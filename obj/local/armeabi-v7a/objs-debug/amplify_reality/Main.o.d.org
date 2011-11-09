@@ -1,0 +1,242 @@
+C:/Android/FinalProject/AmplifyReality/obj/local/armeabi-v7a/objs-debug/amplify_reality/Main.o: \
+ C:/Android/FinalProject/AmplifyReality/jni/Main.cpp \
+ C:/Android/FinalProject/AmplifyReality/jni/positioning/QRFinder.hpp \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/jni.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/core.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/types_c.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/assert.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/cdefs.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/cdefs_elf.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/stdlib.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/string.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/malloc.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/alloca.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/strings.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/stdint.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/_types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/_types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/posix_types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/stddef.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/compiler.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/posix_types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/kernel.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/sysmacros.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/memory.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/math.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/limits.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/limits.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/limits.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/internal_types.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/limits.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/syslimits.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/version.hpp \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/algorithm \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/cmath \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/complex \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/map \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/vector \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/operations.hpp \
+ C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/limits \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/mat.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/imgproc/imgproc.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/imgproc/types_c.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/core_c.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/features2d/features2d.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/miniflann.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/defines.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/config.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/log.h \
+ C:/Android/FinalProject/AmplifyReality/jni/positioning/FindPattern.h \
+ C:/Android/FinalProject/AmplifyReality/jni/LogDefinitions.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/highgui/highgui.hpp \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/highgui/highgui_c.h \
+ ../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/calib3d/calib3d.hpp \
+ C:/Android/android-ndk-r6b/sources/android/native_app_glue/android_native_app_glue.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/poll.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/poll.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/poll.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/configuration.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/asset_manager.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/looper.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/native_activity.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/input.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/keycodes.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/native_window.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/rect.h \
+ C:/Android/FinalProject/AmplifyReality/jni/display/NativeWindowRenderer.hpp \
+ C:/Android/FinalProject/AmplifyReality/jni/LogDefinitions.h \
+ C:/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp \
+ C:/Android/FinalProject/AmplifyReality/jni/ExceptionCodes.hpp \
+ C:/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/EGL/egl.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/EGL/eglplatform.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/KHR/khrplatform.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/gl.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/glplatform.h \
+ C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/glext.h \
+ C:/Android/FinalProject/AmplifyReality/jni/controllers/CalibrationController.hpp \
+ C:/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp \
+ C:/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp
+
+C:/Android/FinalProject/AmplifyReality/jni/positioning/QRFinder.hpp:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/jni.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/core.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/types_c.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/assert.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/cdefs.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/cdefs_elf.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/stdlib.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/string.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/malloc.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/alloca.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/strings.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/stdint.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/_types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/_types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/posix_types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/stddef.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/compiler.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/posix_types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/kernel.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/sysmacros.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/memory.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/math.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/limits.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/limits.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/limits.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/internal_types.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/machine/limits.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/sys/syslimits.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/version.hpp:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/algorithm:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/cmath:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/complex:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/map:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/vector:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/operations.hpp:
+
+C:/Android/android-ndk-r6b/sources/cxx-stl/gnu-libstdc++/include/limits:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/mat.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/imgproc/imgproc.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/imgproc/types_c.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/core/core_c.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/features2d/features2d.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/miniflann.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/defines.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/flann/config.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/log.h:
+
+C:/Android/FinalProject/AmplifyReality/jni/positioning/FindPattern.h:
+
+C:/Android/FinalProject/AmplifyReality/jni/LogDefinitions.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/highgui/highgui.hpp:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/highgui/highgui_c.h:
+
+../OpenCV/OpenCV-2.3.1/share/OpenCV/../../include/opencv2/calib3d/calib3d.hpp:
+
+C:/Android/android-ndk-r6b/sources/android/native_app_glue/android_native_app_glue.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/poll.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/linux/poll.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/asm/poll.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/configuration.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/asset_manager.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/looper.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/native_activity.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/input.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/keycodes.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/native_window.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/android/rect.h:
+
+C:/Android/FinalProject/AmplifyReality/jni/display/NativeWindowRenderer.hpp:
+
+C:/Android/FinalProject/AmplifyReality/jni/LogDefinitions.h:
+
+C:/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp:
+
+C:/Android/FinalProject/AmplifyReality/jni/ExceptionCodes.hpp:
+
+C:/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/EGL/egl.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/EGL/eglplatform.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/KHR/khrplatform.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/gl.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/glplatform.h:
+
+C:/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/glext.h:
+
+C:/Android/FinalProject/AmplifyReality/jni/controllers/CalibrationController.hpp:
+
+C:/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp:
+
+C:/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp:
