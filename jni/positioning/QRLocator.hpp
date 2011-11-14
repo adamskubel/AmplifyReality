@@ -1,5 +1,7 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
+#include <opencv2/core/core.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
 
 #ifndef QR_LOCATPR_HPP_
 #define QR_LOCATPR_HPP_
@@ -14,11 +16,11 @@ class QRLocator
 	float pixelWidth, pixelHeight;
 
 public:
-	QRLocator(Mat& cameraMatrix, Mat& distortionMatrix);
-	void transformPoints(vector<Point_<int>* > pointVector, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
+	QRLocator(Mat cameraMatrix, Mat distortionMatrix);
+	void transformPoints(vector<Point_<int>* > &pointVector, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
 
 private:
-	Point2f unproject(float x, float y);
+	Point2f unproject(double x, double y);
 
 
 

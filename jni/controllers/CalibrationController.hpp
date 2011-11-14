@@ -33,7 +33,7 @@ struct engine
 
 class CalibrationController
 {
-	static const int SampleCount = 10;
+	static const int SampleCount = 4;
 
 	vector<vector<Point3f> > * objectPoints;
 	vector<vector<Point2f> > * imagePoints;
@@ -41,7 +41,7 @@ class CalibrationController
 	bool calibrationComplete;
 	bool isFinding;
 	Size_<int> chessBoardSize;
-	Mat * rgbImage, *binaryImage, *grayImage;
+	Mat * rgbImage, *binaryImage, *grayImage, *distortionMatrix;
 
 public:
 	CalibrationController();
@@ -49,6 +49,7 @@ public:
 	void findCorners(struct engine* engine);
 	bool isDone();
 	void captureImage();
+	void getDistortionMatrix(Mat& mat);
 
 private:
 	vector<Point3f> generateChessboardPoints(int w, int h, float squareSize);

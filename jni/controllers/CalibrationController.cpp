@@ -28,6 +28,11 @@ bool CalibrationController::isDone()
 	return calibrationComplete;
 }
 
+void CalibrationController::getDistortionMatrix(Mat &mat)
+{
+	mat = distortionMatrix->clone();
+}
+
 vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, float squareSize)
 {
 	vector<Point3f> points;
@@ -86,10 +91,10 @@ void CalibrationController::findCorners(struct engine* engine)
 
 			Mat cameraMatrix;
 			cameraMatrix = Mat::zeros(3, 3, CV_64F);
-			Mat distortionMatrix;
+			distortionMatrix = new Mat(3,3,CV_64F);
 			vector<Mat> rotations, translations;
 
-			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), cameraMatrix, distortionMatrix, rotations, translations, 0);
+			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
 			LOGI("Camera matrix: [%lf,%lf,%lf;%lf,%lf,%lf;%lf,%lf,%lf]", cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,1), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,0), cameraMatrix.at<double>(1,1), cameraMatrix.at<double>(1,2), cameraMatrix.at<double>(2,0), cameraMatrix.at<double>(2,1), cameraMatrix.at<double>(2,2));

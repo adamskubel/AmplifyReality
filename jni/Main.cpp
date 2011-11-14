@@ -7,6 +7,7 @@
 #include "datacollection/ImageCollector.hpp"
 #include "display/opengl/OpenGLRenderer.hpp"
 #include "controllers/CalibrationController.hpp"
+#include "positioning/QRLocator.hpp"
 
 using namespace std;
 using namespace cv;
@@ -90,6 +91,14 @@ void process_frame(struct engine* engine)
 		LOG_TIME("Binary->RGBA", start, end);
 	}
 
+	if (qrLocator != NULL && v.size() > 0)
+	{
+		LOGD("Unprojecting points");
+		Mat rotation = Mat();
+		Mat translation = Mat();
+		qrLocator->transformPoints(v,10,rotation,translation);
+	}
+
 	for (size_t i = 0; i < v.size(); i++)
 	{
 		fillConvexPoly(*rgbImage, v[i], 4, Scalar(0, 0, 255, 255));
@@ -145,8 +154,14 @@ void drawFrame(struct engine* engine)
 		calibrationController->findCorners(engine);
 		if (calibrationController->isDone())
 		{
+			Mat distortionMatrix;
+			double camData[3][3] = {{4.31, 0, 0},{0, 4.31, 0},{0,0 ,1}};
+			Mat cameraMatrix = Mat(3,3,CV_64F,camData);
+			calibrationController->getDistortionMatrix(distortionMatrix);
+			LOGI("Creating QRLocator");
+			qrLocator = new QRLocator(cameraMatrix, distortionMatrix);
+
 			setActionMode(QRTrack);
-			qrLocator = new QRLocator(calibrationController->getDistortionMat());
 		}
 		break;
 	}

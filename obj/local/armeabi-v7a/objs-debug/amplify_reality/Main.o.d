@@ -79,7 +79,8 @@
  /cygdrive/c/Android/android-ndk-r6b/platforms/android-9/arch-arm/usr/include/GLES/glext.h \
  /cygdrive/c/Android/FinalProject/AmplifyReality/jni/controllers/CalibrationController.hpp \
  /cygdrive/c/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp \
- /cygdrive/c/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp
+ /cygdrive/c/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp \
+ /cygdrive/c/Android/FinalProject/AmplifyReality/jni/positioning/QRLocator.hpp
 
 /cygdrive/c/Android/FinalProject/AmplifyReality/jni/positioning/QRFinder.hpp:
 
@@ -240,3 +241,5 @@
 /cygdrive/c/Android/FinalProject/AmplifyReality/jni/display/opengl/OpenGLRenderer.hpp:
 
 /cygdrive/c/Android/FinalProject/AmplifyReality/jni/datacollection/ImageCollector.hpp:
+
+/cygdrive/c/Android/FinalProject/AmplifyReality/jni/positioning/QRLocator.hpp:
