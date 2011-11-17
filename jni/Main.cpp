@@ -155,11 +155,11 @@ void drawFrame(struct engine* engine)
 		if (calibrationController->isDone())
 		{
 			Mat distortionMatrix;
-			double camData[3][3] = {{4.31, 0, 0},{0, 4.31, 0},{0,0 ,1}};
+			double camData[9] = {4.31, 0, 0,0, 4.31, 0,0,0 ,1};
 			Mat cameraMatrix = Mat(3,3,CV_64F,camData);
 			calibrationController->getDistortionMatrix(distortionMatrix);
 			LOGI("Creating QRLocator");
-			qrLocator = new QRLocator(cameraMatrix, distortionMatrix);
+			qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 
 			setActionMode(QRTrack);
 		}

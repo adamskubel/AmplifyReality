@@ -16,7 +16,7 @@ class QRLocator
 	float pixelWidth, pixelHeight;
 
 public:
-	QRLocator(Mat cameraMatrix, Mat distortionMatrix);
+	QRLocator(Mat  cameraMatrix, Mat  distortionMatrix);
 	void transformPoints(vector<Point_<int>* > &pointVector, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
 
 private:
