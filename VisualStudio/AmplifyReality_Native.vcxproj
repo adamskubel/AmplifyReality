@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(NDK_HOME)\platforms\android-9\arch-arm\usr\include;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include;$(OPENCV_HOME)\include;$(NDK_HOME)\sources\android\native_app_glue;$(NDK_HOME)\platforms\android-9\arch-arm\usr\include\linux;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\libs\armeabi-v7a\include;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include\tr1</IncludePath>
+    <SourcePath>
+    </SourcePath>
+    <ExecutablePath />
+    <ReferencePath>
+    </ReferencePath>
+    <LibraryPath>
+    </LibraryPath>
+    <ExcludePath />
+    <NMakeBuildCommandLine>
+    </NMakeBuildCommandLine>
+    <NMakeIncludeSearchPath>
+    </NMakeIncludeSearchPath>
+    <NMakeForcedIncludes>
+    </NMakeForcedIncludes>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\jni\Controller.cpp" />
+    <ClCompile Include="..\jni\controllers\CalibrationController.cpp" />
+    <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
+    <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp" />
+    <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp" />
+    <ClCompile Include="..\jni\Main.cpp" />
+    <ClCompile Include="..\jni\positioning\FindPattern.cpp" />
+    <ClCompile Include="..\jni\positioning\QRFinder.cpp" />
+    <ClCompile Include="..\jni\positioning\QRLocator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
+    <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
+    <ClInclude Include="..\jni\display\NativeWindowRenderer.hpp" />
+    <ClInclude Include="..\jni\display\opengl\OpenGLRenderer.hpp" />
+    <ClInclude Include="..\jni\Engine.hpp" />
+    <ClInclude Include="..\jni\ExceptionCodes.hpp" />
+    <ClInclude Include="..\jni\LogDefinitions.h" />
+    <ClInclude Include="..\jni\positioning\FindPattern.h" />
+    <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
+    <ClInclude Include="..\jni\positioning\QRFinder.hpp" />
+    <ClInclude Include="..\jni\positioning\QRLocator.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

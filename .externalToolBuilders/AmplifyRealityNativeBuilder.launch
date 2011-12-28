@@ -2,8 +2,8 @@
 <launchConfiguration type="org.eclipse.ui.externaltools.ProgramBuilderLaunchConfigurationType">
 <stringAttribute key="org.eclipse.debug.core.ATTR_REFRESH_SCOPE" value="${working_set:&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;resources&gt;&#13;&#10;&lt;item path=&quot;/AmplifyReality/libs&quot; type=&quot;2&quot;/&gt;&#13;&#10;&lt;/resources&gt;}"/>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
-<mapEntry key="NDK_HOME" value="C:\Android\android-ndk-r7"/>
-<mapEntry key="OPENCV_HOME" value="C:\Android\FinalProject\OpenCV"/>
+<mapEntry key="NDK_HOME" value="${NDK_HOME}"/>
+<mapEntry key="OPENCV_HOME" value="${OPENCV_HOME}"/>
 </mapAttribute>
 <booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_BUILD_SCOPE" value="${working_set:&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;resources&gt;&#13;&#10;&lt;item path=&quot;/AmplifyReality/jni&quot; type=&quot;2&quot;/&gt;&#13;&#10;&lt;/resources&gt;}"/>

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Header Files\controllers">
+      <UniqueIdentifier>{beac5c31-3639-43d2-9ae7-dafa2fa39142}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\datacollection">
+      <UniqueIdentifier>{846b7632-fb6f-4cbf-9c1d-58e17146d1dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\display">
+      <UniqueIdentifier>{8096ab8f-f1df-42b5-b62d-7044c863c213}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\positioning">
+      <UniqueIdentifier>{949c756f-d7dd-4c28-ac79-e15a0728b19f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\display\opengl">
+      <UniqueIdentifier>{7f438424-bd92-4815-82be-0b01bdce3ca3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\jni\Controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\datacollection\ImageCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\FindPattern.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\QRFinder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\QRLocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\jni\Engine.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\ExceptionCodes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\LogDefinitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\controllers\CalibrationController.hpp">
+      <Filter>Header Files\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\OpenGLRenderer.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\NativeWindowRenderer.hpp">
+      <Filter>Header Files\display</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\QRFinder.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\QRLocator.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\FindPattern.h">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\PerspectiveTransform.h">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\datacollection\ImageCollector.hpp">
+      <Filter>Header Files\datacollection</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
