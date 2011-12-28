@@ -1,0 +1,10 @@
+<project name="AmplifyReality" basedir=".">
+	<target name="copyLib">
+		<copy file="${Android.NDK.Home}\sources\cxx-stl\gnu-libstdc++\libs\armeabi-v7a\libgnustl_static.a" 
+			todir="${basedir}\obj\local\armeabi-v7a"/>
+	</target>		
+	<target name="clean">
+		<delete dir="${basedir}/obj"/>
+		<delete dir="${basedir}/bin"/>			
+	</target>
+</project>
