@@ -1,14 +1,18 @@
 //#include "importgl.h"
 #include "math.h"
-#include "LogDefinitions.h"
+#include <LogDefinitions.h>
 #include "android_native_app_glue.h"
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#include <DebugSettings.hpp>
 
 
 #ifndef OPENGL_RENDERER_HPP
 #define OPENGL_RENDERER_HPP
+
+
+#define USE_POWER2_TEXTURES true
 
 #undef PI
 #define PI 3.1415926535897932f
@@ -25,8 +29,11 @@ struct OpenGLRenderer
 		EGLSurface surface;
 		EGLSurface pBuffer;
 		EGLContext context;
-		int32_t width;
-		int32_t height;
+		int32_t screenWidth;
+		int32_t screenHeight;
+		int32_t textureWidth;
+		int32_t textureHeight;
+		GLuint textureID;
 	};
 
 	struct GLOBJECT
@@ -47,23 +54,26 @@ struct OpenGLRenderer
 		GLint vertexComponents;
 		GLint textureComponents;
 		GLsizei count;
+
+		GLfloat width,height;
 	};
 private:
 	struct timespec start, end;
-	static void gluOrtho(GLfloat height,GLfloat width, GLfloat zNear, GLfloat zFar);
-	static void prepareFrame(int width, int height, int pixelWidth, int pixelHeight);
-	static void gluLookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez, GLfloat centerx, GLfloat centery, GLfloat centerz, GLfloat upx, GLfloat upy, GLfloat upz);
-	static void configureLightAndMaterial();
-	static GLOBJECT* createGroundPlane();
-	static GLOBJECT* createTexturedQuad();
-	static GLOBJECT* newGLObject(long vertices, int vertexComponents, int textureComponents);
-	static void drawGLObject(GLOBJECT *object);
-	static void freeGLObject(GLOBJECT *object);
-	static void drawGroundPlane();
 	engine * myEngine;
 
+	void prepareFrame (int imageWidth, int imageHeight);
+
+	static void calculateTextureSize(int imageWidth, int imageHeight, int * textureWidth, int * textureHeight);
+	static void gluLookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez, GLfloat centerx, GLfloat centery, GLfloat centerz, GLfloat upx, GLfloat upy, GLfloat upz);
+	static void configureLightAndMaterial();
+	static GLOBJECT* createTexturedQuad(int textureWidth, int textureHeight, int size);
+	static GLOBJECT* newGLObject(long vertices, int vertexComponents, int textureComponents);
+	static void drawGLObject(GLOBJECT *object);
+	static void drawTexturedObject(GLOBJECT *object);
+	static void freeGLObject(GLOBJECT *object);
+
 public:
-	void render(int width, int height, int pixelWidth, int pixelHeight, void * pixels);
+	void render( int imageWidth, int imageHeight, void * pixels);
 	void initOpenGL(ANativeWindow* window, int imageWidth, int imageHeight);
 	void teardownOpenGL();
 

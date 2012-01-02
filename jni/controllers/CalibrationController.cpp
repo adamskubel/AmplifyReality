@@ -114,7 +114,7 @@ void CalibrationController::findCorners(struct engine* engine)
 	drawImageCount(rgbImage);
 
 	SET_TIME(&start);
-	engine->glRender.render(engine->screenWidth, engine->screenHeight, engine->imageWidth, engine->imageHeight, rgbImage->ptr<uint32_t>(0));
+	engine->glRender.render(engine->imageWidth, engine->imageHeight, rgbImage->ptr<uint32_t>(0));
 	SET_TIME(&end);
 	LOG_TIME("OpenGL Drawing", start, end);
 }

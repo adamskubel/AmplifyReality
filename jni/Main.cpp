@@ -114,7 +114,7 @@ void process_frame(struct engine* engine)
 	}
 
 	SET_TIME(&start);
-	engine->glRender.render(screenWidth, screenHeight, imageWidth, imageHeight, rgbImage->ptr<uint32_t>(0));
+	engine->glRender.render(imageWidth, imageHeight, rgbImage->ptr<uint32_t>(0));
 	SET_TIME(&end);
 	LOG_TIME("OpenGL Drawing", start, end);
 	//NativeWindowRenderer::drawToBuffer(buffer, rgbImage);
@@ -169,8 +169,7 @@ void drawFrame(struct engine* engine)
 	char myTimeString[100];
 	struct timespec now;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-	sprintf(myTimeString, "Frame took %ld ms", calc_time(lastFrame,now));
-	LOGT(myTimeString);
+	LOGT("Frame took %ld ms", calc_time(lastFrame,now));
 
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastFrame);
 }

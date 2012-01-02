@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 OPENCV_CAMERA_MODULES:=off
 
-OPENCV_MK_PATH= ${OPENCV_HOME}/OpenCV-2.3.1/share/OpenCV/OpenCV.mk
+OPENCV_MK_PATH= ${OPENCV_HOME}/share/OpenCV/OpenCV.mk
 include $(OPENCV_MK_PATH)
 
 

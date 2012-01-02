@@ -93,5 +93,8 @@
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp">
       <Filter>Header Files\datacollection</Filter>
     </ClInclude>
+    <ClInclude Include="..\jni\DebugSettings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
