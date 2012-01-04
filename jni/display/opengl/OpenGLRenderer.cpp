@@ -110,7 +110,7 @@ OpenGLRenderer::GLOBJECT * OpenGLRenderer::createTexturedQuad(int textureWidth, 
 		yLimit = size;
 	}
 
-	LOGD("Creating textured quad");
+	LOGD("OpenGL","Creating textured quad");
 	GLOBJECT *result;
 	result = newGLObject(4, 3, 2);
 
@@ -146,7 +146,7 @@ OpenGLRenderer::GLOBJECT * OpenGLRenderer::createTexturedQuad(int textureWidth, 
 	result->width = xLimit;
 	result->height = yLimit;
 
-	LOGD("Image quad complete");
+	LOGD("OpenGL","Image quad complete");
 	return result;
 }
 
@@ -181,30 +181,30 @@ void OpenGLRenderer::initOpenGL(ANativeWindow* window, int imageWidth, int image
 	EGLSurface surface;
 	EGLContext context;
 
-	LOGI("Setting up display");
+	LOGI("OpenGL","Setting up display");
 	EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(display, 0, 0);
-	LOGI("Display initialized");
+	LOGI("OpenGL","Display initialized");
 	
 	
 	eglChooseConfig(display, attribs, &config, 1, &numConfigs);
 	eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 	ANativeWindow_setBuffersGeometry(window, 0, 0, format);
 
-	LOGI("Creating window surface");
+	LOGI("OpenGL","Creating window surface");
 
 	surface = eglCreateWindowSurface(display, config, window, NULL);
 
 	context = eglCreateContext(display, config, NULL, NULL);
 
 	if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
-		LOGW("Unable to eglMakeCurrent");
+		LOGW("OpenGL","Unable to eglMakeCurrent");
 	}
 
-	LOGI("Getting surface params");
+	LOGI("OpenGL","Getting surface params");
 	eglQuerySurface(display, surface, EGL_WIDTH, &w);
 	eglQuerySurface(display, surface, EGL_HEIGHT, &h);
-	LOGI("Surface parameters: width=%d, height=%d", w, h);
+	LOGI("OpenGL","Surface parameters: width=%d, height=%d", w, h);
 
 	myEngine->display = display;
 	myEngine->context = context;
@@ -215,7 +215,7 @@ void OpenGLRenderer::initOpenGL(ANativeWindow* window, int imageWidth, int image
 
 
 
-	LOGI("Setting OpenGL parameters");
+	LOGI("OpenGL","Setting OpenGL parameters");
 	glShadeModel(GL_FLAT);
 
 //	glEnable(GL_LIGHTING);
@@ -228,10 +228,10 @@ void OpenGLRenderer::initOpenGL(ANativeWindow* window, int imageWidth, int image
 
 	//Create the texture object
 	calculateTextureSize(imageWidth,imageHeight,&myEngine->textureWidth,&myEngine->textureHeight);
-	LOGI("Creating texture, width=%d, height=%d", myEngine->textureWidth, myEngine->textureHeight);
+	LOGI("OpenGL","Creating texture, width=%d, height=%d", myEngine->textureWidth, myEngine->textureHeight);
 	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &(myEngine->textureID));
-	LOGD("Texture ID is %d", (myEngine->textureID));
+	LOGD("OpenGL","Texture ID is %d", (myEngine->textureID));
 	glBindTexture(GL_TEXTURE_2D, (myEngine->textureID));
 
 	//Initialize texture with blank data
@@ -307,7 +307,7 @@ void OpenGLRenderer::prepareFrame(int imageWidth, int imageHeight)
 	float xImg = ((float)imageWidth/(float)myEngine->textureWidth)* texturedQuad->width;
 	float xScale = (float)orthoWidth/(float)xImg;
 
-	LOGD("xScale=%f,yScale=%f",xScale,yScale);
+	LOGD("OpenGL","xScale=%f,yScale=%f",xScale,yScale);
 	
 	glScalef(-yScale,yScale,1);
 	

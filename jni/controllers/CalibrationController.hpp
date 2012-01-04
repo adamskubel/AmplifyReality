@@ -41,7 +41,7 @@ class CalibrationController
 	bool calibrationComplete;
 	bool isFinding;
 	Size_<int> chessBoardSize;
-	Mat * rgbImage, *binaryImage, *grayImage, *distortionMatrix;
+	Mat * rgbImage, *binaryImage, *grayImage, *distortionMatrix, * cameraMatrix;
 
 public:
 	CalibrationController();
@@ -49,7 +49,7 @@ public:
 	void findCorners(struct engine* engine);
 	bool isDone();
 	void captureImage();
-	void getDistortionMatrix(Mat& mat);
+	void getCameraMatrices(Mat& camera, Mat& distortion);
 
 private:
 	vector<Point3f> generateChessboardPoints(int w, int h, float squareSize);

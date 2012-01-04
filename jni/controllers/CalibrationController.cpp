@@ -28,9 +28,11 @@ bool CalibrationController::isDone()
 	return calibrationComplete;
 }
 
-void CalibrationController::getDistortionMatrix(Mat &mat)
+void CalibrationController::getCameraMatrices(Mat &camera, Mat& distortion)
 {
-	mat = distortionMatrix->clone();
+	camera = cameraMatrix->clone();
+	distortion = distortionMatrix->clone();
+
 }
 
 vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, float squareSize)
@@ -50,7 +52,7 @@ vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, fl
 
 void CalibrationController::findCorners(struct engine* engine)
 {
-	LOGD("Find corners Start");
+	LOGD("Calibration","Find corners Start");
 	struct timespec start, end;
 
 	engine->imageCollector->newFrame();
@@ -69,10 +71,10 @@ void CalibrationController::findCorners(struct engine* engine)
 	if (isFinding)
 	{
 		vector<Point2f> corners;
-		LOGD("Finding corners");
+		LOGD("Calibration","Finding corners");
 		bool wasFound = findChessboardCorners(*grayImage, chessBoardSize, corners, CALIB_CB_FAST_CHECK);
 
-		LOGD("Drawing corners");
+		LOGD("Calibration","Drawing corners");
 		drawChessboardCorners(*rgbImage, chessBoardSize, corners, wasFound);
 
 		if (wasFound)
@@ -86,26 +88,26 @@ void CalibrationController::findCorners(struct engine* engine)
 
 		if (collectionCount >= SampleCount)
 		{
-			LOGD("Calculate camera matrix");
+			LOGD("Calibration","Calculate camera matrix");
 			SET_TIME(&start);
 
-			Mat cameraMatrix;
-			cameraMatrix = Mat::zeros(3, 3, CV_64F);
+			cameraMatrix = new Mat(3, 3, CV_64F);
 			distortionMatrix = new Mat(3,3,CV_64F);
 			vector<Mat> rotations, translations;
 
-			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), cameraMatrix, *distortionMatrix, rotations, translations, 0);
+			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
-			LOGI("Camera matrix: [%lf,%lf,%lf;%lf,%lf,%lf;%lf,%lf,%lf]", cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,1), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,0), cameraMatrix.at<double>(1,1), cameraMatrix.at<double>(1,2), cameraMatrix.at<double>(2,0), cameraMatrix.at<double>(2,1), cameraMatrix.at<double>(2,2));
+			//LOGI("Camera matrix: [%lf,%lf,%lf;%lf,%lf,%lf;%lf,%lf,%lf]", cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,1), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,0), cameraMatrix.at<double>(1,1), cameraMatrix.at<double>(1,2), cameraMatrix.at<double>(2,0), cameraMatrix.at<double>(2,1), cameraMatrix.at<double>(2,2));
+			LOGI_Mat("Calibration","Camera Matrix",cameraMatrix);
 
 			double fovx,fovy,aspectRatio,focalLength;
 			Point2d principalPoint;
 			double apX = 4.13,apY = 2.30;
 
-			calibrationMatrixValues(cameraMatrix,grayImage->size(),apX,apY,fovx,fovy,focalLength,principalPoint,aspectRatio);
+			//calibrationMatrixValues(&cameraMatrix,grayImage->size(),apX,apY,fovx,fovy,focalLength,principalPoint,aspectRatio);
 
-			LOGI("FOVx = %lf, FOVy = %lf, AR = %lf, FocalLength=%lf, PrincPoint=(%lf,%lf)",fovx,fovy,aspectRatio,focalLength,principalPoint.x,principalPoint.y);
+			//LOGI("FOVx = %lf, FOVy = %lf, AR = %lf, FocalLength=%lf, PrincPoint=(%lf,%lf)",fovx,fovy,aspectRatio,focalLength,principalPoint.x,principalPoint.y);
 
 			calibrationComplete = true;
 		}

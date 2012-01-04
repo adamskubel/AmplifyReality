@@ -1,49 +1,51 @@
 #include "QRLocator.hpp"
 
-QRLocator::QRLocator(Mat _cameraMatrix, Mat _distortionMatrix)
+
+
+QRLocator::QRLocator(Mat _cameraMatrix)
 {
-//	cameraMatrix = new Mat(_cameraMatrix.size,_cameraMatrix.type());
-	cameraMatrix = new Mat();
-	_cameraMatrix.copyTo(*cameraMatrix);
-	//cameraMatrix = _cameraMatrix;
-	LOGI_Mat("CamMat2",cameraMatrix);
-	distortionMatrix = new Mat(_distortionMatrix);
-	pixelWidth = 4.98f / 800;
-	pixelHeight = 2.30f / 480;
+	cameraMatrix = new Mat(_cameraMatrix);
+//	distortionMatrix = new Mat(_distortionMatrix);
 }
 
-void QRLocator::transformPoints(vector<Point_<int>*> &pointVector, float qrSize, Mat& rotationMatrix, Mat& translationMatrix)
+void QRLocator::transformPoints(Point_<int> * pointArray, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix)
 {
-	LOGI_Mat("CamMat2",cameraMatrix);
-	unproject((double) pointVector.at(0)->x, (double) pointVector.at(0)->y);
-}
+	double * pointData = new double[numPoints*2];
 
-Point2f QRLocator::unproject(double x, double y)
-{
-	double pointData[2] = { x, y };
-	Mat pointMat = Mat(1,1, CV_64FC2, pointData);
-//	LOGI("Undistort input: [%lf,%lf]", pointMat.at<double>(0,0), pointMat.at<double>(0,1));
-	Mat output;
-	LOGD("Calling undistort");
-	try
+	vector<Point3f> qrVector = vector<Point3f>();
+	qrVector.push_back(Point3f(0,0,0));
+	qrVector.push_back(Point3f(qrSize,0,0));
+	qrVector.push_back(Point3f(0,qrSize,0));
+	qrVector.push_back(Point3f(qrSize,qrSize,0));
+
+
+	
+	for (int i=0;i<numPoints;i++)
 	{
-		LOGI_Mat("Input Point",&pointMat);
-		LOGI_Mat("DistortionMat",distortionMatrix);
-		LOGI_Mat("CameraMat",cameraMatrix);
-	//	Mat identity = Mat(3,3,CV_64FC2,new double[]{1,1,1,1,1,1,1,1,1});
-		undistortPoints(pointMat, output, *cameraMatrix, *distortionMatrix);
-	} catch (int e)
-	{
-		LOGE("Exception: %d", e);
-		return Point2f(0, 0);
-	} catch (exception& e)
-	{
-		LOGE("Exception2: %s", e.what());
-		return Point2f(0, 0);
+		LOGI("QRLocator","PointInput(%d)=[%lf,%lf]",i,(double) pointArray[i].x,(double) pointArray[i].x);
+		pointData[i] = (double) pointArray[i].x;
+		pointData[(i*2)+1] = (double) pointArray[i].y;
 	}
 
-	LOGI_Mat("UndistortResult",&output);
-	Point2f result(output.at<double>(0, 0), output.at<double>(1, 0));
-	return result;
+	Mat pointMat = Mat(numPoints,1, CV_64FC2, pointData);
+	Mat output;
+	LOGD("QRLocator","Calling undistort");
+	try
+	{
+		LOGD_Mat("QRLocator","Input Point",&pointMat);
+		LOGD_Mat("QRLocator","Camera Matrix",cameraMatrix);
+		solvePnP(qrVector,pointMat,*cameraMatrix,*distortionMatrix,rotationMatrix,translationMatrix,false);
+		LOGD_Mat("QRLocator","Rotation",&rotationMatrix);
+		LOGD_Mat("QRLocator","Translation",&translationMatrix);
+
+	} catch (int e)
+	{
+		LOGE("QRLocator","Exception: %d", e);
+	} catch (exception& e)
+	{
+		LOGE("QRLocator","Exception2: %s", e.what());
+	}
+
+	LOGD_Mat("QRLocator","UndistortResult",&output);
 }
 

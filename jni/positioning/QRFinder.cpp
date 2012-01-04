@@ -2,10 +2,8 @@
 #include "LogDefinitions.h"
 //#include <PerspectiveTransform.h>
 
-using namespace cv;
-using namespace std;
 
-void QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) // QR_vector& qr_store)
+bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) // QR_vector& qr_store)
 {
 
 	long height = M.rows;
@@ -17,7 +15,6 @@ void QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 
 	if (pattern_store.size() == 3)
 	{
-		LOGD("Three patterns statement enter");
 		FINDPATTERN top_left, top_right, bottom_left, bottom_right;
 		TriangleOrder(pattern_store, bottom_left, top_left, top_right);
 
@@ -41,11 +38,10 @@ void QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 
 		ptList.push_back(points);
 
-		LOGD("Three patterns statement exit");
+		return true;
 
 	} else if (pattern_store.size() > 0)
 	{
-		LOGD("Other patterns statement enter");
 		for (size_t i = 0; i < pattern_store.size(); i++)
 		{
 			FINDPATTERN pattern = pattern_store[i];
@@ -66,9 +62,8 @@ void QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 
 			ptList.push_back(points);
 		}
-		LOGD("Other patterns statement exit");
 	}
-	LOGD("locateQRCode Exit");
+	return false;
 }
 
 void QRFinder::FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Point3i>& debugVector)
@@ -216,10 +211,11 @@ bool QRFinder::CheckRatios(int bw[])
 		return false; /* Minimum size check failed. */
 	}
 
-	int module_size = (modules_sum) / 7;
+	int module_size = (int)round((float)modules_sum / 7.0f);
 
 	/* Allow less than 25% variance from 1-1-3-1-1 ratios. */
-	int variance = module_size >> 2;
+	int variance	= module_size >> 2;
+	int variance2	= module_size >> 1;
 
 	int a = bw[0];
 	int b = bw[1];
@@ -227,9 +223,89 @@ bool QRFinder::CheckRatios(int bw[])
 	int d = bw[3];
 	int e = bw[4];
 
-	return abs(module_size - a) < variance && abs(module_size - b) < variance && abs((3 * module_size) - c) < (3 * variance) && abs(module_size - d) < variance
-			&& abs(module_size - e) < variance;
+	
+
+	if(
+		(abs(module_size - a) < variance2) && 
+		(abs(module_size - b) < variance2) && 
+		(abs(module_size - d) < variance2) && 
+		(abs(module_size - e) < variance2) && 
+		(abs(a - e) < variance2) &&
+		(abs(b - d) < variance2) &&
+		(c > b && c > d && c > a && c > e) && 
+		(abs((3 * module_size) - c) < (3 * variance2)))
+	{
+		//LOGD("QRFinder","CheckRatios Success: a=%d,b=%d,c=%d,d=%d,e=%d,msize=%d,var1=%d,var2=%d",a,b,c,d,e,module_size,variance,variance2);
+		return true;
+	}
+	else
+	{
+		//LOGD("QRFinder","CheckRatios Failed: a=%d,b=%d,c=%d,d=%d,e=%d,msize=%d,var1=%d,var2=%d",a,b,c,d,e,module_size,variance,variance2);
+	}
+	return false;
+	//return 
+	//	abs(module_size - a) < variance && 
+	//	abs(module_size - b) < variance && 
+	//	abs((3 * module_size) - c) < (3 * variance) && 
+	//	abs(module_size - d) < variance && 
+	//	abs(module_size - e) < variance;
 }
+
+bool QRFinder::CheckRatios(int newBw[], int oldBw[])
+{
+	int newModuleSum = 0, oldModuleSum = 0;
+	for (int i = 0; i < 5; ++i)
+	{
+		if (newBw[i] == 0)
+		{
+			return false; 
+		}
+		newModuleSum += newBw[i];
+	}
+	if (newModuleSum < 7)
+	{
+		return false; 
+	}
+	int newModuleSize = (int)round((float)newModuleSum / 7.0f);
+
+
+	for (int i = 0; i < 5; ++i)
+	{
+		if (newBw[i] == 0)
+		{
+			return false; 
+		}
+		oldModuleSum += oldBw[i];
+	}
+		
+
+	int variance	= newModuleSize >> 2;
+	int variance2	= newModuleSize >> 1;
+
+	int a = newBw[0];	int b = newBw[1];	int c = newBw[2];	int d = newBw[3];	int e = newBw[4];
+
+	int symmetryScore = (abs(a - e) < variance2) && (abs(b - d) < variance2);
+	int sizeScore = ((abs(newModuleSize - a) < variance2) + (abs(newModuleSize - b) < variance2) + (abs(newModuleSize - d) < variance2) + (abs(newModuleSize - e) < variance2)) + 
+		(abs((3 * newModuleSize) - c) < (3 * variance2))*3; //Max 7
+
+	int comparisonScore = (c > b && c > d && c > a && c > e);
+
+	int oldNewCompareScore = ((abs(oldModuleSum-newModuleSum) < (oldModuleSum >> 2)) && abs((newBw[2] - oldBw[2]) < oldBw[2] >> 1));
+	
+	if ((symmetryScore && sizeScore && comparisonScore && oldNewCompareScore) &&
+		(symmetryScore*3 + sizeScore + comparisonScore*3 + oldNewCompareScore*6) > 14)
+	{		
+		return true;
+	}
+	else
+	{
+		LOGD("QRFinder","CheckRatio2 F: New= %d,%d,%d,%d,%d",newBw[0],newBw[1],newBw[2],newBw[3],newBw[4]);
+		LOGD("QRFinder","CheckRatio2 F: Old= %d,%d,%d,%d,%d",oldBw[0],oldBw[1],oldBw[2],oldBw[3],oldBw[4]);
+		LOGD("QRFinder","Scores: Sym=%d,Size=%d,Compare=%d,OldNew=%d",symmetryScore,sizeScore,comparisonScore,oldNewCompareScore);
+		return false;
+	}
+}
+
 
 int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[])
 {
@@ -288,8 +364,9 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[])
 		return 0;
 	}
 
-	if (CheckRatios(bw) == false)
+	if (CheckRatios(bw,fpbw) == false)
 	{
+		LOGD("QRFinder","VertCenter CheckRatio2 Failed: %d,%d,%d,%d,%d",bw[0],bw[1],bw[2],bw[3],bw[4]);
 		return 0;
 	}
 
@@ -364,21 +441,53 @@ void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_
 	long d1to2 = FINDPATTERN::Distance(fpv[1], fpv[2]);
 	long d0to2 = FINDPATTERN::Distance(fpv[0], fpv[2]);
 
-	if (d1to2 >= d0to1 && d1to2 >= d0to2)
+
+
+	if (d1to2 > d0to1 && d1to2 > d0to2)
 	{
 		top_left = fpv[0];
 		bottom_left = fpv[1];
 		top_right = fpv[2];
-	} else if (d1to2 >= d0to1 && d1to2 < d0to2)
+	} else if (d0to1 > d1to2 && d0to1 > d0to2)
+	{
+		top_left = fpv[2];
+		bottom_left = fpv[1];
+		top_right = fpv[0];
+	}  else if (d0to2 > d1to2 && d0to2 > d0to1)
 	{
 		top_left = fpv[1];
 		bottom_left = fpv[0];
 		top_right = fpv[2];
-	} else
+	}
+	else
 	{
-		top_left = fpv[2];
-		bottom_left = fpv[0];
-		top_right = fpv[1];
+		LOGW("QRFinder","Unable to resolve finder pattern order by distance");
+		//no clear winner, probably some significant perspective. 
+		if (FINDPATTERN::AcuteAngleGeometry(fpv[0], fpv[1], fpv[2]) >= 0)
+		{
+			top_left = fpv[0];
+			top_right = fpv[1];
+			bottom_left = fpv[2];
+		}
+		else if (FINDPATTERN::AcuteAngleGeometry(fpv[1], fpv[0], fpv[2]) >= 0)
+		{
+			top_left = fpv[1];
+			top_right = fpv[0];
+			bottom_left = fpv[2];
+		}
+		else if (FINDPATTERN::AcuteAngleGeometry(fpv[2], fpv[0], fpv[1]) >= 0)
+		{
+			top_left = fpv[2];
+			top_right = fpv[0];
+			bottom_left = fpv[1];
+		}
+		else
+		{
+			LOGE("QRFinder","Error determining finder pattern order. This shouldn't happen.");
+			top_left = fpv[0];
+			bottom_left = fpv[1];
+			top_right = fpv[2];
+		}
 	}
 
 	if (FINDPATTERN::AcuteAngleGeometry(bottom_left, top_left, top_right) < 0)

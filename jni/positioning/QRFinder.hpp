@@ -9,8 +9,12 @@
 #ifndef QR_FINDER_HPP_
 #define QR_FINDER_HPP_
 
+#undef LOG_TAG
+#define LOG_TAG "QRFinder"
+
 using namespace cv;
 using namespace std;
+
 class QR_vector: public vector<bool>
 {
 public:
@@ -27,10 +31,11 @@ private:
 struct QRFinder
 {
 public:
-	static void locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>&  debugVector);
+	static bool locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>&  debugVector);
 
 private:
 	static bool CheckRatios(int bw[]);
+	static bool CheckRatios(int bw[], int bw2[]);
 	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[]);
 	static int FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[]);
 	static void FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Point3i>& debugVector);

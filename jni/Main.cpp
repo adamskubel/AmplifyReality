@@ -12,6 +12,7 @@
 using namespace std;
 using namespace cv;
 
+
 enum DrawMode
 {
 	Color = 0, Gray = 1, Binary = 2
@@ -47,9 +48,11 @@ QRLocator * qrLocator;
 //	ImageCollector * imageCollector;
 //};
 
+
+
 void process_frame(struct engine* engine)
 {
-	LOGD("Frame Start");
+	LOGD("Main","Frame Start");
 	struct timespec start, end;
 
 	engine->imageCollector->newFrame();
@@ -73,7 +76,7 @@ void process_frame(struct engine* engine)
 	vector<Point3i> vDebug;
 
 	SET_TIME(&start);
-	QRFinder::locateQRCode(*binaryImage, v, vDebug);
+	bool wasFound = QRFinder::locateQRCode(*binaryImage, v, vDebug);
 	SET_TIME(&end);
 	LOG_TIME("QR Search", start, end);
 
@@ -91,17 +94,29 @@ void process_frame(struct engine* engine)
 		LOG_TIME("Binary->RGBA", start, end);
 	}
 
-	if (qrLocator != NULL && v.size() > 0)
-	{
-		LOGD("Unprojecting points");
-		Mat rotation = Mat();
-		Mat translation = Mat();
-		qrLocator->transformPoints(v,10,rotation,translation);
-	}
 
-	for (size_t i = 0; i < v.size(); i++)
+	if (wasFound)
 	{
-		fillConvexPoly(*rgbImage, v[i], 4, Scalar(0, 0, 255, 255));
+		Point_<int> * pointArray = v[0];
+		int numPoints = 4;
+		
+		if (qrLocator != NULL &&  numPoints > 3)
+		{
+			LOGI("Main","Unprojecting points");
+			Mat rotation = Mat();
+			Mat translation = Mat();
+			qrLocator->transformPoints(pointArray,4,10,rotation,translation);
+		}
+		fillConvexPoly(*rgbImage, v[0], 4, Scalar(0, 255, 0, 255));
+	}
+	else
+	{
+		for (size_t i = 0; i < v.size(); i++)
+		{
+			int npts = 4;
+			const Point_<int> * pArray[] = {v[i]};
+			polylines(*rgbImage,pArray,&npts,1,true,Scalar(0,0,255,255),4);
+		}
 	}
 	while (!v.empty())
 	{
@@ -116,8 +131,7 @@ void process_frame(struct engine* engine)
 	SET_TIME(&start);
 	engine->glRender.render(imageWidth, imageHeight, rgbImage->ptr<uint32_t>(0));
 	SET_TIME(&end);
-	LOG_TIME("OpenGL Drawing", start, end);
-	//NativeWindowRenderer::drawToBuffer(buffer, rgbImage);
+	LOG_TIME("OpenGL Drawing", start, end);	
 }
 
 void setActionMode(ActionMode newMode)
@@ -154,12 +168,15 @@ void drawFrame(struct engine* engine)
 		calibrationController->findCorners(engine);
 		if (calibrationController->isDone())
 		{
-			Mat distortionMatrix;
-			double camData[9] = {4.31, 0, 0,0, 4.31, 0,0,0 ,1};
+	/*		Mat distortionMatrix,cameraMatrix;
+			Mat cameraMatrix = Mat();
+			calibrationController->getCameraMatrices(cameraMatrix,distortionMatrix);*/
+			LOGI("Main","Creating QRLocator");
+
+			double camData[9] = {92.5, 0, 400, 0, 92.5, 240, 0, 0 ,1};
 			Mat cameraMatrix = Mat(3,3,CV_64F,camData);
-			calibrationController->getDistortionMatrix(distortionMatrix);
-			LOGI("Creating QRLocator");
-			qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
+			qrLocator = new QRLocator(cameraMatrix);
+			//engine->imageCollector->setCorrectionMatrices(&cameraMatrix,NULL);
 
 			setActionMode(QRTrack);
 		}
@@ -169,7 +186,7 @@ void drawFrame(struct engine* engine)
 	char myTimeString[100];
 	struct timespec now;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-	LOGT("Frame took %ld ms", calc_time(lastFrame,now));
+	LOG_TIME("Frame took %ld ms", lastFrame,now);
 
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastFrame);
 }
@@ -179,7 +196,7 @@ void terminateDisplay(struct engine* engine)
 	engine->animating = 0;
 	engine->glRender.teardownOpenGL();
 	engine->imageCollector->teardown();
-	LOGI("Teardown successful. Goodbye!");
+	LOGI("Main","Teardown successful. Goodbye!");
 }
 
 static void engineHandleCommand(struct android_app* app, int32_t cmd)
@@ -190,9 +207,9 @@ static void engineHandleCommand(struct android_app* app, int32_t cmd)
 	case APP_CMD_INIT_WINDOW:
 		if (engine->app->window != NULL)
 		{
-			LOGD("Importing OpenGL");
+			LOGD("Main","Importing OpenGL");
 			engine->glRender.initOpenGL(engine->app->window, imageWidth, imageHeight);
-			LOGD("Import complete");
+			LOGD("Main","Import complete");
 			engine->animating = 1;
 		}
 		break;
@@ -229,8 +246,9 @@ static int32_t engineHandleInput(struct android_app* app, AInputEvent* event)
 	{
 		if (((double) (AKeyEvent_getEventTime(event) / (1000000000LL))) > 0.5 && AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP)
 		{
-			LOGI("Key event: action=%d keyCode=%d metaState=0x%x", AKeyEvent_getAction(event), AKeyEvent_getKeyCode(event), AKeyEvent_getMetaState(event));
+			LOGI("Main","Key event: action=%d keyCode=%d metaState=0x%x", AKeyEvent_getAction(event), AKeyEvent_getKeyCode(event), AKeyEvent_getMetaState(event));
 			setActionMode((ActionMode) ((currentActionMode + 1) % 2));
+			LOGI("Main","Mode changed");
 		}
 	}
 	return 0;
@@ -284,7 +302,7 @@ void android_main(struct android_app* state)
 			// Check if we are exiting.
 			if (state->destroyRequested != 0)
 			{
-				LOGI("Engine thread destroy requested!");
+				LOGI("Main","Engine thread destroy requested!");
 				terminateDisplay(&engine);
 				return;
 			}

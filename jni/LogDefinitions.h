@@ -2,36 +2,60 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 
-#define  LOG_TAG    "AmplifyR"
-#define  LOG_TAG_BASE    "AmplifyR"
+#ifndef LOG_TAG
+#define  LOG_TAG    ""
+#endif
+
+#define  LOG_TAG_BASE    "AmplifyR-"
 #define  LOG_TAG_TIME    "AmplifyR-Time"
 
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
-#define  LOGT(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,__VA_ARGS__)
+#define STR(tok) #tok
+
+#define  LOGD(TAG,...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_BASE TAG,__VA_ARGS__)
+#define  LOGI(TAG,...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG_BASE TAG,__VA_ARGS__)
+#define  LOGW(TAG,...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG_BASE TAG,__VA_ARGS__)
+#define  LOGE(TAG,...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG_BASE TAG,__VA_ARGS__)
+
 
 #define calc_time(start,end) (((end.tv_sec*1000000000LL + end.tv_nsec) - (start.tv_sec*1000000000LL + start.tv_nsec))/1000000LL)
 
 #define SET_TIME(timeObject) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, timeObject);
 
-#define LOG_TIME(message,start,end) LOGT("%s took %ld ms",message,calc_time(start,end))
+#define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
 
 #ifndef LOGDEF_HPP_
 #define LOGDEF_HPP_
 
-static void LOGI_Mat(const char * matDescription,cv::Mat * matrix)
+
+static void LOGD_Mat(const char * matrixTag, const char * matDescription,cv::Mat * matrix)
 {
 	if (matrix == NULL)
-		LOGI("%s is null");
+		LOGD(STR(matrixTag),"%s is null",matDescription);
 
 	for (int i = 0; i < matrix->rows; i++)
 	{
+		char string[300];
 		for (int j = 0; j < matrix->cols*matrix->channels(); j++)
 		{
-			LOGI("%s[%d,%d]=%lf",matDescription,i,j,matrix->at<double>(i,j));
+			sprintf(string,"%lf",matrix->at<double>(i,j));
 		}
+		LOGD("%s[:,%d]=%s",matDescription,i,string);
+	}
+}
+
+static void LOGI_Mat(const char * matrixTag, const char * matDescription,cv::Mat * matrix)
+{
+	if (matrix == NULL)
+		LOGI(STR(matrixTag),"%s is null",matDescription);
+
+	for (int i = 0; i < matrix->rows; i++)
+	{
+		char string[300];
+		for (int j = 0; j < matrix->cols*matrix->channels(); j++)
+		{
+			sprintf(string,"%lf",matrix->at<double>(i,j));
+		}
+		LOGI("%s[:,%d]=%s",matDescription,i,string);
 	}
 }
 

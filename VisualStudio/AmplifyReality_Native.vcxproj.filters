@@ -29,6 +29,9 @@
     <Filter Include="Header Files\display\opengl">
       <UniqueIdentifier>{7f438424-bd92-4815-82be-0b01bdce3ca3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\model">
+      <UniqueIdentifier>{450ef34e-441d-4507-b891-ab381d96d817}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\Controller.cpp">
@@ -56,6 +59,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\positioning\QRLocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\model\FrameItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,6 +101,9 @@
     </ClInclude>
     <ClInclude Include="..\jni\DebugSettings.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\FrameItem.hpp">
+      <Filter>Header Files\model</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
