@@ -1,5 +1,4 @@
-#include "LogDefinitions.h"
-#include "ExceptionCodes.hpp"
+#include "Controller.hpp"
 
 #include <jni.h>
 #include <vector>
@@ -9,31 +8,28 @@
 
 #include "display/opengl/OpenGLRenderer.hpp"
 #include "datacollection/ImageCollector.hpp"
+#include "datacollection/ImageProcessor.hpp"
 
 
-using namespace cv;
+
 
 #ifndef CALIBRATIONCONTROLLER_HPP_
 #define CALIBRATIONCONTROLLER_HPP_
 
+using namespace cv;
 
-
-struct engine
+class CalibrationController : public Controller
 {
-	static const int imageHeight = 480;
-	static const int imageWidth = 800;
-	static const int screenWidth = 960;
-	static const int screenHeight = 540;
-	struct android_app* app;
-	int animating;
-	OpenGLRenderer glRender;
-	ImageCollector * imageCollector;
-};
+public:
+	CalibrationController();
+	~CalibrationController();
+	void ProcessFrame(Engine * engine, FrameItem * frame);
+	bool isExpired();
+	void captureImage();
+	void getCameraMatrices(Mat& camera, Mat& distortion);
 
-
-class CalibrationController
-{
-	static const int SampleCount = 4;
+private:
+	static const int SampleCount = NUM_CALIBRATION_SAMPLES;
 
 	vector<vector<Point3f> > * objectPoints;
 	vector<vector<Point2f> > * imagePoints;
@@ -43,15 +39,6 @@ class CalibrationController
 	Size_<int> chessBoardSize;
 	Mat * rgbImage, *binaryImage, *grayImage, *distortionMatrix, * cameraMatrix;
 
-public:
-	CalibrationController();
-	~CalibrationController();
-	void findCorners(struct engine* engine);
-	bool isDone();
-	void captureImage();
-	void getCameraMatrices(Mat& camera, Mat& distortion);
-
-private:
 	vector<Point3f> generateChessboardPoints(int w, int h, float squareSize);
 	void drawImageCount(Mat * img);
 };

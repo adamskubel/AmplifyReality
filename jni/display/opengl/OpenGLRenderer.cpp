@@ -16,8 +16,12 @@ static OpenGLRenderer::GLOBJECT * texturedQuad;
 
 
 static int bgSize = 20; 
+	
 
-void OpenGLRenderer::render(int imageWidth, int imageHeight, void * pixels) {
+void OpenGLRenderer::render(int imageWidth, int imageHeight, void * pixels) 
+{	
+	struct timespec start,end;
+	SET_TIME(&start);
 	// Prepare OpenGL ES for rendering of the frame.
 	prepareFrame(imageWidth, imageHeight);
 
@@ -40,6 +44,8 @@ void OpenGLRenderer::render(int imageWidth, int imageHeight, void * pixels) {
 	drawTexturedObject(texturedQuad);
 
 	eglSwapBuffers(myEngine->display, myEngine->surface);
+	SET_TIME(&end);
+	LOG_TIME("OpenGL Drawing", start, end);	
 }
 
 void OpenGLRenderer::calculateTextureSize(int imageWidth, int imageHeight, int * textureWidth, int * textureHeight)

@@ -1,6 +1,7 @@
 #include <android/log.h>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
+#include "DebugSettings.hpp"
 
 #ifndef LOG_TAG
 #define  LOG_TAG    ""
@@ -8,6 +9,7 @@
 
 #define  LOG_TAG_BASE    "AmplifyR-"
 #define  LOG_TAG_TIME    "AmplifyR-Time"
+#define  LOG_TAG_TIME_BASE    "AmplifyR-Time-"
 
 #define STR(tok) #tok
 
@@ -16,6 +18,13 @@
 #define  LOGW(TAG,...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGE(TAG,...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG_BASE TAG,__VA_ARGS__)
 
+#define QRCONTROLLER_LOGTAG "QRController"
+#define LOGTAG_MAIN "Main"
+#define QRFINDER_LOGTAG "QRFinder"
+#define OPENGL_LOGTAG "OpenGL"
+#define LOGTAG_IMAGECAPTURE "ImageCapture"
+#define LOGTAG_IMAGEPROCESSING "ImageProcessing"
+
 
 #define calc_time(start,end) (((end.tv_sec*1000000000LL + end.tv_nsec) - (start.tv_sec*1000000000LL + start.tv_nsec))/1000000LL)
 
@@ -23,8 +32,22 @@
 
 #define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
 
+
+#define START_TIMER struct timespec start,end; clock_gettime(CLOCK_PROCESS_CPUTIME_ID, start);
+#define STOP_TIMER(TAG,MSG)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME_BASE TAG,"%s took %ld ms",message,calc_time(start,end))
+
 #ifndef LOGDEF_HPP_
 #define LOGDEF_HPP_
+
+
+static void LOG_INTRO()
+{
+	LOGI(LOGTAG_MAIN,"******************************");
+	LOGI(LOGTAG_MAIN,"     --Amplified Reality--    ");
+	LOGI(LOGTAG_MAIN,"       Version %s             ",STR(VERSION_STRING));
+	LOGI(LOGTAG_MAIN,"         Adam Skubel          ");
+	LOGI(LOGTAG_MAIN,"******************************");
+}
 
 
 static void LOGD_Mat(const char * matrixTag, const char * matDescription,cv::Mat * matrix)

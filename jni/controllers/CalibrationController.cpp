@@ -7,9 +7,6 @@ CalibrationController::CalibrationController()
 	collectionCount = 0;
 	calibrationComplete = false;
 	chessBoardSize = Size_<int>(7, 7);
-
-	rgbImage = new Mat(1, 1, CV_8UC4);
-
 }
 
 CalibrationController::~CalibrationController()
@@ -23,7 +20,7 @@ void CalibrationController::captureImage()
 	isFinding = true;
 }
 
-bool CalibrationController::isDone()
+bool CalibrationController::isExpired()
 {
 	return calibrationComplete;
 }
@@ -32,7 +29,6 @@ void CalibrationController::getCameraMatrices(Mat &camera, Mat& distortion)
 {
 	camera = cameraMatrix->clone();
 	distortion = distortionMatrix->clone();
-
 }
 
 vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, float squareSize)
@@ -50,23 +46,17 @@ vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, fl
 	return points;
 }
 
-void CalibrationController::findCorners(struct engine* engine)
+void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 {
 	LOGD("Calibration","Find corners Start");
 	struct timespec start, end;
-
+	
 	engine->imageCollector->newFrame();
-	engine->imageCollector->getImage(&grayImage, ImageCollector::GRAY);
+	engine->imageCollector->getImage(&(item->grayImage), ImageCollector::GRAY);
 
-	SET_TIME(&start);
-	engine->imageCollector->getImage(&binaryImage, ImageCollector::OTSU);
-	SET_TIME(&end);
-	LOG_TIME("Binary get", start, end);
-
-	SET_TIME(&start)
+	ImageProcessor::SimpleThreshold(item);
+	
 	cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
-	SET_TIME(&end);
-	LOG_TIME("Gray->RGBA", start, end);
 
 	if (isFinding)
 	{
@@ -98,16 +88,7 @@ void CalibrationController::findCorners(struct engine* engine)
 			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
-			//LOGI("Camera matrix: [%lf,%lf,%lf;%lf,%lf,%lf;%lf,%lf,%lf]", cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,1), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,0), cameraMatrix.at<double>(1,1), cameraMatrix.at<double>(1,2), cameraMatrix.at<double>(2,0), cameraMatrix.at<double>(2,1), cameraMatrix.at<double>(2,2));
 			LOGI_Mat("Calibration","Camera Matrix",cameraMatrix);
-
-			double fovx,fovy,aspectRatio,focalLength;
-			Point2d principalPoint;
-			double apX = 4.13,apY = 2.30;
-
-			//calibrationMatrixValues(&cameraMatrix,grayImage->size(),apX,apY,fovx,fovy,focalLength,principalPoint,aspectRatio);
-
-			//LOGI("FOVx = %lf, FOVy = %lf, AR = %lf, FocalLength=%lf, PrincPoint=(%lf,%lf)",fovx,fovy,aspectRatio,focalLength,principalPoint.x,principalPoint.y);
 
 			calibrationComplete = true;
 		}
@@ -115,10 +96,6 @@ void CalibrationController::findCorners(struct engine* engine)
 
 	drawImageCount(rgbImage);
 
-	SET_TIME(&start);
-	engine->glRender.render(engine->imageWidth, engine->imageHeight, rgbImage->ptr<uint32_t>(0));
-	SET_TIME(&end);
-	LOG_TIME("OpenGL Drawing", start, end);
 }
 
 void CalibrationController::drawImageCount(Mat * img)

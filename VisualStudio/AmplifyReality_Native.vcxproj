@@ -43,7 +43,8 @@
     <LibraryPath>
     </LibraryPath>
     <ExcludePath />
-    <NMakeBuildCommandLine>$(NDK_HOME)\ndk-build.cmd</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>
+    </NMakeBuildCommandLine>
     <NMakeIncludeSearchPath>
     </NMakeIncludeSearchPath>
     <NMakeForcedIncludes>
@@ -55,9 +56,12 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\jni\Controller.cpp" />
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp" />
+    <ClCompile Include="..\jni\controllers\Controller.cpp" />
+    <ClCompile Include="..\jni\controllers\Controller.hpp" />
+    <ClCompile Include="..\jni\controllers\QRController.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
+    <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="..\jni\Main.cpp" />
@@ -68,18 +72,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
+    <ClInclude Include="..\jni\controllers\QRController.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
+    <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\DebugSettings.hpp" />
     <ClInclude Include="..\jni\display\NativeWindowRenderer.hpp" />
     <ClInclude Include="..\jni\display\opengl\OpenGLRenderer.hpp" />
-    <ClInclude Include="..\jni\Engine.hpp" />
     <ClInclude Include="..\jni\ExceptionCodes.hpp" />
     <ClInclude Include="..\jni\LogDefinitions.h" />
+    <ClInclude Include="..\jni\model\Engine.hpp" />
     <ClInclude Include="..\jni\model\FrameItem.hpp" />
     <ClInclude Include="..\jni\positioning\FindPattern.h" />
     <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
     <ClInclude Include="..\jni\positioning\QRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\QRLocator.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\jni\Android.mk" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

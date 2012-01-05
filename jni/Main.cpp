@@ -4,134 +4,48 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "android_native_app_glue.h"
 #include "display/NativeWindowRenderer.hpp"
-#include "datacollection/ImageCollector.hpp"
-#include "display/opengl/OpenGLRenderer.hpp"
+
+#include "controllers/Controller.hpp"
 #include "controllers/CalibrationController.hpp"
+#include "controllers/QRController.hpp"
+
+#include "datacollection/ImageCollector.hpp"
+#include "datacollection/ImageProcessor.hpp"
+#include "display/opengl/OpenGLRenderer.hpp"
 #include "positioning/QRLocator.hpp"
+#include "model/FrameItem.hpp"
+#include "model/Engine.hpp"
 
 using namespace std;
 using namespace cv;
-
-
-enum DrawMode
-{
-	Color = 0, Gray = 1, Binary = 2
-};
 
 enum ActionMode
 {
 	QRTrack = 0, Calibrate = 1
 };
 
-int imageHeight = 480, imageWidth = 800;
-int screenWidth = 960, screenHeight = 540;
 
-DrawMode currentDrawMode = Gray;
 ActionMode currentActionMode = QRTrack;
+Controller * currentController;
 
-Mat * rgbImage, *binaryImage, *grayImage, *cameraMatrix;
-struct timespec lastFrame;
-
-void * currentController;
-
-QRLocator * qrLocator;
-
-//struct engine
-//{
-//	static const int imageHeight = 480;
-//	static const int imageWidth = 800;
-//	static const int screenWidth = 960;
-//	static const int screenHeight = 540;
-//	struct android_app* app;
-//	int animating;
-//	OpenGLRenderer glRender;
-//	ImageCollector * imageCollector;
-//};
+struct timespec lastFrameTimeStamp;	
+FrameItem * item;
 
 
-
-void process_frame(struct engine* engine)
+void ProcessFrame(Engine* engine)
 {
+	struct timespec  start, end;
 	LOGD("Main","Frame Start");
-	struct timespec start, end;
-
-	engine->imageCollector->newFrame();
-	if (currentDrawMode == Gray || currentDrawMode == Binary)
-	{
-		engine->imageCollector->getImage(&grayImage, ImageCollector::GRAY);
-	} else
-	{
-		SET_TIME(&start);
-		engine->imageCollector->getImage(&rgbImage, ImageCollector::RGBA);
-		SET_TIME(&end);
-		LOG_TIME("RGBA get", start, end);
-	}
-
-	SET_TIME(&start);
-	engine->imageCollector->getImage(&binaryImage, ImageCollector::OTSU);
-	SET_TIME(&end);
-	LOG_TIME("Binary get", start, end);
-
-	vector<Point_<int>*> v;
-	vector<Point3i> vDebug;
-
-	SET_TIME(&start);
-	bool wasFound = QRFinder::locateQRCode(*binaryImage, v, vDebug);
-	SET_TIME(&end);
-	LOG_TIME("QR Search", start, end);
-
-	if (currentDrawMode == Gray)
-	{
-		SET_TIME(&start)
-		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
-		SET_TIME(&end);
-		LOG_TIME("Gray->RGBA", start, end);
-	} else if (currentDrawMode == Binary)
-	{
-		SET_TIME(&start)
-		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
-		SET_TIME(&end);
-		LOG_TIME("Binary->RGBA", start, end);
-	}
-
-
-	if (wasFound)
-	{
-		Point_<int> * pointArray = v[0];
-		int numPoints = 4;
 		
-		if (qrLocator != NULL &&  numPoints > 3)
-		{
-			LOGI("Main","Unprojecting points");
-			Mat rotation = Mat();
-			Mat translation = Mat();
-			qrLocator->transformPoints(pointArray,4,10,rotation,translation);
-		}
-		fillConvexPoly(*rgbImage, v[0], 4, Scalar(0, 255, 0, 255));
-	}
-	else
-	{
-		for (size_t i = 0; i < v.size(); i++)
-		{
-			int npts = 4;
-			const Point_<int> * pArray[] = {v[i]};
-			polylines(*rgbImage,pArray,&npts,1,true,Scalar(0,0,255,255),4);
-		}
-	}
-	while (!v.empty())
-	{
-		delete v.back();
-		v.pop_back();
-	}
-	for (size_t i = 0; i < vDebug.size(); i++)
-	{
-		circle(*rgbImage, Point2i((vDebug)[i].x, (vDebug)[i].y), (vDebug)[i].z, Scalar(255, 0, 0, 255), 1);
-	}
+	
 
-	SET_TIME(&start);
-	engine->glRender.render(imageWidth, imageHeight, rgbImage->ptr<uint32_t>(0));
-	SET_TIME(&end);
-	LOG_TIME("OpenGL Drawing", start, end);	
+	//The current controller does whatever it wants to here
+	currentController->ProcessFrame(engine,item);
+	
+	//Draw the contents of the RGBImage field, whatever they may be
+	engine->glRender.render(engine->imageWidth, engine->imageHeight, item->rgbImage->ptr<uint32_t>(0));
+	
+	//delete item;	
 }
 
 void setActionMode(ActionMode newMode)
@@ -151,65 +65,58 @@ void setActionMode(ActionMode newMode)
 	currentActionMode = newMode;
 }
 
-void drawFrame(struct engine* engine)
+void drawFrame(Engine* engine)
 {
 	if (engine->app->window == NULL)
 	{
 		return;
 	}
 
-	switch (currentActionMode)
-	{
-	case QRTrack:
-		process_frame(engine);
-		break;
-	case Calibrate:
-		CalibrationController* calibrationController = (CalibrationController*) (currentController);
-		calibrationController->findCorners(engine);
-		if (calibrationController->isDone())
-		{
-	/*		Mat distortionMatrix,cameraMatrix;
-			Mat cameraMatrix = Mat();
-			calibrationController->getCameraMatrices(cameraMatrix,distortionMatrix);*/
-			LOGI("Main","Creating QRLocator");
+	ProcessFrame(engine);
 
-			double camData[9] = {92.5, 0, 400, 0, 92.5, 240, 0, 0 ,1};
-			Mat cameraMatrix = Mat(3,3,CV_64F,camData);
-			qrLocator = new QRLocator(cameraMatrix);
-			//engine->imageCollector->setCorrectionMatrices(&cameraMatrix,NULL);
+	//switch (currentActionMode)
+	//{
+	//case QRTrack:
+	//	ProcessFrame(engine);
+	//	break;
+	//case Calibrate:
+	//	CalibrationController* calibrationController = (CalibrationController*) (currentController);
+	//	calibrationController->findCorners(engine);
+	//	if (calibrationController->isExpired())
+	//	{
+	//		double camData[9] = {92.5, 0, 400, 0, 92.5, 240, 0, 0 ,1};
+	//		Mat cameraMatrix = Mat(3,3,CV_64F,camData);
+	//		qrLocator = new QRLocator(cameraMatrix);
+	//		setActionMode(QRTrack);
+	//	}
+	//	break;
+	//}
 
-			setActionMode(QRTrack);
-		}
-		break;
-	}
-
-	char myTimeString[100];
-	struct timespec now;
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-	LOG_TIME("Frame took %ld ms", lastFrame,now);
-
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastFrame);
+	struct timespec now;	
+	SET_TIME(&now);
+	LOG_TIME("Frame took %ld ms", lastFrameTimeStamp,now);
+	SET_TIME(&lastFrameTimeStamp);
 }
 
-void terminateDisplay(struct engine* engine)
+void terminateDisplay(Engine* engine)
 {
 	engine->animating = 0;
 	engine->glRender.teardownOpenGL();
 	engine->imageCollector->teardown();
-	LOGI("Main","Teardown successful. Goodbye!");
+	LOGI(LOGTAG_MAIN,"Teardown successful. Goodbye!");
 }
 
 static void engineHandleCommand(struct android_app* app, int32_t cmd)
 {
-	struct engine* engine = (struct engine*) app->userData;
+	Engine* engine = (Engine*) app->userData;
 	switch (cmd)
 	{
 	case APP_CMD_INIT_WINDOW:
 		if (engine->app->window != NULL)
 		{
-			LOGD("Main","Importing OpenGL");
-			engine->glRender.initOpenGL(engine->app->window, imageWidth, imageHeight);
-			LOGD("Main","Import complete");
+			LOGI(LOGTAG_MAIN,"Initializing OpenGL");
+			engine->glRender.initOpenGL(engine->app->window,engine->imageWidth,engine->imageHeight);
+			LOGI(LOGTAG_MAIN,"OpenGL initialization complete");			
 			engine->animating = 1;
 		}
 		break;
@@ -224,7 +131,7 @@ static void engineHandleCommand(struct android_app* app, int32_t cmd)
 
 static int32_t engineHandleInput(struct android_app* app, AInputEvent* event)
 {
-	struct engine* engine = (struct engine*) app->userData;
+	Engine* engine = (Engine*) app->userData;
 	if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION)
 	{
 		if (((double) (AMotionEvent_getEventTime(event) / (1000000000LL))) > 0.5 && AMotionEvent_getAction(event) == AMOTION_EVENT_ACTION_UP)
@@ -232,7 +139,7 @@ static int32_t engineHandleInput(struct android_app* app, AInputEvent* event)
 			switch (currentActionMode)
 			{
 			case QRTrack:
-				currentDrawMode = (DrawMode) ((currentDrawMode + 1) % 3);
+				engine->drawMode = (Configuration::DrawMode) ((engine->drawMode + 1) % Configuration::DrawModeSize);
 				break;
 			case Calibrate:
 				CalibrationController* calibrationController = (CalibrationController*) (currentController);
@@ -246,38 +153,47 @@ static int32_t engineHandleInput(struct android_app* app, AInputEvent* event)
 	{
 		if (((double) (AKeyEvent_getEventTime(event) / (1000000000LL))) > 0.5 && AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP)
 		{
-			LOGI("Main","Key event: action=%d keyCode=%d metaState=0x%x", AKeyEvent_getAction(event), AKeyEvent_getKeyCode(event), AKeyEvent_getMetaState(event));
+			LOGI(LOGTAG_MAIN,"Key event: action=%d keyCode=%d metaState=0x%x", AKeyEvent_getAction(event), AKeyEvent_getKeyCode(event), AKeyEvent_getMetaState(event));
 			setActionMode((ActionMode) ((currentActionMode + 1) % 2));
-			LOGI("Main","Mode changed");
+			LOGI(LOGTAG_MAIN,"Mode changed");
 		}
 	}
 	return 0;
 }
 
-void initializeEngine(struct engine* engine)
+void initializeEngine(Engine* engine)
 {
+	LOGI(LOGTAG_MAIN,"Initializing engine");
 	//Mat myuv(height + height / 2, width, CV_8UC1);
-	engine->imageCollector = new ImageCollector(imageWidth, imageHeight);
-	rgbImage = new Mat(imageHeight, imageWidth, CV_8UC4);
-
+	engine->imageCollector = new ImageCollector(engine->imageWidth, engine->imageHeight);
+	currentController = new QRController();
 }
 
 void android_main(struct android_app* state)
 {
-	struct engine engine;
+	LOG_INTRO();
+
+	Engine engine = Engine();
 
 	app_dummy();
-
-	memset(&engine, 0, sizeof(engine));
 
 	state->userData = &engine;
 	state->onAppCmd = engineHandleCommand;
 	state->onInputEvent = engineHandleInput;
 
+	item = new FrameItem();
+
+	//Camera preview size is hardcoded for now
+	engine.imageWidth = CAMERA_IMAGE_WIDTH;
+	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
+
 	engine.app = state;
 	engine.animating = 0;
 
+	engine.drawMode = Configuration::GrayImage;
+
 	initializeEngine(&engine);
+
 
 	while (1)
 	{
@@ -317,4 +233,3 @@ void android_main(struct android_app* state)
 	engine.glRender.teardownOpenGL();
 
 }
-

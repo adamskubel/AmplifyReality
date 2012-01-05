@@ -3,8 +3,11 @@
 //#include <PerspectiveTransform.h>
 
 
+
 bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) // QR_vector& qr_store)
-{
+{	
+	struct timespec start,end;
+	SET_TIME(&start);
 
 	long height = M.rows;
 	long width = M.cols;
@@ -63,6 +66,8 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 			ptList.push_back(points);
 		}
 	}
+	SET_TIME(&end);
+	LOG_TIME("QR Search", start, end);
 	return false;
 }
 

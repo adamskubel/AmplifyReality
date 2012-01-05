@@ -34,9 +34,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\jni\Controller.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,11 +61,20 @@
     <ClCompile Include="..\jni\model\FrameItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\controllers\Controller.hpp">
+      <Filter>Header Files\controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\controllers\QRController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\controllers\Controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\jni\Engine.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -105,5 +111,17 @@
     <ClInclude Include="..\jni\model\FrameItem.hpp">
       <Filter>Header Files\model</Filter>
     </ClInclude>
+    <ClInclude Include="..\jni\controllers\QRController.hpp">
+      <Filter>Header Files\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp">
+      <Filter>Header Files\datacollection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\Engine.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\jni\Android.mk" />
   </ItemGroup>
 </Project>

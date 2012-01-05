@@ -5,9 +5,10 @@
 QRLocator::QRLocator(Mat _cameraMatrix)
 {
 	cameraMatrix = new Mat(_cameraMatrix);
-//	distortionMatrix = new Mat(_distortionMatrix);
+	LOGI_Mat("QRLocator","Instantiated with camera matrix:",cameraMatrix);
 }
 
+//Transform a set of points from camera space to reality space 
 void QRLocator::transformPoints(Point_<int> * pointArray, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix)
 {
 	double * pointData = new double[numPoints*2];

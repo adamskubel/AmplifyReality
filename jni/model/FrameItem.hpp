@@ -1,19 +1,31 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
 #include <opencv2/core/core.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
-#include <opencv2\calib3d\calib3d.hpp>
+#include "Engine.hpp"
 
 #ifndef FRAME_ITEM_HPP_
 #define FRAME_ITEM_HPP_
 
 
+
 class FrameItem
 {
+	
 public:
-	Mat *rgbImage,*grayImage,*binaryImage;
-	vector<Point_<int>*> finderPatterns;	
-	vector<Point3i> ratioMatches;
+	cv::Mat *rgbImage;
+	cv::Mat *grayImage;
+	cv::Mat *binaryImage;
+	std::vector<Point_<int>* > finderPatterns;	
+	std::vector<Point3i> ratioMatches;
+	Configuration::DrawMode drawMode;
+	bool foundQRCodes;
+
+	void setPreviousFrame(FrameItem * frame);
+	~FrameItem();
+
+
+private:
+	FrameItem * lastFrame;
 
 
 };

@@ -15,14 +15,12 @@ using namespace cv;
 
 class QRLocator
 {
-
+private:
 	Mat * cameraMatrix, * distortionMatrix;
 
 public:
 	QRLocator(Mat  cameraMatrix);
 	void transformPoints(Point_<int>* points, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
-
-
 };
 
 #endif

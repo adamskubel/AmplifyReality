@@ -11,10 +11,6 @@
 #ifndef OPENGL_RENDERER_HPP
 #define OPENGL_RENDERER_HPP
 
-#undef LOG_TAG
-#define LOG_TAG "OpenGL"
-
-
 #define USE_POWER2_TEXTURES true
 
 #undef PI
