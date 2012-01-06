@@ -7,11 +7,13 @@
 #define FRAME_ITEM_HPP_
 
 
-
+//Stores the processing inputs and outputs for a given frame.
+//Is designed to be reused indefinitely. This saves the need to reallocate memory. 
 class FrameItem
 {
 	
 public:
+	FrameItem();
 	cv::Mat *rgbImage;
 	cv::Mat *grayImage;
 	cv::Mat *binaryImage;
@@ -21,6 +23,7 @@ public:
 	bool foundQRCodes;
 
 	void setPreviousFrame(FrameItem * frame);
+	void clearOldData();
 	~FrameItem();
 
 

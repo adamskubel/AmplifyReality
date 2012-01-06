@@ -69,6 +69,8 @@
     <ClCompile Include="..\jni\positioning\FindPattern.cpp" />
     <ClCompile Include="..\jni\positioning\QRFinder.cpp" />
     <ClCompile Include="..\jni\positioning\QRLocator.cpp" />
+    <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\EventArgs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
@@ -86,6 +88,12 @@
     <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
     <ClInclude Include="..\jni\positioning\QRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\QRLocator.hpp" />
+    <ClInclude Include="..\jni\userinterface\AndroidInputHandler.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\Element.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\EventArgs.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />
+    <ClInclude Include="..\jni\userinterface\UIWatcher.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />

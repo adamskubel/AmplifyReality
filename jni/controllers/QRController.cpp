@@ -2,11 +2,13 @@
 
 QRController::QRController()
 {
-	LOGD(QRCONTROLLER_LOGTAG,"QRController Initialized");
+	LOGD(LOGTAG_QRCONTROLLER,"QRController Initialized");
 }
 
 void QRController::drawDebugOverlay(FrameItem * item)
 {
+	struct timespec start, end;
+	SET_TIME(&start);
 	if (item->foundQRCodes)
 	{
 		Point_<int> * pointArray = item->finderPatterns[0];
@@ -26,46 +28,53 @@ void QRController::drawDebugOverlay(FrameItem * item)
 	{
 		circle(*(item->rgbImage), Point2i((item->ratioMatches)[i].x, (item->ratioMatches)[i].y), (item->ratioMatches)[i].z, Scalar(255, 0, 0, 255), 1);
 	}
+	SET_TIME(&end);
+	LOG_TIME("Debug Draw", start, end);
 }
 
 void QRController::getImages(Engine * engine, FrameItem * item)
 {
-	struct timespec start, end;	
-
-	//Retrieve image from the camera
-	engine->imageCollector->newFrame();
-	SET_TIME(&start);
-	engine->imageCollector->getImage(&(item->rgbImage), ImageCollector::RGBA);
-	engine->imageCollector->getImage(&(item->grayImage), ImageCollector::GRAY);	
-	SET_TIME(&end);
-	LOG_TIME("Image Capture", start, end);
-
-	//Threshold captured image
-	ImageProcessor::SimpleThreshold(item);
-
+	struct timespec start, end;
 	
-	//If the draw mode is not RGB, then copy the appropriate image to the RGB image
-	if (engine->drawMode == Configuration::GrayImage)
+	//Retrieve image from the camera	
+	if (engine->drawMode == Configuration::ColorImage)
+	{		
+		engine->imageCollector->newFrame();
+		engine->imageCollector->getCameraImages(*(item->rgbImage), *(item->grayImage));
+	} 
+	else if (engine->drawMode == Configuration::GrayImage || engine->drawMode == Configuration::BinaryImage)
 	{
+		SET_TIME(&start);
+		engine->imageCollector->newFrame();
+		engine->imageCollector->getGrayCameraImage(*(item->grayImage));
+		SET_TIME(&end);
+		LOG_TIME("Image Capture", start, end);
+
+		//Copy gray image to RGB image to be used by the following stages (rendering, debug overlay, etc)
 		SET_TIME(&start)
 		cvtColor(*(item->grayImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
 		LOG_TIME("Gray->RGBA", start, end);
-	} else if (engine->drawMode == Configuration::BinaryImage)
+	} 
+	
+	//Threshold captured image
+	ImageProcessor::SimpleThreshold(item);
+	
+	if (engine->drawMode == Configuration::BinaryImage)
 	{
 		SET_TIME(&start)
 		cvtColor(*(item->binaryImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
 		LOG_TIME("Binary->RGBA", start, end);
 	}
-
+	SET_TIME(&end);
 }
 
 
 void QRController::ProcessFrame(Engine * engine, FrameItem * item)
 {
-	LOGD(QRCONTROLLER_LOGTAG,"Processing frame");
+	LOGD(LOGTAG_QRCONTROLLER,"Processing frame");
 	getImages(engine,item);
-	bool wasFound = QRFinder::locateQRCode(*(item->binaryImage), item->finderPatterns, item->ratioMatches);
+	item->foundQRCodes = QRFinder::locateQRCode(*(item->binaryImage), item->finderPatterns, item->ratioMatches);
 	drawDebugOverlay(item);
 }

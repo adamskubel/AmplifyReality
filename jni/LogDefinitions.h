@@ -13,17 +13,26 @@
 
 #define STR(tok) #tok
 
+
+#define  LOGV(TAG,...)  __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGD(TAG,...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGI(TAG,...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGW(TAG,...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGE(TAG,...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG_BASE TAG,__VA_ARGS__)
 
-#define QRCONTROLLER_LOGTAG "QRController"
+#define LOGTAG_QRCONTROLLER "QRController"
 #define LOGTAG_MAIN "Main"
 #define QRFINDER_LOGTAG "QRFinder"
 #define OPENGL_LOGTAG "OpenGL"
 #define LOGTAG_IMAGECAPTURE "ImageCapture"
 #define LOGTAG_IMAGEPROCESSING "ImageProcessing"
+#define LOGTAG_INPUT "InputHandler"
+#define LOGTAG_CALIBRATION "Calibration"
+
+/*
+Suggested logcat filters:
+AmplifyR-QRController:D AmplifyR-Main:D AmplifyR-QRFinder:D AmplifyR-ImageCapture:D AmplifyR-ImageProcessing:D *:S
+*/
 
 
 #define calc_time(start,end) (((end.tv_sec*1000000000LL + end.tv_nsec) - (start.tv_sec*1000000000LL + start.tv_nsec))/1000000LL)

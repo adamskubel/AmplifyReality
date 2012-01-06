@@ -37,7 +37,7 @@ private:
 	bool calibrationComplete;
 	bool isFinding;
 	Size_<int> chessBoardSize;
-	Mat * rgbImage, *binaryImage, *grayImage, *distortionMatrix, * cameraMatrix;
+	Mat *distortionMatrix, * cameraMatrix;
 
 	vector<Point3f> generateChessboardPoints(int w, int h, float squareSize);
 	void drawImageCount(Mat * img);

@@ -21,6 +21,8 @@ public:
 	enum ImageType {GRAY, RGBA};
 	void setCorrectionMatrices(Mat* cameraMatrix, Mat* distortionMatrix);
 	void getImage(cv::Mat ** imageMatrix, ImageType type);
+	void getGrayCameraImage(cv::Mat & grayImage);
+	void getCameraImages(cv::Mat & rgbImage, cv::Mat & grayImage);
 	ImageCollector(int width, int height);
 	void newFrame();
 	void teardown();

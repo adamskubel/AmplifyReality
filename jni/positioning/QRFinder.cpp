@@ -40,7 +40,8 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 		points[3].y = (int) bottom_left.pt.y;
 
 		ptList.push_back(points);
-
+		SET_TIME(&end);
+		LOG_TIME("QR Search(Found)", start, end);
 		return true;
 
 	} else if (pattern_store.size() > 0)
@@ -67,7 +68,7 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 		}
 	}
 	SET_TIME(&end);
-	LOG_TIME("QR Search", start, end);
+	LOG_TIME("QR Search(NotFound)", start, end);
 	return false;
 }
 

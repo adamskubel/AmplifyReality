@@ -4,8 +4,8 @@
 void ImageCollector::newFrame()
 {
 	myCapture->grab();
-	grayUpdated = false;
-	rgbaUpdated = false;
+	//grayUpdated = false;
+	//rgbaUpdated = false;
 }
 
 ImageCollector::ImageCollector(int width, int height)
@@ -60,117 +60,135 @@ void ImageCollector::undistortImage(Mat* inputImage, Mat* outputImage)
 	}
 }
 
-
-void ImageCollector::setCorrectionMatrices(Mat* _cameraMatrix, Mat* _distortionMatrix)
+void ImageCollector::getCameraImages(Mat & rgbImage, Mat & grayImage)
 {
-	cameraMatrix = new Mat();
-	_cameraMatrix->copyTo(*cameraMatrix);
-	distortionMatrix = new Mat();
-	_distortionMatrix->copyTo(*distortionMatrix);
+	struct timespec start,end;
+	SET_TIME(&start);
+	myCapture->retrieve(rgbImage, CV_CAP_ANDROID_COLOR_FRAME_RGBA);
+	cvtColor(rgbImage, grayImage, CV_RGBA2GRAY, 1);
+	SET_TIME(&end);
+	LOG_TIME("Image Capture", start, end);
 }
 
+//Get gray image only
+void ImageCollector::getGrayCameraImage(Mat & grayImage)
+{
+	myCapture->retrieve(grayImage, CV_CAP_ANDROID_GREY_FRAME);
+}
 void ImageCollector::teardown()
 {
 	myCapture->release();
 }
 
-bool ImageCollector::canUndistort()
-{	
-	if (ENABLE_UNDISTORT)
-	{
-		if (distortionMatrix == NULL || cameraMatrix == NULL) 
-		{
-			LOGD(LOGTAG_IMAGECAPTURE,"Cannot undistort");
-			return false;
-		}
-			LOGD(LOGTAG_IMAGECAPTURE,"Can undistort!");
-		return true;
-	}
-	return false;
-}
 
-void ImageCollector::generateImage(ImageType type)
-{
-	switch (type)
-	{
-	case (int) RGBA:
-		if (rgbaUpdated)
-			break;
-		LOGD(LOGTAG_IMAGECAPTURE,"RGBA Image will be retrieved");
-		if (canUndistort())
-		{
-			Mat * tmp = new Mat(height, width, CV_8UC4);
-			mrgba = new Mat(height, width, CV_8UC4);
-			myCapture->retrieve(*tmp, CV_CAP_ANDROID_COLOR_FRAME_RGBA);
-			undistortImage(tmp,mrgba);
-		}
-		else
-		{
-			myCapture->retrieve(*mrgba, CV_CAP_ANDROID_COLOR_FRAME_RGBA);
-		}
 
-		LOGD(LOGTAG_IMAGECAPTURE,"Got RGBA!");
-		rgbaUpdated = true;
-		break;
-	case (int) GRAY:
-		if (grayUpdated)
-			break;
-		if (rgbaUpdated)
-		{
-			LOGD(LOGTAG_IMAGECAPTURE,"Converting RGBA to GRAY");
-			cvtColor(*mrgba, *mgray, CV_RGBA2GRAY, 1);
-			grayUpdated = true;
-			LOGD(LOGTAG_IMAGECAPTURE,"Complete!");
-		} else if (grayOptMode)
-		{
-			if (canUndistort())
-			{
-				Mat * tmp = new Mat(height, width, CV_8UC1);
-				mgray = new Mat(height, width, CV_8UC1);
-				myCapture->retrieve(*tmp, CV_CAP_ANDROID_GREY_FRAME);
-				undistortImage(tmp,mgray);
-			}
-			else
-			{
-				myCapture->retrieve(*mgray, CV_CAP_ANDROID_GREY_FRAME);
-			}
-			grayUpdated = true;
-		} else
-		{
-			generateImage(RGBA);
-			generateImage(GRAY);
-		}
-		break;
-	};
-}
+//void ImageCollector::setCorrectionMatrices(Mat* _cameraMatrix, Mat* _distortionMatrix)
+//{
+//	cameraMatrix = new Mat();
+//	_cameraMatrix->copyTo(*cameraMatrix);
+//	distortionMatrix = new Mat();
+//	_distortionMatrix->copyTo(*distortionMatrix);
+//}
+//
 
-void ImageCollector::getImage(Mat ** outputMat, ImageType type)
-{
-	switch (type)
-	{
-	case (int) RGBA:
-		if (rgbaUpdated)
-		{
-			*outputMat = mrgba;
-		}
-		else
-		{
-			generateImage(RGBA);
-			getImage(outputMat, type);
-			LOGD(LOGTAG_IMAGECAPTURE,"RGBA Output image set");
-		}
-		break;
-	case (int) GRAY:
-		if (grayUpdated)
-			*outputMat = mgray;
-		else
-		{
-			generateImage(GRAY);
-			getImage(outputMat, type);
-		}
-		break;
-	};
-}
+//bool ImageCollector::canUndistort()
+//{	
+//	if (ENABLE_UNDISTORT)
+//	{
+//		if (distortionMatrix == NULL || cameraMatrix == NULL) 
+//		{
+//			LOGD(LOGTAG_IMAGECAPTURE,"Cannot undistort");
+//			return false;
+//		}
+//			LOGD(LOGTAG_IMAGECAPTURE,"Can undistort!");
+//		return true;
+//	}
+//	return false;
+//}
+//
+//
+//void ImageCollector::generateImage(ImageType type)
+//{	
+//	switch (type)
+//	{
+//	case (int) RGBA:
+//		if (rgbaUpdated)
+//			break;
+//		LOGD(LOGTAG_IMAGECAPTURE,"RGBA Image will be retrieved");
+//		if (canUndistort())
+//		{
+//			Mat * tmp = new Mat(height, width, CV_8UC4);
+//			mrgba = new Mat(height, width, CV_8UC4);
+//			myCapture->retrieve(*tmp, CV_CAP_ANDROID_COLOR_FRAME_RGBA);
+//			undistortImage(tmp,mrgba);
+//		}
+//		else
+//		{
+//			myCapture->retrieve(*mrgba, CV_CAP_ANDROID_COLOR_FRAME_RGBA);
+//		}
+//
+//		LOGD(LOGTAG_IMAGECAPTURE,"Got RGBA!");
+//		rgbaUpdated = true;
+//		break;
+//	case (int) GRAY:
+//		if (grayUpdated)
+//			break;
+//		if (rgbaUpdated)
+//		{
+//			LOGD(LOGTAG_IMAGECAPTURE,"Converting RGBA to GRAY");
+//			cvtColor(*mrgba, *mgray, CV_RGBA2GRAY, 1);
+//			grayUpdated = true;
+//			LOGD(LOGTAG_IMAGECAPTURE,"Complete!");
+//		} else if (grayOptMode)
+//		{
+//			if (canUndistort())
+//			{
+//				Mat * tmp = new Mat(height, width, CV_8UC1);
+//				mgray = new Mat(height, width, CV_8UC1);
+//				myCapture->retrieve(*tmp, CV_CAP_ANDROID_GREY_FRAME);
+//				undistortImage(tmp,mgray);
+//			}
+//			else
+//			{
+//				myCapture->retrieve(*mgray, CV_CAP_ANDROID_GREY_FRAME);
+//			}
+//			grayUpdated = true;
+//		} else
+//		{
+//			generateImage(RGBA);
+//			generateImage(GRAY);
+//		}
+//		break;
+//	};
+//}
+//
+//void ImageCollector::getImage(Mat ** outputMat, ImageType type)
+//{
+//	switch (type)
+//	{
+//	case (int) RGBA:
+//		if (rgbaUpdated)
+//		{
+//			*outputMat = mrgba;
+//		}
+//		else
+//		{
+//			generateImage(RGBA);
+//			getImage(outputMat, type);
+//			LOGD(LOGTAG_IMAGECAPTURE,"RGBA Output image set");
+//		}
+//		break;
+//	case (int) GRAY:
+//		if (grayUpdated)
+//			*outputMat = mgray;
+//		else
+//		{
+//			generateImage(GRAY);
+//			getImage(outputMat, type);
+//		}
+//		break;
+//	};
+//}
 
 
 

@@ -32,6 +32,12 @@
     <Filter Include="Header Files\model">
       <UniqueIdentifier>{450ef34e-441d-4507-b891-ab381d96d817}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\userinterface">
+      <UniqueIdentifier>{825cf253-e183-4fee-9bba-bbf5b3b5eec4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\userinterface\uimodel">
+      <UniqueIdentifier>{f3d307b2-7cf7-43de-88da-d9772f8e87b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -71,6 +77,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\controllers\Controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\EventArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -119,6 +131,24 @@
     </ClInclude>
     <ClInclude Include="..\jni\model\Engine.hpp">
       <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\AndroidInputHandler.hpp">
+      <Filter>Header Files\userinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\UIWatcher.hpp">
+      <Filter>Header Files\userinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\Element.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\EventArgs.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

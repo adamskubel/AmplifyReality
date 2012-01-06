@@ -23,8 +23,12 @@ public:
 	int screenHeight;
 	struct android_app* app;
 	int animating;
-	OpenGLRenderer glRender;
+	
+	//Important and unchanging objects
+	OpenGLRenderer * glRender;
 	ImageCollector * imageCollector;
+
+
 
 	//Putting some configuration stuff in here for now
 	Configuration::DrawMode drawMode;

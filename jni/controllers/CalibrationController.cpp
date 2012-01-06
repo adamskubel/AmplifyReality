@@ -7,6 +7,7 @@ CalibrationController::CalibrationController()
 	collectionCount = 0;
 	calibrationComplete = false;
 	chessBoardSize = Size_<int>(7, 7);
+	LOGI(LOGTAG_CALIBRATION,"Calibration Controller Initialized");
 }
 
 CalibrationController::~CalibrationController()
@@ -48,28 +49,26 @@ vector<Point3f> CalibrationController::generateChessboardPoints(int w, int h, fl
 
 void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 {
-	LOGD("Calibration","Find corners Start");
+	LOGV(LOGTAG_CALIBRATION,"Begin ProcessFrame");
 	struct timespec start, end;
 	
-	engine->imageCollector->newFrame();
-	engine->imageCollector->getImage(&(item->grayImage), ImageCollector::GRAY);
-
-	ImageProcessor::SimpleThreshold(item);
-	
-	cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
+	engine->imageCollector->newFrame();	
+	engine->imageCollector->getGrayCameraImage(*(item->grayImage));
+	ImageProcessor::SimpleThreshold(item);	
+	cvtColor(*(item->grayImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
 
 	if (isFinding)
 	{
 		vector<Point2f> corners;
-		LOGD("Calibration","Finding corners");
-		bool wasFound = findChessboardCorners(*grayImage, chessBoardSize, corners, CALIB_CB_FAST_CHECK);
+		LOGD(LOGTAG_CALIBRATION,"Finding corners");
+		bool wasFound = findChessboardCorners(*(item->grayImage), chessBoardSize, corners, CALIB_CB_FAST_CHECK);
 
-		LOGD("Calibration","Drawing corners");
-		drawChessboardCorners(*rgbImage, chessBoardSize, corners, wasFound);
+		LOGD(LOGTAG_CALIBRATION,"Drawing corners");
+		drawChessboardCorners(*(item->rgbImage), chessBoardSize, corners, wasFound);
 
 		if (wasFound)
 		{
-			cornerSubPix(*grayImage, corners, Size(10, 10), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+			cornerSubPix(*(item->grayImage), corners, Size(10, 10), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 			objectPoints->push_back(generateChessboardPoints(7, 7, 25.0f));
 			imagePoints->push_back(corners);
 			collectionCount++;
@@ -78,24 +77,24 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 
 		if (collectionCount >= SampleCount)
 		{
-			LOGD("Calibration","Calculate camera matrix");
+			LOGD(LOGTAG_CALIBRATION,"Calculate camera matrix");
 			SET_TIME(&start);
 
 			cameraMatrix = new Mat(3, 3, CV_64F);
 			distortionMatrix = new Mat(3,3,CV_64F);
 			vector<Mat> rotations, translations;
 
-			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
+			calibrateCamera(*objectPoints, *imagePoints, (item->grayImage)->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
-			LOGI_Mat("Calibration","Camera Matrix",cameraMatrix);
+			LOGI_Mat(LOGTAG_CALIBRATION,"Camera Matrix",cameraMatrix);
 
 			calibrationComplete = true;
 		}
 	}
 
-	drawImageCount(rgbImage);
-
+	drawImageCount((item->rgbImage));
+	LOGV(LOGTAG_CALIBRATION,"End ProcessFrame");
 }
 
 void CalibrationController::drawImageCount(Mat * img)
