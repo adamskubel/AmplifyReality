@@ -38,6 +38,21 @@
     <Filter Include="Header Files\userinterface\uimodel">
       <UniqueIdentifier>{f3d307b2-7cf7-43de-88da-d9772f8e87b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\srutil">
+      <UniqueIdentifier>{b389e50d-89b6-40db-942d-9214bb22fb00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\srutil\delegate">
+      <UniqueIdentifier>{266e7507-f44a-4ba9-b1f9-e3fdf2faf974}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\srutil\event">
+      <UniqueIdentifier>{972a347e-9008-45c6-b38b-185fbfddb01c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\srutil\delegate\detail">
+      <UniqueIdentifier>{b1a9b163-3c5b-440f-90eb-0e815627ae0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\userinterface\events">
+      <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -82,7 +97,22 @@
     <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\userinterface\uimodel\EventArgs.cpp">
+    <ClCompile Include="..\jni\ARRunner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\Button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\events\EventArgs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\VirtualDeclarations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,12 +125,6 @@
     </ClInclude>
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp">
       <Filter>Header Files\controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\display\opengl\OpenGLRenderer.hpp">
-      <Filter>Header Files\display\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\display\NativeWindowRenderer.hpp">
-      <Filter>Header Files\display</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\positioning\QRFinder.hpp">
       <Filter>Header Files\positioning</Filter>
@@ -135,20 +159,50 @@
     <ClInclude Include="..\jni\userinterface\AndroidInputHandler.hpp">
       <Filter>Header Files\userinterface</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\userinterface\UIWatcher.hpp">
-      <Filter>Header Files\userinterface</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\userinterface\uimodel\Element.hpp">
-      <Filter>Header Files\userinterface\uimodel</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\userinterface\uimodel\EventArgs.hpp">
+    <ClInclude Include="..\jni\ARRunner.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\srutil\delegate\delegate.hpp">
+      <Filter>Header Files\srutil\delegate</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\srutil\delegate\detail\delegate_list.hpp">
+      <Filter>Header Files\srutil\delegate\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\srutil\delegate\detail\delegate_template.hpp">
+      <Filter>Header Files\srutil\delegate\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\srutil\event\event.hpp">
+      <Filter>Header Files\srutil\event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\events\EventDelegates.hpp">
+      <Filter>Header Files\userinterface\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\events\EventArgs.hpp">
+      <Filter>Header Files\userinterface\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\OpenGLRenderable.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\OpenGL.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\OpenGLHelper.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\Updateable.hpp">
+      <Filter>Header Files\model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

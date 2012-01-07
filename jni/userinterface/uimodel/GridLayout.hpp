@@ -1,16 +1,15 @@
-#include "Element.hpp"
-#include "model/Engine.hpp"
+#include "userinterface/uimodel/UIElement.hpp"
 #include "model/FrameItem.hpp"
 
 #ifndef GRIDLAYOUT_HPP_
 #define GRIDLAYOUT_HPP_
 
-class GridLayout : Element
+class GridLayout : public Element, public Updateable
 {
 public:	
 	void AddChild(Element child, Point2i position);
 	Element GetChildAt(Point2i p);	
-	void Render(Engine* engine, FrameItem * item);
+	void Update(FrameItem * item);
 
 private:
 	vector<Element> childElements;

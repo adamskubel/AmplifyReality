@@ -2,9 +2,7 @@
 
 void FrameItem::setPreviousFrame(FrameItem * frame)
 {
-	//lastFrame = new FrameItem();
-	//lastFrame->finderPatterns = frame->finderPatterns; 
-	//delete frame; //probably deletes thing above
+	lastFrame = frame;
 }
 
 

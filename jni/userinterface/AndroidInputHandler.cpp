@@ -4,24 +4,49 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 {
 	int32_t eventType = AInputEvent_getType(inputEvent);
 
-	switch(eventType)
-	{
 	//Assume motion type events are from a touch screen
-	case(AINPUT_EVENT_TYPE_MOTION):
-		//TODO: Send events to children
-		//Handle global events
-		HandleGlobalTouchEvents(inputEvent);
-		break;
-
-	case(AINPUT_EVENT_TYPE_KEY):
+	if (eventType == AINPUT_EVENT_TYPE_MOTION)
+	{
+		TouchEventArgs touchEvent = TouchEventArgs();
+		if (CreateTouchEvent(inputEvent, &touchEvent))
+		{
+			//Send events to children
+			UIElement * childElement = NULL;
+			if (rootElement != NULL)
+			{
+				childElement = rootElement->GetChildAt(*(touchEvent.TouchLocations));
+				if (childElement != NULL)
+					childElement->HandleInput();
+				else
+				{
+					LOGD(LOGTAG_INPUT,"No children found");
+				}
+			}
+			//If no children found, process as a global event
+			if (childElement == NULL)
+			{
+				for (int i=0;i<globalTouchEventDelegates.size();i++)
+				{
+					LOGD(LOGTAG_INPUT,"Sending touch event to callback: %d",i);
+					globalTouchEventDelegates.at(i)(NULL,touchEvent);
+				}
+			}
+		}			
+	}
+	else if ( eventType == AINPUT_EVENT_TYPE_KEY)
+	{
 		//Check for physical key events, which are not contexual
 		HandleButtonEvent(inputEvent);
 		//Nothing else yet
-		break;
-
 	}
-
 	return 0;
+}
+
+
+void AndroidInputHandler::SetRootUIElement(UIElement * element)
+{
+	rootDefined = true;
+	rootElement = element;
 }
 
 bool AndroidInputHandler::CreateTouchEvent(AInputEvent * inputEvent, TouchEventArgs * touchEvent)
@@ -31,24 +56,25 @@ bool AndroidInputHandler::CreateTouchEvent(AInputEvent * inputEvent, TouchEventA
 	if (eventAction == AMOTION_EVENT_ACTION_UP  && CheckEventTime(inputEvent,ARInput::MinimumTouchPressTime))
 	{
 		touchEvent->InputType = ARInput::Press;
+		touchEvent->TouchLocations = new cv::Point2i((int)AMotionEvent_getX(inputEvent,0),(int)AMotionEvent_getY(inputEvent,0));
 		return true;
 	}
 	return false;
 }
 
-void AndroidInputHandler::HandleGlobalTouchEvents(AInputEvent * inputEvent)
-{
-	TouchEventArgs touchEvent = TouchEventArgs();
-
-	if (CreateTouchEvent(inputEvent, &touchEvent))
-	{
-		for (int i=0;i<globalTouchCallbacks.size();i++)
-		{
-			LOGD(LOGTAG_INPUT,"Sending touch event to callback: %d",i);
-			globalTouchCallbacks.at(i)(NULL,touchEvent);
-		}
-	}
-}
+//void AndroidInputHandler::HandleGlobalTouchEvents(AInputEvent * inputEvent)
+//{
+//	TouchEventArgs touchEvent = TouchEventArgs();
+//
+//	if (CreateTouchEvent(inputEvent, &touchEvent))
+//	{
+//		for (int i=0;i<globalTouchEventDelegates.size();i++)
+//		{
+//			LOGD(LOGTAG_INPUT,"Sending touch event to callback: %d",i);
+//			globalTouchEventDelegates.at(i)(NULL,touchEvent);
+//		}
+//	}
+//}
 
 void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 {
@@ -60,25 +86,25 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 		//Only care about complete press, doesn't check for down occuring
 		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))
 		{		
-			for (int i=0;i<physicalButtonCallbacks.size();i++)
+			for (int i=0;i<globalButtonEventDelegates.size();i++)
 			{
 				PhysicalButtonEventArgs buttonEvent = PhysicalButtonEventArgs();
 				buttonEvent.ButtonCode = eventKey;
 				LOGD(LOGTAG_INPUT,"Sending button event to callback: %d",i);
-				physicalButtonCallbacks.at(i)(NULL,buttonEvent);
+				globalButtonEventDelegates.at(i)(NULL,buttonEvent);
 			}
 		}
 	}
 }
 
-void AndroidInputHandler::AddGlobalButtonListener(PhsyicalButtonCallback callback)
+void AndroidInputHandler::AddGlobalButtonDelegate(ButtonEventDelegate myDelegate)
 {
-	physicalButtonCallbacks.push_back(callback);
+	globalButtonEventDelegates.push_back(myDelegate);
 }
 
-void AndroidInputHandler::AddGlobalTouchListener(TouchCallback callback)
+void AndroidInputHandler::AddGlobalTouchDelegate(TouchEventDelegate myDelegate)
 {
-	globalTouchCallbacks.push_back(callback);
+	globalTouchEventDelegates.push_back(myDelegate);
 }
 
 bool AndroidInputHandler::CheckEventTime(AInputEvent * inputEvent, int eventTimeMillis)

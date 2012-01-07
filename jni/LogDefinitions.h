@@ -18,20 +18,23 @@
 #define  LOGD(TAG,...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGI(TAG,...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGW(TAG,...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG_BASE TAG,__VA_ARGS__)
-#define  LOGE(TAG,...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG_BASE TAG,__VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,"AmplifyR",__VA_ARGS__)
 
 #define LOGTAG_QRCONTROLLER "QRController"
 #define LOGTAG_MAIN "Main"
 #define QRFINDER_LOGTAG "QRFinder"
 #define OPENGL_LOGTAG "OpenGL"
+#define LOGTAG_OPENGL "OpenGL"
 #define LOGTAG_IMAGECAPTURE "ImageCapture"
 #define LOGTAG_IMAGEPROCESSING "ImageProcessing"
 #define LOGTAG_INPUT "InputHandler"
 #define LOGTAG_CALIBRATION "Calibration"
+#define LOGTAG_BUTTON "Button"
+
 
 /*
 Suggested logcat filters:
-AmplifyR-QRController:D AmplifyR-Main:D AmplifyR-QRFinder:D AmplifyR-ImageCapture:D AmplifyR-ImageProcessing:D *:S
+AmplifyR-All:D AmplifyR-QRController:D AmplifyR-Main:D AmplifyR-QRFinder:D AmplifyR-ImageCapture:D AmplifyR-ImageProcessing:D *:S
 */
 
 

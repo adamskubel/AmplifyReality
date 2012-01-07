@@ -56,6 +56,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\jni\ARRunner.cpp" />
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.hpp" />
@@ -63,37 +64,49 @@
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp" />
+    <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp" />
+    <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp" />
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
     <ClCompile Include="..\jni\positioning\FindPattern.cpp" />
     <ClCompile Include="..\jni\positioning\QRFinder.cpp" />
     <ClCompile Include="..\jni\positioning\QRLocator.cpp" />
     <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp" />
-    <ClCompile Include="..\jni\userinterface\uimodel\EventArgs.cpp" />
+    <ClCompile Include="..\jni\userinterface\events\EventArgs.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\Button.cpp" />
+    <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\jni\ARRunner.hpp" />
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
     <ClInclude Include="..\jni\controllers\QRController.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\DebugSettings.hpp" />
-    <ClInclude Include="..\jni\display\NativeWindowRenderer.hpp" />
-    <ClInclude Include="..\jni\display\opengl\OpenGLRenderer.hpp" />
+    <ClInclude Include="..\jni\display\opengl\OpenGLHelper.hpp" />
+    <ClInclude Include="..\jni\display\opengl\OpenGLRenderable.hpp" />
+    <ClInclude Include="..\jni\display\opengl\OpenGL.hpp" />
+    <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp" />
     <ClInclude Include="..\jni\ExceptionCodes.hpp" />
     <ClInclude Include="..\jni\LogDefinitions.h" />
     <ClInclude Include="..\jni\model\Engine.hpp" />
     <ClInclude Include="..\jni\model\FrameItem.hpp" />
+    <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\positioning\FindPattern.h" />
     <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
     <ClInclude Include="..\jni\positioning\QRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\QRLocator.hpp" />
+    <ClInclude Include="..\jni\srutil\delegate\delegate.hpp" />
+    <ClInclude Include="..\jni\srutil\delegate\detail\delegate_list.hpp" />
+    <ClInclude Include="..\jni\srutil\delegate\detail\delegate_template.hpp" />
+    <ClInclude Include="..\jni\srutil\event\event.hpp" />
     <ClInclude Include="..\jni\userinterface\AndroidInputHandler.hpp" />
+    <ClInclude Include="..\jni\userinterface\events\EventArgs.hpp" />
+    <ClInclude Include="..\jni\userinterface\events\EventDelegates.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp" />
-    <ClInclude Include="..\jni\userinterface\uimodel\Element.hpp" />
-    <ClInclude Include="..\jni\userinterface\uimodel\EventArgs.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />
-    <ClInclude Include="..\jni\userinterface\UIWatcher.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />

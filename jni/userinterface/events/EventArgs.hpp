@@ -24,11 +24,11 @@ namespace ARInput
 
 }
 
-//class EventArgs
-//{
-//public:
-//	virtual EventArgs();
-//};
+class EventArgs
+{
+public:
+	EventArgs();
+};
 
 class PhysicalButtonEventArgs// : EventArgs
 {

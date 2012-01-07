@@ -1,6 +1,7 @@
 #include "ImageCollector.hpp"
 
 
+
 void ImageCollector::newFrame()
 {
 	myCapture->grab();
@@ -27,6 +28,7 @@ ImageCollector::ImageCollector(int width, int height)
 	myCapture = new VideoCapture(CV_CAP_ANDROID);
 	
 	double addr = myCapture->get(CV_CAP_PROP_SUPPORTED_PREVIEW_SIZES_STRING);
+
 	char* result = *((char**)&addr);
 	LOGI(LOGTAG_IMAGECAPTURE,"Allowed preview sizes are: %s",result);
 

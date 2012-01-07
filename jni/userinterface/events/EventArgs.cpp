@@ -1,4 +1,4 @@
-#include "userinterface/uimodel/EventArgs.hpp"
+#include "userinterface/events/EventArgs.hpp"
 
 //
 //EventArgs::EventArgs()
@@ -15,4 +15,9 @@ TouchEventArgs::TouchEventArgs()
 PhysicalButtonEventArgs::PhysicalButtonEventArgs()
 {
 	ButtonCode = 0;
+}
+
+EventArgs::EventArgs()
+{
+	;
 }
