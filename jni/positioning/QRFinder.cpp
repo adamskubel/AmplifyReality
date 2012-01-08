@@ -4,7 +4,7 @@
 
 
 
-bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) // QR_vector& qr_store)
+bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) 
 {	
 	struct timespec start,end;
 	SET_TIME(&start);
@@ -489,7 +489,7 @@ void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_
 		}
 		else
 		{
-			LOGE("QRFinder","Error determining finder pattern order. This shouldn't happen.");
+			LOGE("Error determining finder pattern order. This shouldn't happen.");
 			top_left = fpv[0];
 			bottom_left = fpv[1];
 			top_right = fpv[2];

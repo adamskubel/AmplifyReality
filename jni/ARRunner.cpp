@@ -6,21 +6,31 @@ ARRunner::ARRunner(Engine * engine)
 	//Start in gray - configurable?
 	drawMode = Configuration::GrayImage;	
 	currentFrameItem = 0;
-	currentActionMode = QRTrack;
-
+	
 	items = new FrameItem*[numItems];
 	for (int i=0;i < numItems; i ++)
 	{
 		items[i] = new FrameItem();
 	}
 		
-	currentController = new QRController();
+	if (USE_CALCULATED_CAMERA_MATRIX)
+	{
+		currentController = new CalibrationController();
+		currentActionMode = Calibrate;
+		LOGI(LOGTAG_MAIN,"Starting in calibration mode");
+	}
+	else
+	{
+		QRController * qrCont = new QRController();
+		currentActionMode = QRTrack;
+		LOGI(LOGTAG_MAIN,"Starting with predefined camera matrix");
+	}
 }
 
 void ARRunner::Initialize(Engine * engine)
 {	
 	InitializeUserInterface(engine);
-
+	
 	//BG quad must be last value in update vector
 	QuadBackground * quad = new QuadBackground(engine->imageWidth,engine->imageHeight);
 
@@ -42,8 +52,12 @@ void ARRunner::ProcessFrame(Engine* engine)
 	item->drawMode = drawMode;
 	
 	SET_TIME(&start);
-	//The current controller does whatever it wants to here
+	//Make sure current controller is initialized. NEED TO MOVE THIS!
+	currentController->Initialize(engine);
+
+	//The current controller does whatever it wants to here	
 	currentController->ProcessFrame(engine,item);
+	CheckControllerExpiry(engine);
 	SET_TIME(&end);
 	LOG_TIME("Controller",start,end);
 	
@@ -61,20 +75,35 @@ void ARRunner::ProcessFrame(Engine* engine)
 		renderObjects.at(i)->Render(engine->glRender);
 	}
 	
+	engine->glRender->Present();
+
 	LOGV(LOGTAG_MAIN,"Frame End");		
 }
 
 
 
-void ARRunner::HandleButtonClick(void * sender, EventArgs args)
+void ARRunner::CheckControllerExpiry(Engine * engine)
 {
-	Button * button = (Button*)sender;
-
-	if (button->FillColor != Scalar(255,0,0,255))
-		button->FillColor = Scalar(255,0,0,255);
-	else
-		button->FillColor = Scalar(12,62,141,255);
-
+	if (currentController->isExpired())
+	{
+		if (currentActionMode == Calibrate)
+		{
+			//If the camera matrices were created correctly, then create a QR controller with them
+			if (currentController->wasSuccessful())
+			{
+				Mat camera,distortion;
+				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
+				currentController = new QRController(camera,distortion);	
+			}
+			//Otherwise, create the controller using the predefined matrix
+			else
+			{
+				currentController = new QRController();
+			}
+			currentController->Initialize(engine);					
+			currentActionMode = QRTrack;		
+		}
+	}
 }
 
 void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
@@ -102,24 +131,16 @@ void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args
 void ARRunner::Main_HandleTouchInput(void* sender, TouchEventArgs args)
 {
 	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
-	switch (currentActionMode)
+	switch (drawMode)
 	{
-	case (Calibrate):
-		((CalibrationController*)currentController)->captureImage();
+	case(Configuration::BinaryImage):
+		drawMode = Configuration::ColorImage;
 		break;
-	default:
-		switch (drawMode)
-		{
-		case(Configuration::BinaryImage):
-			drawMode = Configuration::ColorImage;
-			break;
-		case(Configuration::GrayImage):
-			drawMode = Configuration::BinaryImage;
-			break;
-		case(Configuration::ColorImage):
-			drawMode = Configuration::GrayImage;
-			break;
-		}
+	case(Configuration::GrayImage):
+		drawMode = Configuration::BinaryImage;
+		break;
+	case(Configuration::ColorImage):
+		drawMode = Configuration::GrayImage;
 		break;
 	}
 }
@@ -132,11 +153,6 @@ void ARRunner::InitializeUserInterface(Engine * engine)
 	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<ARRunner,&ARRunner::Main_HandleButtonInput>(this));
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARRunner,&ARRunner::Main_HandleTouchInput>(this));
 
-	Button * myButton = new Button(cv::Rect(300,300,150,160),Scalar(12,62,141,255));
-	myButton->AddClickDelegate(ClickEventDelegate::from_method<ARRunner,&ARRunner::HandleButtonClick>(this));
-
-	engine->inputHandler->SetRootUIElement(myButton);
-	updateObjects.push_back(myButton);
 }
 
 void ARRunner::DoFrame(Engine* engine)

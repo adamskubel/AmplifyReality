@@ -1,17 +1,59 @@
 #include "controllers/QRController.hpp"
 
+
 QRController::QRController()
 {
-	LOGD(LOGTAG_QRCONTROLLER,"QRController Initialized");
+	LOGD(LOGTAG_QRCONTROLLER,"QRController Initialized. Using predefined camera matrix.");
+	double data[] = HTC_SENSATION_CAMERA_MATRIX;
+	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data));
+	initialized = false;
+}
+
+
+QRController::QRController(Mat cameraMatrix, Mat distortionMatrix)
+{
+	LOGD(LOGTAG_QRCONTROLLER,"QRController Initialized. Using calculated camera and distortion matrices.");
+	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
+	initialized = false;
+}
+
+void QRController::Initialize(Engine * engine)
+{
+	if (initialized)
+		return;
+	
+	LOGD(LOGTAG_QR,"Initializing QRController");
+	initialized = true;
+	
+
+	debugLabel = new Label("X",Point2i(50,50),Scalar::all(255),Scalar::all(0));
+	engine->inputHandler->SetRootUIElement(debugLabel);
+	updateObjects.push_back(debugLabel);
+		
+	LOGD(LOGTAG_QR,"Initialization complete");
 }
 
 
 void QRController::ProcessFrame(Engine * engine, FrameItem * item)
 {
-	LOGD(LOGTAG_QRCONTROLLER,"Processing frame");
+	if (!initialized)
+		return;
+
+	LOGV(LOGTAG_QRCONTROLLER,"Processing frame");
 	getImages(engine,item);
 	item->foundQRCodes = QRFinder::locateQRCode(*(item->binaryImage), item->finderPatterns, item->ratioMatches);
-	drawDebugOverlay(item);
+	if (item->foundQRCodes)
+	{
+		qrLocator->transformPoints(item->finderPatterns.at(0),4,37,*(item->rotationMatrix),*(item->translationMatrix));
+		if (debugLabel != NULL)
+		{
+			char string[300];
+			sprintf(string,"[%.3lf,%.3lf,%.3lf]",item->translationMatrix->at<double>(0,0),item->translationMatrix->at<double>(0,1),item->translationMatrix->at<double>(0,2));
+			debugLabel->Text = std::string(string);
+		}	
+	}
+	drawDebugOverlay(item);	
+	debugLabel->Update(item);
 }
 
 
@@ -55,6 +97,7 @@ void QRController::getImages(Engine * engine, FrameItem * item)
 
 void QRController::drawDebugOverlay(FrameItem * item)
 {
+	LOGV(LOGTAG_QRCONTROLLER,"Starting debug draw");
 	struct timespec start, end;
 	SET_TIME(&start);
 	if (item->foundQRCodes)
@@ -62,6 +105,8 @@ void QRController::drawDebugOverlay(FrameItem * item)
 		Point_<int> * pointArray = item->finderPatterns[0];
 		int numPoints = 4;
 		fillConvexPoly(*(item->rgbImage),item->finderPatterns[0], 4, Scalar(0, 255, 0, 255));
+
+		
 	}
 	else
 	{
@@ -76,8 +121,13 @@ void QRController::drawDebugOverlay(FrameItem * item)
 	{
 		circle(*(item->rgbImage), Point2i((item->ratioMatches)[i].x, (item->ratioMatches)[i].y), (item->ratioMatches)[i].z, Scalar(255, 0, 0, 255), 1);
 	}
+
 	SET_TIME(&end);
 	LOG_TIME("Debug Draw", start, end);
 }
 
+QRController::~QRController()
+{
+	delete qrLocator;
+}
 

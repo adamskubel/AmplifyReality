@@ -87,7 +87,7 @@ void ImageProcessor::localThresholding(Mat & inputImg, Mat & outputImg, int wind
 	}
 	catch (std::exception &e)
 	{
-		LOGE("ImageCollector","LocalThresholding Exception: %s",e.what());
+		LOGE("LocalThresholding Exception: %s",e.what());
 	}
 	LOGD("ImageCollector","Local thresholding complete");
 

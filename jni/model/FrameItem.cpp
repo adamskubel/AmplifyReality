@@ -15,6 +15,7 @@ void FrameItem::clearOldData()
 		finderPatterns.pop_back();
 	}
 	ratioMatches.clear();
+	foundQRCodes = false;
 
 }
 
@@ -23,6 +24,11 @@ FrameItem::FrameItem()
 	rgbImage = new Mat();
 	grayImage = new Mat();
 	binaryImage = new Mat();
+	rotationMatrix = new Mat();
+	translationMatrix = new Mat();
+
+
+	foundQRCodes = false;
 }
 
 FrameItem::~FrameItem()

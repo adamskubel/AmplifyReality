@@ -17,6 +17,10 @@ public:
 	virtual void ProcessFrame(Engine * engine, FrameItem * frame);
 	virtual void Initialize(Engine * engine);
 	virtual bool isExpired();
+	virtual bool wasSuccessful();
+
+protected:
+	bool initialized;
 
 
 };

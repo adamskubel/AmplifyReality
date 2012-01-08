@@ -34,8 +34,9 @@ ImageCollector::ImageCollector(int width, int height)
 
 	if (!myCapture->isOpened())
 	{
-		LOGE(LOGTAG_IMAGECAPTURE,"VideoCapture Failed to open. Whoops!");
-		throw CAMERA_INITIALIZATION_EXCEPTION;
+		LOGE("Whoops! VideoCapture failed to open! Try opening the camera app, and if that also fails, try restarting your phone. ");
+		Exception ex =  Exception(0,"Unable to open VideoCapture","ImageCollector()","ImageCollector.cpp",107);
+		throw ex;
 	}
 
 	myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
@@ -58,7 +59,7 @@ void ImageCollector::undistortImage(Mat* inputImage, Mat* outputImage)
 	}
 	catch (std::exception& e)
 	{
-		LOGE(LOGTAG_IMAGECAPTURE,"UndistortImage: %s", e.what());
+		LOGE("UndistortImage: %s", e.what());
 	}
 }
 
@@ -79,7 +80,15 @@ void ImageCollector::getGrayCameraImage(Mat & grayImage)
 }
 void ImageCollector::teardown()
 {
-	myCapture->release();
+	try
+	{
+		myCapture->release();
+	}
+	catch (std::exception& e)
+	{
+		LOGE("Error shutting down VC! -> %s", e.what());
+	}
+	LOGI(LOGTAG_IMAGECAPTURE,"Video Capture shutdown successfully");
 }
 
 

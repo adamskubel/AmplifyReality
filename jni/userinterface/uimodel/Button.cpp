@@ -1,9 +1,10 @@
 #include "userinterface/uimodel/Button.hpp"
 
-Button::Button(cv::Rect _buttonBoundaries, cv::Scalar _fillColor)
+Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillColor)
 {
 	buttonBoundaries = _buttonBoundaries;
 	FillColor = _fillColor;
+	label = _label;
 
 	clickDelegateVector = std::vector<ClickEventDelegate>();
 }
@@ -16,10 +17,10 @@ void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 
 UIElement * Button::GetChildAt(cv::Point2i point)
 {
-	LOGD(LOGTAG_BUTTON,"Testing point (%d,%d)",point.x,point.y);
+	LOGD(LOGTAG_BUTTON,"Button: Testing point (%d,%d)",point.x,point.y);
 	if (buttonBoundaries.contains(point))
 	{
-		LOGD(LOGTAG_BUTTON,"Point is inside!");
+		LOGD(LOGTAG_BUTTON,"Button: Point is inside!");
 		return this;
 	}
 	return NULL;
@@ -27,7 +28,7 @@ UIElement * Button::GetChildAt(cv::Point2i point)
 
 void Button::HandleInput()
 {
-	LOGD(LOGTAG_BUTTON,"Handling input");
+	LOGD(LOGTAG_BUTTON,"Button: Handling input");
 	for (int i=0;i<clickDelegateVector.size();i++)
 	{
 		EventArgs args = EventArgs();
@@ -37,5 +38,21 @@ void Button::HandleInput()
 
 void Button::Update(FrameItem * item)
 {
-	cv::rectangle(*(item->rgbImage),buttonBoundaries,FillColor,-1);
+	//Draw button background
+	cv::rectangle(*(item->rgbImage),buttonBoundaries,FillColor,CV_FILLED);
+	//Draw border
+	cv::rectangle(*(item->rgbImage),buttonBoundaries,Scalar::all(0),2,CV_AA);
+
+
+	//Draw button label
+	int fontFace = FONT_HERSHEY_SIMPLEX;
+	double fontScale = 1.2;
+	int thickness = 2;
+	int baseline = 0;
+	Size textSize = getTextSize(label.c_str(), fontFace, fontScale, thickness, &baseline);
+
+	Point2i textLocation = Point2i(buttonBoundaries.x + (buttonBoundaries.width - textSize.width)/2,
+		baseline + buttonBoundaries.y + (buttonBoundaries.height - textSize.height)/2);
+	putText(*(item->rgbImage), label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
 }
+

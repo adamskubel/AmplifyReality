@@ -27,6 +27,8 @@ userinterface/AndroidInputHandler.cpp  \
 userinterface/events/EventArgs.cpp \
 ARRunner.cpp \
 userinterface/uimodel/Button.cpp \
+userinterface/uimodel/Label.cpp \
+userinterface/uimodel/GridLayout.cpp \
 VirtualDeclarations.cpp
 
 

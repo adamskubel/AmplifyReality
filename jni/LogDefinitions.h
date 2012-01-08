@@ -20,16 +20,16 @@
 #define  LOGW(TAG,...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG_BASE TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,"AmplifyR",__VA_ARGS__)
 
-#define LOGTAG_QRCONTROLLER "QRController"
+#define LOGTAG_QRCONTROLLER "QR"
 #define LOGTAG_MAIN "Main"
-#define QRFINDER_LOGTAG "QRFinder"
-#define OPENGL_LOGTAG "OpenGL"
+#define QRFINDER_LOGTAG "QR"
+#define LOGTAG_QR "QR"
 #define LOGTAG_OPENGL "OpenGL"
 #define LOGTAG_IMAGECAPTURE "ImageCapture"
 #define LOGTAG_IMAGEPROCESSING "ImageProcessing"
-#define LOGTAG_INPUT "InputHandler"
+#define LOGTAG_INPUT "Input"
 #define LOGTAG_CALIBRATION "Calibration"
-#define LOGTAG_BUTTON "Button"
+#define LOGTAG_BUTTON "Input"
 
 
 /*
@@ -56,43 +56,55 @@ static void LOG_INTRO()
 {
 	LOGI(LOGTAG_MAIN,"******************************");
 	LOGI(LOGTAG_MAIN,"     --Amplified Reality--    ");
-	LOGI(LOGTAG_MAIN,"       Version %s             ",STR(VERSION_STRING));
+	LOGI(LOGTAG_MAIN,"       Version %s             ","0.01");
 	LOGI(LOGTAG_MAIN,"         Adam Skubel          ");
 	LOGI(LOGTAG_MAIN,"******************************");
 }
 
 
-static void LOGD_Mat(const char * matrixTag, const char * matDescription,cv::Mat * matrix)
+static void LOGD_Mat(std::string matrixTag, const char * matDescription,cv::Mat * matrix)
 {
 	if (matrix == NULL)
-		LOGD(STR(matrixTag),"%s is null",matDescription);
+	{
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(ANDROID_LOG_DEBUG,(prefix.append(matrixTag)).c_str(),"%s is NULL",matDescription);
+	}
+
 
 	for (int i = 0; i < matrix->rows; i++)
 	{
 		char string[300];
+		sprintf(string,"[");
 		for (int j = 0; j < matrix->cols*matrix->channels(); j++)
-		{
-			sprintf(string,"%lf",matrix->at<double>(i,j));
+		{			
+			sprintf(string,"%s,%lf",string,matrix->at<double>(i,j));
 		}
-		LOGD("%s[:,%d]=%s",matDescription,i,string);
+		sprintf(string,"%s]",string);
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(ANDROID_LOG_DEBUG,(prefix.append(matrixTag)).c_str(),"%s[:,%d]=%s",matDescription,i,string);
 	}
 }
 
-static void LOGI_Mat(const char * matrixTag, const char * matDescription,cv::Mat * matrix)
+
+static void LOG_Vector(android_LogPriority logPriority, std::string vectorTag, const char * vectorDescription,std::vector<cv::Point2f> * pointVector)
 {
-	if (matrix == NULL)
-		LOGI(STR(matrixTag),"%s is null",matDescription);
-
-	for (int i = 0; i < matrix->rows; i++)
+	if (pointVector == NULL)
 	{
-		char string[300];
-		for (int j = 0; j < matrix->cols*matrix->channels(); j++)
-		{
-			sprintf(string,"%lf",matrix->at<double>(i,j));
-		}
-		LOGI("%s[:,%d]=%s",matDescription,i,string);
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(logPriority,(prefix.append(vectorTag)).c_str(),"%s is NULL",vectorDescription);
 	}
+
+	char string[300];
+	sprintf(string,"[");
+	for (int i = 0; i < pointVector->size();i++)
+	{		
+		sprintf(string,"%s,(%f,%f)",string,pointVector->at(i).x,pointVector->at(i).y);
+	}
+	sprintf(string,"%s]",string);
+	std::string prefix = std::string("AmplifyR-");
+	__android_log_print(logPriority,(prefix.append(vectorTag)).c_str(),"%s=%s",vectorDescription,string);
 }
+
 
 //static void LOGI_Mat(cv::Mat& matrix)
 //{

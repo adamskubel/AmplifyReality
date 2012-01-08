@@ -53,6 +53,9 @@
     <Filter Include="Header Files\userinterface\events">
       <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\display\model">
+      <UniqueIdentifier>{a1bc6d4d-81d3-49ae-a062-4da6ba6a0eee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -109,11 +112,23 @@
     <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp">
-      <Filter>Header Files\display\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\VirtualDeclarations.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\model\AugmentedView.cpp">
+      <Filter>Header Files\display\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\model\ARObject.cpp">
+      <Filter>Header Files\display\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +218,18 @@
     </ClInclude>
     <ClInclude Include="..\jni\model\Updateable.hpp">
       <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\model\AugmentedView.hpp">
+      <Filter>Header Files\display\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\model\ARObject.hpp">
+      <Filter>Header Files\display\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\GLObject.hpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -14,3 +14,9 @@ bool Controller::isExpired()
 {
 	return false;
 }
+
+
+bool Controller::wasSuccessful()
+{
+	return false;
+}

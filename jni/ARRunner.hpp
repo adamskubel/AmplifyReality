@@ -48,6 +48,7 @@ private:
 	void Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args);
 	void HandleButtonClick(void * sender, EventArgs args);
 	void InitializeUserInterface(Engine * engine);
+	void CheckControllerExpiry(Engine * engine);
 
 	//Constants
 	static const int numItems = 2; //Number of previous frames to store

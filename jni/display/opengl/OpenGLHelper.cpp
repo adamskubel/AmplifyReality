@@ -180,3 +180,13 @@ long OpenGLHelper::floatToFixed(float value)
 		value = 32767;
 	return (long) (value * 65536);
 }
+
+
+void OpenGLHelper::gluPerspective(GLfloat fovy,GLfloat aspectRatio, GLfloat zNear, GLfloat zFar)
+{
+	GLfloat top = zFar * tanf(fovy);  
+	GLfloat left = top * aspectRatio;
+
+	glFrustumf(left,-left,-top,top,zNear,zFar);
+	LOGD(LOGTAG_OPENGL,"Created frustum: fovy=%f,left=%f,top=%f",fovy,left,top);
+}

@@ -12,16 +12,17 @@ class Button : public UIElement, public Updateable
 {
 
 public:
-	Button(cv::Rect buttonBoundaries, cv::Scalar fillColor);
+	Button(std::string label, cv::Rect buttonBoundaries, cv::Scalar fillColor);
 	void AddClickDelegate(ClickEventDelegate myDelegate);
 	UIElement* GetChildAt(Point2i p);	
 	void Update(FrameItem * item);
 	void HandleInput();
-	
+	cv::Rect buttonBoundaries;
 	cv::Scalar FillColor;
+	std::string label;
 
 private:
-	cv::Rect buttonBoundaries;
+	
 	std::vector<ClickEventDelegate> clickDelegateVector;
 
 };

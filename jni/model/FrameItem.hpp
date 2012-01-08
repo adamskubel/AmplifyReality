@@ -24,9 +24,8 @@ class FrameItem
 	
 public:
 	FrameItem();
-	cv::Mat *rgbImage;
-	cv::Mat *grayImage;
-	cv::Mat *binaryImage;
+	cv::Mat *rgbImage, *binaryImage, *grayImage;
+	cv::Mat *rotationMatrix, *translationMatrix;
 	std::vector<Point_<int>* > finderPatterns;	
 	std::vector<Point3i> ratioMatches;
 	Configuration::DrawMode drawMode;
@@ -35,7 +34,6 @@ public:
 	void setPreviousFrame(FrameItem * frame);
 	void clearOldData();
 	~FrameItem();
-
 
 private:
 	FrameItem * lastFrame;

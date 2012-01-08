@@ -10,6 +10,7 @@ class OpenGLHelper
 {
 public:	
 	static void gluLookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez, GLfloat centerx, GLfloat centery, GLfloat centerz, GLfloat upx, GLfloat upy, GLfloat upz);
+	static void gluPerspective(GLfloat fovy, GLfloat aspectRatio, GLfloat zNear, GLfloat zFar);
 	static void configureLightAndMaterial();
 	static GLObject* newGLObject(long vertices, int vertexComponents, int textureComponents);
 	static GLObject* CreateTexturedQuad(int textureWidth, int textureHeight, int size);

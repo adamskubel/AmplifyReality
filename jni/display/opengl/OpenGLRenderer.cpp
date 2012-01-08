@@ -55,7 +55,10 @@ void OpenGL::DrawGLObject(GLObject *object)
 	//glColorPointer(4, GL_UNSIGNED_BYTE, 0, object->colorArray);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, object->count);
+}
 
+void OpenGL::Present()
+{
 	eglSwapBuffers( display,  surface);
 }
 
@@ -75,9 +78,6 @@ void OpenGL::DrawGLObject(GLObject *object)
 ////	glDisable(GL_BLEND);
 ////	glEnable(GL_DEPTH_TEST);
 //}
-
-
-static float countF = -20.0f;
 
 
 OpenGL::~OpenGL() 

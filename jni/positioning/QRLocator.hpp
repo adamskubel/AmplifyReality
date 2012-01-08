@@ -19,6 +19,7 @@ private:
 	Mat * cameraMatrix, * distortionMatrix;
 
 public:
+	QRLocator(Mat  cameraMatrix, Mat distortionMatrix);
 	QRLocator(Mat  cameraMatrix);
 	void transformPoints(Point_<int>* points, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
 };

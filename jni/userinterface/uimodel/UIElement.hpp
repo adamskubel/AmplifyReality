@@ -17,6 +17,7 @@ public:
 		return NULL;
 	};
 	virtual void HandleInput() {};
+	std::string Name;
 
 };
 
