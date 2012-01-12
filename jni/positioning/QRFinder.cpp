@@ -1,10 +1,11 @@
 #include "QRFinder.hpp"
 #include "LogDefinitions.h"
+#include "QRCode.hpp"
 //#include <PerspectiveTransform.h>
 
 
 
-bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>& debugVector) 
+QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector) 
 {	
 	struct timespec start,end;
 	SET_TIME(&start);
@@ -12,13 +13,17 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 	long height = M.rows;
 	long width = M.cols;
 
-	FINDPATTERN_vector pattern_store;
+	FinderPattern_vector pattern_store;
 
 	FindFinderPatterns(M, pattern_store, debugVector);
 
+	//Less or more than three patterns were found, so just return a vector of all the finder patterns 
+
+
+	//If 3 patterns are found, we've probably found a QR code. Generate it and return.
 	if (pattern_store.size() == 3)
 	{
-		FINDPATTERN top_left, top_right, bottom_left, bottom_right;
+		FinderPattern  top_left, top_right, bottom_left, bottom_right;
 		TriangleOrder(pattern_store, bottom_left, top_left, top_right);
 
 		bottom_right.pt.x = (top_right.pt.x - top_left.pt.x) + bottom_left.pt.x;
@@ -26,7 +31,7 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 		bottom_right.hitCount = -1;
 		bottom_right.size = 0;
 
-		Point_<int>* points = new Point_<int> [4];
+	/*	Point_<int>* points = new Point_<int> [4];
 		points[0].x = (int) top_left.pt.x;
 		points[0].y = (int) top_left.pt.y;
 
@@ -37,42 +42,35 @@ bool QRFinder::locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Poi
 		points[2].y = (int) bottom_right.pt.y;
 
 		points[3].x = (int) bottom_left.pt.x;
-		points[3].y = (int) bottom_left.pt.y;
+		points[3].y = (int) bottom_left.pt.y;*/
 
-		ptList.push_back(points);
+		
 		SET_TIME(&end);
 		LOG_TIME("QR Search(Found)", start, end);
-		return true;
+		vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();
 
-	} else if (pattern_store.size() > 0)
-	{
-		for (size_t i = 0; i < pattern_store.size(); i++)
-		{
-			FINDPATTERN pattern = pattern_store[i];
+		patternVector->push_back(new FinderPattern(top_left));
+		patternVector->push_back(new FinderPattern(top_right));
+		patternVector->push_back(new FinderPattern(bottom_right));
+		patternVector->push_back(new FinderPattern(bottom_left));
 
-			int size = pattern.size / 2;
-			Point_<int>* points = new Point_<int> [4];
-			points[0].x = (int) pattern.pt.x - size;
-			points[0].y = (int) pattern.pt.y - size;
+		return new QRCode(patternVector,true);
 
-			points[1].x = (int) pattern.pt.x + size;
-			points[1].y = (int) pattern.pt.y - size;
-
-			points[2].x = (int) pattern.pt.x + size;
-			points[2].y = (int) pattern.pt.y + size;
-
-			points[3].x = (int) pattern.pt.x - size;
-			points[3].y = (int) pattern.pt.y + size;
-
-			ptList.push_back(points);
-		}
+	} 
+	
+	vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();
+	for (int i=0;i<pattern_store.size();i++)
+	{		
+		patternVector->push_back(new FinderPattern(pattern_store.at(i)));
 	}
+
+	
 	SET_TIME(&end);
 	LOG_TIME("QR Search(NotFound)", start, end);
-	return false;
+	return new QRCode(patternVector,false);
 }
 
-void QRFinder::FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Point3i>& debugVector)
+void QRFinder::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Point3i>& debugVector)
 {
 
 	bool skip = true;
@@ -126,11 +124,11 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Po
 							tx = t;
 						}
 
-						POINT pt;
+						Point2i pt;
 						pt.x = tx;
 						pt.y = ty;
 
-						FINDPATTERN fp;
+						FinderPattern fp;
 						fp.hitCount = 1;
 						fp.pt = pt;
 						fp.size = bw[0] + bw[1] + bw[2] + bw[3] + bw[4];
@@ -169,7 +167,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Po
 	}
 }
 
-int QRFinder::SkipHeuristic(const FINDPATTERN_vector& fpv)
+int QRFinder::SkipHeuristic(const FinderPattern_vector& fpv)
 {
 	long skip = 0;
 
@@ -441,11 +439,11 @@ int QRFinder::FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[])
 	return (j - bw[4] - bw[3]) - (bw[2] / 2);
 }
 
-void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_left, FINDPATTERN& top_left, FINDPATTERN& top_right)
+void QRFinder::TriangleOrder(const FinderPattern_vector& fpv, FinderPattern& bottom_left, FinderPattern& top_left, FinderPattern& top_right)
 {
-	long d0to1 = FINDPATTERN::Distance(fpv[0], fpv[1]);
-	long d1to2 = FINDPATTERN::Distance(fpv[1], fpv[2]);
-	long d0to2 = FINDPATTERN::Distance(fpv[0], fpv[2]);
+	long d0to1 = FinderPattern::Distance(fpv[0], fpv[1]);
+	long d1to2 = FinderPattern::Distance(fpv[1], fpv[2]);
+	long d0to2 = FinderPattern::Distance(fpv[0], fpv[2]);
 
 
 
@@ -469,19 +467,19 @@ void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_
 	{
 		LOGW("QRFinder","Unable to resolve finder pattern order by distance");
 		//no clear winner, probably some significant perspective. 
-		if (FINDPATTERN::AcuteAngleGeometry(fpv[0], fpv[1], fpv[2]) >= 0)
+		if (FinderPattern::AcuteAngleGeometry(fpv[0], fpv[1], fpv[2]) >= 0)
 		{
 			top_left = fpv[0];
 			top_right = fpv[1];
 			bottom_left = fpv[2];
 		}
-		else if (FINDPATTERN::AcuteAngleGeometry(fpv[1], fpv[0], fpv[2]) >= 0)
+		else if (FinderPattern::AcuteAngleGeometry(fpv[1], fpv[0], fpv[2]) >= 0)
 		{
 			top_left = fpv[1];
 			top_right = fpv[0];
 			bottom_left = fpv[2];
 		}
-		else if (FINDPATTERN::AcuteAngleGeometry(fpv[2], fpv[0], fpv[1]) >= 0)
+		else if (FinderPattern::AcuteAngleGeometry(fpv[2], fpv[0], fpv[1]) >= 0)
 		{
 			top_left = fpv[2];
 			top_right = fpv[0];
@@ -496,9 +494,9 @@ void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_
 		}
 	}
 
-	if (FINDPATTERN::AcuteAngleGeometry(bottom_left, top_left, top_right) < 0)
+	if (FinderPattern::AcuteAngleGeometry(bottom_left, top_left, top_right) < 0)
 	{
-		FINDPATTERN t = bottom_left;
+		FinderPattern t = bottom_left;
 		bottom_left = top_right;
 		top_right = t;
 	}
@@ -508,8 +506,8 @@ void QRFinder::TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_
 
 //long module_size = ((pattern_store[0].size + pattern_store[1].size + pattern_store[2].size) / 3) / 7;
 
-//long dab = FINDPATTERN::Distance(top_left, top_right) / module_size;
-//long dac = FINDPATTERN::Distance(top_left, bottom_left) / module_size;
+//long dab = FinderPattern::Distance(top_left, top_right) / module_size;
+//long dac = FinderPattern::Distance(top_left, bottom_left) / module_size;
 
 //		if (!qr_store.SetDimension(((dab + dac) / 2) + 7))
 //		{

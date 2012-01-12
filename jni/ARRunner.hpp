@@ -2,7 +2,7 @@
 
 #include "controllers/Controller.hpp"
 #include "controllers/CalibrationController.hpp"
-#include "controllers/QRController.hpp"
+#include "controllers/LocationController.hpp"
 
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"

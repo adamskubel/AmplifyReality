@@ -3,6 +3,8 @@
 #define USE_ADAPTIVE_THRESH false
 #define USE_LOCAL_THRESH false
 
+#define USE_FEEDBACK_THRESH false
+
 #define NUM_CALIBRATION_SAMPLES 4
 #define USE_CALCULATED_CAMERA_MATRIX true
 

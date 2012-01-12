@@ -37,7 +37,7 @@ bool GridLayout::CheckGridFit(Point2i gridPoint, Size_<int> gridSpan)
 	}
 }
 
-void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan = Size_<int>(1,1))
+void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan)
 {
 	CheckGridFit(gridPoint,gridSpan);
 
@@ -56,7 +56,7 @@ void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan
 
 }
 
-void GridLayout::AddChild(Label * child, Point2i gridPoint, Size_<int> gridSpan = Size_<int>(1,1))
+void GridLayout::AddChild(Label * child, Point2i gridPoint, Size_<int> gridSpan)
 {
 	CheckGridFit(gridPoint,gridSpan);
 

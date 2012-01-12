@@ -16,8 +16,8 @@ public:
 	~GridLayout();
 
 	//Point determines (x,y) position in grid. Top-left cell is (0,0)
-	void AddChild(Button * child, Point2i position, Size_<int> gridSpan);
-	void AddChild(Label * child, Point2i position, Size_<int> gridSpan);
+	void AddChild(Button * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
+	void AddChild(Label * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
 
 	UIElement * GetChildAt(Point2i p);	
 	void Update(FrameItem * item);

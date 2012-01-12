@@ -17,6 +17,8 @@ public:
 		return NULL;
 	};
 	virtual void HandleInput() {};
+	//virtual void TouchEnter() {};
+	//virtual void TouchLeave() {};
 	std::string Name;
 
 };

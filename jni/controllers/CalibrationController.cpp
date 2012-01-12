@@ -6,7 +6,7 @@ CalibrationController::CalibrationController()
 	imagePoints = new vector<vector<Point2f> >();
 	collectionCount = 0;
 	chessBoardSize = Size_<int>(7, 7);
-	LOGI(LOGTAG_CALIBRATION,"Calibration Controller Initialized");
+	LOGI(LOGTAG_CALIBRATION,"Calibration Controller created");
 
 	updateObjects = vector<Updateable*>();
 
@@ -33,6 +33,7 @@ void CalibrationController::Initialize(Engine * engine)
 {	
 	if (initialized)
 		return;
+	LOGI(LOGTAG_CALIBRATION,"Initializing calibration controller");
 
 	GridLayout * layout = new GridLayout(engine,Size_<int>(5,4));
 
@@ -158,7 +159,7 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 			calibrateCamera(*objectPoints, *imagePoints, (item->grayImage)->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
-			LOGD_Mat(LOGTAG_CALIBRATION,"Camera Matrix",cameraMatrix);
+			LOG_Mat(ANDROID_LOG_INFO,LOGTAG_CALIBRATION,"Camera Matrix",cameraMatrix);
 
 			calibrationComplete = true;
 			LOGI(LOGTAG_CALIBRATION,"Calibration Complete");

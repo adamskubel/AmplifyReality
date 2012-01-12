@@ -20,14 +20,8 @@
     <Filter Include="Header Files\datacollection">
       <UniqueIdentifier>{846b7632-fb6f-4cbf-9c1d-58e17146d1dc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\display">
-      <UniqueIdentifier>{8096ab8f-f1df-42b5-b62d-7044c863c213}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\positioning">
       <UniqueIdentifier>{949c756f-d7dd-4c28-ac79-e15a0728b19f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\display\opengl">
-      <UniqueIdentifier>{7f438424-bd92-4815-82be-0b01bdce3ca3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\model">
       <UniqueIdentifier>{450ef34e-441d-4507-b891-ab381d96d817}</UniqueIdentifier>
@@ -52,6 +46,12 @@
     </Filter>
     <Filter Include="Header Files\userinterface\events">
       <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\display">
+      <UniqueIdentifier>{8096ab8f-f1df-42b5-b62d-7044c863c213}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\display\opengl">
+      <UniqueIdentifier>{7f438424-bd92-4815-82be-0b01bdce3ca3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\display\model">
       <UniqueIdentifier>{a1bc6d4d-81d3-49ae-a062-4da6ba6a0eee}</UniqueIdentifier>
@@ -87,9 +87,6 @@
     </ClCompile>
     <ClCompile Include="..\jni\controllers\Controller.hpp">
       <Filter>Header Files\controllers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\controllers\QRController.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp">
       <Filter>Source Files</Filter>
@@ -130,6 +127,12 @@
     <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\datacollection\SensorCollector.cpp">
+      <Filter>Header Files\datacollection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\controllers\LocationController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -161,9 +164,6 @@
     </ClInclude>
     <ClInclude Include="..\jni\model\FrameItem.hpp">
       <Filter>Header Files\model</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\controllers\QRController.hpp">
-      <Filter>Header Files\controllers</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp">
       <Filter>Header Files\datacollection</Filter>
@@ -230,6 +230,15 @@
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\datacollection\SensorCollector.hpp">
+      <Filter>Header Files\datacollection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\controllers\LocationController.hpp">
+      <Filter>Header Files\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\QRCode.hpp">
+      <Filter>Header Files\positioning</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -10,19 +10,20 @@
 #include "positioning/QRFinder.hpp"
 
 #include "userinterface/uimodel/Label.hpp"
+#include "userinterface/uimodel/GridLayout.hpp"
 
-#ifndef QRCONTROLLER_HPP_
-#define QRCONTROLLER_HPP_
+#ifndef LocationController_HPP_
+#define LocationController_HPP_
 
 using namespace cv;
 using namespace std;
 
-class QRController : public Controller
+class LocationController : public Controller
 {
 public:
-	QRController();
-	QRController(Mat camera, Mat distortion);
-	~QRController();
+	LocationController();
+	LocationController(Mat camera, Mat distortion);
+	~LocationController();
 	void ProcessFrame(Engine * engine, FrameItem * item);
 	void Initialize(Engine * engine);
 
@@ -30,9 +31,13 @@ private:
 	void drawDebugOverlay(FrameItem * item);
 	void getImages(Engine* engine, FrameItem * item);
 	void locateCodes(Engine* engine, FrameItem * item);	
+	void readGyroData(Engine * engine, FrameItem * item);
 	std::vector<Updateable*> updateObjects;
 	QRLocator * qrLocator;
-	Label * debugLabel;
+	Label * translationVectorLabel, * gyroDataLabel;
+
+	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
+	Rect createWindow(Point_<int> * points, int borderSize);
 
 };
 

@@ -14,6 +14,7 @@ Main.cpp\
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 datacollection/ImageCollector.cpp \
+datacollection/SensorCollector.cpp\
 display/opengl/OpenGLRenderer.cpp \
 display/opengl/OpenGLHelper.cpp \
 display/opengl/QuadBackground.cpp\
@@ -21,7 +22,7 @@ controllers/CalibrationController.cpp \
 positioning/QRLocator.cpp \
 model/FrameItem.cpp \
 datacollection/ImageProcessor.cpp \
-controllers/QRController.cpp \
+controllers/LocationController.cpp \
 controllers/Controller.cpp \
 userinterface/AndroidInputHandler.cpp  \
 userinterface/events/EventArgs.cpp \

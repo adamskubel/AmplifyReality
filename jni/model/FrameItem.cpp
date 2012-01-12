@@ -9,14 +9,22 @@ void FrameItem::setPreviousFrame(FrameItem * frame)
 //Empty lists/vectors
 void FrameItem::clearOldData()
 {
-	while (!finderPatterns.empty())
-	{
-		delete finderPatterns.back();
-		finderPatterns.pop_back();
-	}
+	if (qrCode != NULL)
+		delete qrCode;	
 	ratioMatches.clear();
-	foundQRCodes = false;
+}
 
+vector<FrameItem*> FrameItem::getLastFrames()
+{
+	vector<FrameItem *> frameVector = vector<FrameItem *>();
+
+	FrameItem * lastFramePointer = lastFrame;
+	while (lastFramePointer != NULL && lastFramePointer != this)
+	{
+		frameVector.push_back(lastFramePointer);
+		lastFramePointer = lastFramePointer->lastFrame;
+	}
+	return frameVector;
 }
 
 FrameItem::FrameItem()
@@ -26,20 +34,16 @@ FrameItem::FrameItem()
 	binaryImage = new Mat();
 	rotationMatrix = new Mat();
 	translationMatrix = new Mat();
+	qrCode = NULL;
+	lastFrame = NULL;
+	//qrCode = new QRCode(std::vector<FinderPattern*>(),false);
 
-
-	foundQRCodes = false;
 }
 
 FrameItem::~FrameItem()
 {
+	clearOldData();
 	delete rgbImage;
 	delete grayImage;
 	delete binaryImage;
-
-	while (!finderPatterns.empty())
-	{
-		delete finderPatterns.back();
-		finderPatterns.pop_back();
-	}
 }

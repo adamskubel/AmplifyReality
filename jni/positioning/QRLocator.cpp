@@ -1,7 +1,6 @@
 #include "QRLocator.hpp"
 
 
-
 QRLocator::QRLocator(Mat  _cameraMatrix, Mat  _distortionMatrix)
 {
 	cameraMatrix = new Mat(_cameraMatrix);
@@ -20,11 +19,12 @@ QRLocator::QRLocator(Mat _cameraMatrix)
 }
 
 //Transform a set of points from camera space to reality space 
-void QRLocator::transformPoints(Point_<int> * pointArray, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix)
+void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix)
 {
+	float qrSize = 37;
+
 	struct timespec start,end;
 	SET_TIME(&start);
-	double * pointData = new double[numPoints*2];
 
 	vector<Point3f> qrVector = vector<Point3f>();
 	qrVector.push_back(Point3f(0,0,0));
@@ -33,10 +33,10 @@ void QRLocator::transformPoints(Point_<int> * pointArray, int numPoints, float q
 	qrVector.push_back(Point3f(0,qrSize,0));
 		
 	vector<Point2f> imagePointVector = vector<Point2f>();
-	for (int i=0;i<numPoints;i++)
+	for (int i=0;i<qrCode->finderPatterns->size();i++)
 	{
-		imagePointVector.push_back(Point2f((float)pointArray[i].x,(float)pointArray[i].y));
-
+		imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(i)->pt.x,qrCode->finderPatterns->at(i)->pt.y));
+		//Point2f((float)pointArray[i].x,(float)pointArray[i].y));
 	}
 	//LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"Input Points",&imagePointVector);
 

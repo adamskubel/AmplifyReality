@@ -5,6 +5,7 @@
 #include <vector>
 #include <android/log.h>
 #include "FindPattern.h"
+#include "positioning/QRCode.hpp"
 
 #ifndef QR_FINDER_HPP_
 #define QR_FINDER_HPP_
@@ -31,16 +32,16 @@ private:
 struct QRFinder
 {
 public:
-	static bool locateQRCode(cv::Mat& M, vector<Point_<int>*>& ptList, vector<Point3i>&  debugVector);
+	static QRCode * locateQRCode(cv::Mat& M, vector<Point3i>&  debugVector);
 
 private:
 	static bool CheckRatios(int bw[]);
 	static bool CheckRatios(int bw[], int bw2[]);
 	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[]);
 	static int FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[]);
-	static void FindFinderPatterns(cv::Mat& M, FINDPATTERN_vector& fpv, vector<Point3i>& debugVector);
-	static void TriangleOrder(const FINDPATTERN_vector& fpv, FINDPATTERN& bottom_left, FINDPATTERN& top_left, FINDPATTERN& top_right);
-	static int SkipHeuristic(const FINDPATTERN_vector& fpv);
+	static void FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Point3i>& debugVector);
+	static void TriangleOrder(const FinderPattern_vector& fpv, FinderPattern& bottom_left, FinderPattern& top_left, FinderPattern& top_right);
+	static int SkipHeuristic(const FinderPattern_vector& fpv);
 };
 
 #endif /* QR_FINDER_HPP_ */

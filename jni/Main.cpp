@@ -1,5 +1,6 @@
 #include "android_native_app_glue.h"
 #include "ARRunner.hpp"
+#include "android/sensor.h"
 
 
 static void engineHandleCommand(struct android_app* app, int32_t cmd);
@@ -35,10 +36,23 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 	case APP_CMD_TERM_WINDOW:
 		shutdownEngine(engine);
 		break;
+	case APP_CMD_GAINED_FOCUS:
+		//Enable all sensors, start animation
+	/*	if (engine->sensorCollector != NULL)
+		{
+			engine->sensorCollector->EnableSensors(false,true,false);
+		}*/
+		engine->animating = 1;
+		break;
 	case APP_CMD_LOST_FOCUS:
+		//Disable all sensors and stop animation
+		if (engine->sensorCollector != NULL)
+		{
+			engine->sensorCollector->DisableSensors();
+		}
 		engine->animating = 0;
-		break; 
-	}
+		break;
+    }
 }
 
 int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
@@ -72,6 +86,7 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	//Initialize objects
 	engine.imageCollector = new ImageCollector(engine.imageWidth, engine.imageHeight);
 	engine.inputHandler = new AndroidInputHandler();
+	engine.sensorCollector = new SensorCollector(ASensorManager_getInstance(), state->looper);
 }
 
 
@@ -92,6 +107,12 @@ void shutdownEngine(Engine* engine)
 		LOGI(LOGTAG_MAIN,"OpenGL Shutdown");
 	}
 	
+	LOGI(LOGTAG_MAIN,"Deleting engine objects");
+	delete engine->imageCollector; 
+	delete engine->inputHandler;
+	delete engine->sensorCollector;
+
+
 	LOGI(LOGTAG_MAIN,"Shutdown complete.");
 }
 
@@ -102,7 +123,7 @@ void android_main(struct android_app* state)
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
-
+	
 	ARRunner myRunner = ARRunner(&mainEngine);
 
 	struct ARUserData myData;
@@ -111,8 +132,10 @@ void android_main(struct android_app* state)
 	myData.engine = &mainEngine;
 	myData.runner = &myRunner;
 
+
 	state->userData = &myData;
 	
+
 	while (1)
 	{
 		// Read all pending events.
@@ -128,6 +151,11 @@ void android_main(struct android_app* state)
 			if (source != NULL)
 			{
 				source->process(state, source);
+			}
+			//Process sensor events
+			if (ident == LOOPER_ID_USER)
+			{
+				mainEngine.sensorCollector->ProcessSensorEvents();
 			}
 
 			// Check if we are exiting.

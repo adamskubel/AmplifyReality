@@ -12,6 +12,7 @@ ARRunner::ARRunner(Engine * engine)
 	{
 		items[i] = new FrameItem();
 	}
+	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
 		
 	if (USE_CALCULATED_CAMERA_MATRIX)
 	{
@@ -21,7 +22,7 @@ ARRunner::ARRunner(Engine * engine)
 	}
 	else
 	{
-		QRController * qrCont = new QRController();
+		LocationController * qrCont = new LocationController();
 		currentActionMode = QRTrack;
 		LOGI(LOGTAG_MAIN,"Starting with predefined camera matrix");
 	}
@@ -40,7 +41,7 @@ void ARRunner::Initialize(Engine * engine)
 
 void ARRunner::ProcessFrame(Engine* engine)
 {
-	struct timespec  start, end;
+	struct timespec start, end;
 	LOGV("Main","Frame Start");		
 	
 	int lastFrameItem = currentFrameItem;
@@ -52,10 +53,11 @@ void ARRunner::ProcessFrame(Engine* engine)
 	item->drawMode = drawMode;
 	
 	SET_TIME(&start);
-	//Make sure current controller is initialized. NEED TO MOVE THIS!
+
+	//Make sure current controller is initialized. NEED TO MOVE THIS!	
 	currentController->Initialize(engine);
 
-	//The current controller does whatever it wants to here	
+	//The current controller does whatever it wants to here			
 	currentController->ProcessFrame(engine,item);
 	CheckControllerExpiry(engine);
 	SET_TIME(&end);
@@ -93,12 +95,12 @@ void ARRunner::CheckControllerExpiry(Engine * engine)
 			{
 				Mat camera,distortion;
 				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
-				currentController = new QRController(camera,distortion);	
+				currentController = new LocationController(camera,distortion);	
 			}
 			//Otherwise, create the controller using the predefined matrix
 			else
 			{
-				currentController = new QRController();
+				currentController = new LocationController();
 			}
 			currentController->Initialize(engine);					
 			currentActionMode = QRTrack;		
@@ -122,7 +124,7 @@ void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args
 		case (Calibrate):
 			currentActionMode = QRTrack;
 			delete currentController;
-			currentController = new QRController();
+			currentController = new LocationController();
 			break;
 		}
 	}

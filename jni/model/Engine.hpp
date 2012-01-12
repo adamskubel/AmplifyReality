@@ -1,6 +1,7 @@
 #include "display/opengl/OpenGL.hpp"
 #include "datacollection/ImageCollector.hpp"
 #include "userinterface/AndroidInputHandler.hpp"
+#include "datacollection/SensorCollector.hpp"
 
 #ifndef ENGINE_HPP_
 #define ENGINE_HPP_
@@ -20,6 +21,7 @@ public:
 	OpenGL * glRender;
 	ImageCollector * imageCollector;
 	AndroidInputHandler * inputHandler;
+	SensorCollector * sensorCollector;
 
 
 

@@ -3,6 +3,7 @@
 #include <opencv2/core/core.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2\calib3d\calib3d.hpp>
+#include "QRCode.hpp"
 
 #ifndef QR_LOCATPR_HPP_
 #define QR_LOCATPR_HPP_
@@ -21,7 +22,7 @@ private:
 public:
 	QRLocator(Mat  cameraMatrix, Mat distortionMatrix);
 	QRLocator(Mat  cameraMatrix);
-	void transformPoints(Point_<int>* points, int numPoints, float qrSize, Mat& rotationMatrix, Mat& translationMatrix);
+	void transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix);
 };
 
 #endif

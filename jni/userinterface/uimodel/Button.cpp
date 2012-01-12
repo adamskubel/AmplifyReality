@@ -11,16 +11,16 @@ Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillC
 
 void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 {
-	LOGD(LOGTAG_BUTTON,"Adding new delegate to button");
+	LOGD(LOGTAG_INPUT,"Adding new delegate to button");
 	clickDelegateVector.push_back(myDelegate);
 }
 
 UIElement * Button::GetChildAt(cv::Point2i point)
 {
-	LOGD(LOGTAG_BUTTON,"Button: Testing point (%d,%d)",point.x,point.y);
+	LOGD(LOGTAG_INPUT,"Button: Testing point (%d,%d)",point.x,point.y);
 	if (buttonBoundaries.contains(point))
 	{
-		LOGD(LOGTAG_BUTTON,"Button: Point is inside!");
+		LOGD(LOGTAG_INPUT,"Button: Point is inside!");
 		return this;
 	}
 	return NULL;
@@ -28,7 +28,7 @@ UIElement * Button::GetChildAt(cv::Point2i point)
 
 void Button::HandleInput()
 {
-	LOGD(LOGTAG_BUTTON,"Button: Handling input");
+	LOGD(LOGTAG_INPUT,"Button: Handling input");
 	for (int i=0;i<clickDelegateVector.size();i++)
 	{
 		EventArgs args = EventArgs();
