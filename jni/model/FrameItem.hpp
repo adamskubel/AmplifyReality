@@ -60,7 +60,7 @@ public:
 
 	long nanoTimeStamp;
 
-	//PositioningResults * positioningResults;
+	PositioningResults * positioningResults;
 
 private:
 	FrameItem * lastFrame;

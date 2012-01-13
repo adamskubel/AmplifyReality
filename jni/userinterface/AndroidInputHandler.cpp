@@ -16,7 +16,7 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 			{
 				childElement = rootElement->GetChildAt(*(touchEvent.TouchLocations));
 				if (childElement != NULL)
-					childElement->HandleInput();
+					childElement->HandleInput(touchEvent);
 				else
 				{
 					LOGD(LOGTAG_INPUT,"No children found");
@@ -56,6 +56,12 @@ bool AndroidInputHandler::CreateTouchEvent(AInputEvent * inputEvent, TouchEventA
 	if (eventAction == AMOTION_EVENT_ACTION_UP  && CheckEventTime(inputEvent,ARInput::MinimumTouchPressTime))
 	{
 		touchEvent->InputType = ARInput::Press;
+		touchEvent->TouchLocations = new cv::Point2i((int)AMotionEvent_getX(inputEvent,0),(int)AMotionEvent_getY(inputEvent,0));
+		return true;
+	}
+	else if (eventAction == AMOTION_EVENT_ACTION_DOWN)
+	{
+		touchEvent->InputType = ARInput::FingerDown;
 		touchEvent->TouchLocations = new cv::Point2i((int)AMotionEvent_getX(inputEvent,0),(int)AMotionEvent_getY(inputEvent,0));
 		return true;
 	}

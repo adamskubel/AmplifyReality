@@ -5,7 +5,8 @@ Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillC
 	buttonBoundaries = _buttonBoundaries;
 	FillColor = _fillColor;
 	label = _label;
-
+	isPressed = false;
+	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
 }
 
@@ -26,20 +27,29 @@ UIElement * Button::GetChildAt(cv::Point2i point)
 	return NULL;
 }
 
-void Button::HandleInput()
+void Button::HandleInput(TouchEventArgs args)
 {
 	LOGD(LOGTAG_INPUT,"Button: Handling input");
-	for (int i=0;i<clickDelegateVector.size();i++)
+	if (args.InputType == ARInput::Press)
 	{
-		EventArgs args = EventArgs();
-		clickDelegateVector.at(i)(this,args);
+		isPressed = false;
+		for (int i=0;i<clickDelegateVector.size();i++)
+		{
+			EventArgs args = EventArgs();
+			clickDelegateVector.at(i)(this,args);
+		}
+	}
+	else if (args.InputType == ARInput::FingerDown)
+	{
+		isPressed = true;
 	}
 }
+
 
 void Button::Update(FrameItem * item)
 {
 	//Draw button background
-	cv::rectangle(*(item->rgbImage),buttonBoundaries,FillColor,CV_FILLED);
+	cv::rectangle(*(item->rgbImage),buttonBoundaries,(isPressed) ? PressColor : FillColor,CV_FILLED);
 	//Draw border
 	cv::rectangle(*(item->rgbImage),buttonBoundaries,Scalar::all(0),2,CV_AA);
 

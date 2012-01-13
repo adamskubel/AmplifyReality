@@ -161,6 +161,11 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 			LOG_TIME("Camera Matrix Generation", start, end);
 			LOG_Mat(ANDROID_LOG_INFO,LOGTAG_CALIBRATION,"Camera Matrix",cameraMatrix);
 
+			double fovx,fovy,focalLength,aspectRatio;
+			Point2d principalPoint;
+			calibrationMatrixValues(*cameraMatrix,item->grayImage->size(),1,1,fovx,fovy,focalLength,principalPoint,aspectRatio);
+			LOGI(LOGTAG_CALIBRATION,"Camera physical parameters: fovx=%lf,fovy=%lf,focalLength=%lf,PrincipalPoint=(%lf,%lf),aspectRatio=%lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
+
 			calibrationComplete = true;
 			LOGI(LOGTAG_CALIBRATION,"Calibration Complete");
 		}

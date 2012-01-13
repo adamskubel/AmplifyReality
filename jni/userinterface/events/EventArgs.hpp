@@ -19,7 +19,7 @@ namespace ARInput
 
 	enum TouchInputType
 	{
-		Press, Swipe
+		Press, Swipe, FingerDown
 	};
 
 }
@@ -30,7 +30,7 @@ public:
 	EventArgs();
 };
 
-class PhysicalButtonEventArgs// : EventArgs
+class PhysicalButtonEventArgs : public EventArgs
 {
 public:
 	PhysicalButtonEventArgs();
@@ -38,7 +38,7 @@ public:
 };
 
 
-class TouchEventArgs// : EventArgs
+class TouchEventArgs : public EventArgs
 {
 public:
 	TouchEventArgs();

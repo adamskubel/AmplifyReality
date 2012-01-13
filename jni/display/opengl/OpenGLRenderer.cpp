@@ -45,7 +45,7 @@ OpenGL::OpenGL(ANativeWindow* window)
 	LOGI(LOGTAG_OPENGL,"OpenGL initialization complete");		
 }
 
-void OpenGL::StartDraw()
+void OpenGL::StartFrame()
 {		
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();	
@@ -59,7 +59,7 @@ void OpenGL::DrawGLObject(GLObject *object)
 	object->Draw();
 }
 
-void OpenGL::Present()
+void OpenGL::EndFrame()
 {	
     glFlush();
 	eglSwapBuffers( display,  surface);

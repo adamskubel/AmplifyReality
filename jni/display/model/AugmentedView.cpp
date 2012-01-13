@@ -91,7 +91,7 @@ void AugmentedView::SetCameraPosition()
 	glMatrixMode(GL_PROJECTION);	
 	glPushMatrix();
 
-	OpenGLHelper::gluPerspective(60.0f,1.7f,20.0f, 600.0f);
+	OpenGLHelper::gluPerspective(40.0f,1.7f,20.0f, 600.0f);
 
 	if (position->size().area() >= 3)
 	{

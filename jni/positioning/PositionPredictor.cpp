@@ -1,17 +1,9 @@
 #include "positioning/PositionPredictor.hpp"
 
 void PositionPredictor::Update(FrameItem * item)
-{
-	
+{	
 	vector<Mat*> positionVectors = vector<Mat*>();
 	Mat predictedPosition = Mat(), predictedRotation = Mat();
-
-
-
-
-
-
-
 }
 
 static void FirstOrderPrediction(FrameItem * item)

@@ -4,8 +4,8 @@
 LocationController::LocationController()
 {
 	LOGD(LOGTAG_QR,"LocationController created. Using predefined camera matrix.");
-	double data[] = HTC_SENSATION_CAMERA_MATRIX;
-	double data2[] = HTC_SENSATION_DISTORTION_MATRIX;
+	double data[] = DEFAULT_CAMERA_MATRIX;
+	double data2[] = DEFAULT_DISTORTION_MATRIX;
 
 	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data), Mat(1,5,CV_64F,&data2));
 
@@ -19,11 +19,10 @@ LocationController::LocationController(Mat cameraMatrix, Mat distortionMatrix)
 	LOGD(LOGTAG_QR,"LocationController created. Using calculated camera and distortion matrices.");
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 	
-	//augmentedView = new AugmentedView(cameraMatrix);
-
 	initialized = false;
 	LOGD(LOGTAG_QR,"LocationController Instantiation Complete");
 }
+
 
 void LocationController::Initialize(Engine * engine)
 {
@@ -53,10 +52,26 @@ void LocationController::Initialize(Engine * engine)
 	updateObjects.push_back(grid);
 	//End UI
 
-
+	initializeARView();
 
 	initialized = true;
 	LOGD(LOGTAG_QR,"Initialization complete");
+}
+
+void LocationController::initializeARView()
+{
+	LOGD(LOGTAG_QR,"Initializing AR View");
+	//Create Augmented View
+	double data[] = DEFAULT_CAMERA_MATRIX;
+	AugmentedView * augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
+
+	//Add some cubes
+	ARObject * myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(255,0,0,100)),Point3f(0,0,0));
+	augmentedView->AddObject(myCube);	
+	
+	renderObjects.push_back(augmentedView);
+	updateObjects.push_back(augmentedView);
+	LOGD(LOGTAG_QR,"AR View Initialization Complete");
 }
 
 void LocationController::readGyroData(Engine * engine, FrameItem * item)
@@ -111,12 +126,14 @@ void LocationController::ProcessFrame(Engine * engine, FrameItem * item)
 	}
 }
 
-//void LocationController::Render(OpenGL * openGL)
-//{
-//	LOGV(LOGTAG_QR,"Rendering locationcontroller");
-//	if (augmentedView != NULL)
-//		augmentedView->Render(openGL);
-//}
+void LocationController::Render(OpenGL * openGL)
+{
+	LOGV(LOGTAG_QR,"Rendering locationcontroller. %d objects to render.", renderObjects.size());
+	for (int i=0;i<renderObjects.size();i++)
+	{		
+		renderObjects.at(i)->Render(openGL);
+	}
+}
 
 
 void LocationController::getImages(Engine * engine, FrameItem * item)
@@ -225,7 +242,12 @@ LocationController::~LocationController()
 		delete updateObjects.back();
 		updateObjects.pop_back();
 	}
-	//delete augmentedView;
+
+	while(!renderObjects.empty())
+	{
+		delete renderObjects.back();
+		renderObjects.pop_back();
+	}
 	delete qrLocator;
 }
 

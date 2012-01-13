@@ -18,6 +18,10 @@ public:
 	virtual void Initialize(Engine * engine);
 	virtual bool isExpired();
 	virtual bool wasSuccessful();
+	virtual void Render(OpenGL * openGL)
+	{
+		;//Do nothing
+	}
 
 protected:
 	bool initialized;

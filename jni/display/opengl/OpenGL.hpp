@@ -39,8 +39,8 @@ public:
 	int32_t screenHeight;
 	OpenGL(ANativeWindow* window);
 	void DrawGLObject(GLObject * object);
-	void Present();
-	void StartDraw();
+	void StartFrame();
+	void EndFrame();
 	~OpenGL();
 
 };

@@ -48,7 +48,8 @@ private:
 	void Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args);
 	void HandleButtonClick(void * sender, EventArgs args);
 	void InitializeUserInterface(Engine * engine);
-	void CheckControllerExpiry(Engine * engine);
+	void CheckControllerExpiry();
+	void ControllerExpired(CalibrationController * calibrationController);
 
 	//Constants
 	static const int numItems = 2; //Number of previous frames to store
@@ -60,8 +61,10 @@ private:
 	ActionMode currentActionMode;
 	Configuration::DrawMode drawMode;
 	Controller * currentController;
-	std::vector<Updateable*> updateObjects;
-	std::vector<OpenGLRenderable*> renderObjects;
+	QuadBackground * quadBackground;
+
+	/*std::vector<Updateable*> updateObjects;
+	std::vector<OpenGLRenderable*> renderObjects;*/
 
 	
 };

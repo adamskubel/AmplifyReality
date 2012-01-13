@@ -13,7 +13,6 @@ ARRunner::ARRunner(Engine * engine)
 		items[i] = new FrameItem();
 	}
 	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
-	renderObjects = vector<OpenGLRenderable*>();
 		
 	if (USE_CALCULATED_CAMERA_MATRIX)
 	{
@@ -33,31 +32,8 @@ void ARRunner::Initialize(Engine * engine)
 {	
 	InitializeUserInterface(engine);
 	
-	//BG quad must be last value in update vector
-	QuadBackground * quad = new QuadBackground(engine->imageWidth,engine->imageHeight);
-
-	/*vector<OpenGLRenderable*>::iterator it;
-	it = renderObjects.begin();
+	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
 	
-	renderObjects.insert(it,quad);*/
-	updateObjects.push_back(quad);
-	renderObjects.push_back(quad);
-
-	
-	//Create Augmented View
-	double data[] = HTC_SENSATION_CAMERA_MATRIX;
-	AugmentedView * augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
-	//Add some cubes
-	ARObject * myCube = new ARObject(OpenGLHelper::CreateCube(50,Scalar(255,0,0,100)),Point3f(0,0,0));
-	augmentedView->AddObject(myCube);	
-
-	//myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(0,255,0,100)),Point3f(20,20,-250));
-	//augmentedView->AddObject(myCube);
-	//myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(0,0,255,100)),Point3f(-20,-20,250));
-	//augmentedView->AddObject(myCube);
-
-	renderObjects.push_back(augmentedView);
-	updateObjects.push_back(augmentedView);
 }
 
 void ARRunner::ProcessFrame(Engine* engine)
@@ -80,60 +56,58 @@ void ARRunner::ProcessFrame(Engine* engine)
 
 	//The current controller does whatever it wants to here			
 	currentController->ProcessFrame(engine,item);
-	CheckControllerExpiry(engine);
+
+	//Check if controller is done
+	CheckControllerExpiry();
+
 	SET_TIME(&end);
 	LOG_TIME("Controller",start,end);
 	
 	//Update
 	LOGV(LOGTAG_MAIN,"Update Phase");
-	for (int i=0;i<updateObjects.size();i++)
-	{
-		updateObjects.at(i)->Update(item);
-	}
-	
-	//Render OpenGL Objects
-	
-	
-	engine->glRender->StartDraw();
-
-	//LOGV(LOGTAG_MAIN,"OpenGL Render Phase: %d objects to render",renderObjects.size());	
-		for (int i=0;i<renderObjects.size();i++)
-	{		
-		//LOGV(LOGTAG_MAIN,"Rendering object: %d",i);	
-		renderObjects.at(i)->Render(engine->glRender);
-	}
-	//LOGV(LOGTAG_MAIN,"Render phase complete, swapping buffers");	
-	
-	engine->glRender->Present();
+	quadBackground->Update(item);
+		
+	//OpenGL Rendering 
+	LOGV(LOGTAG_MAIN,"Render Phase");	
+	engine->glRender->StartFrame();
+	quadBackground->Render(engine->glRender);
+	currentController->Render(engine->glRender);
+	engine->glRender->EndFrame();
 
 	LOGV(LOGTAG_MAIN,"Frame End");		
 }
 
 
 
-void ARRunner::CheckControllerExpiry(Engine * engine)
+void ARRunner::CheckControllerExpiry()
 {
 	if (currentController->isExpired())
 	{
 		if (currentActionMode == Calibrate)
-		{
-			//If the camera matrices were created correctly, then create a QR controller with them
-			if (currentController->wasSuccessful())
-			{
-				Mat camera,distortion;
-				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
-				currentController = new LocationController(camera,distortion);	
-			}
-			//Otherwise, create the controller using the predefined matrix
-			else
-			{
-				currentController = new LocationController();
-			}
-			currentController->Initialize(engine);			
-			currentActionMode = QRTrack;		
-		}
+			ControllerExpired((CalibrationController*)currentController);
 	}
 }
+
+void ARRunner::ControllerExpired(CalibrationController * calibrationController)
+{
+	LOGI(LOGTAG_MAIN,"Calibration controller expired");
+	//If the camera matrices were created correctly, then create a QR controller with them
+	if (calibrationController->wasSuccessful())
+	{
+		Mat camera,distortion;
+		((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
+	//	delete calibrationController;
+		currentController = new LocationController(camera,distortion);	
+	}
+	//Otherwise, create the controller using the predefined matrix
+	else
+	{
+	//	delete calibrationController;
+		currentController = new LocationController();
+	}		
+	currentActionMode = QRTrack;		
+}
+
 
 void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
 {	
@@ -203,15 +177,6 @@ void ARRunner::DoFrame(Engine* engine)
 
 ARRunner::~ARRunner()
 {
-	while (!updateObjects.empty())
-	{
-		delete updateObjects.back();
-		updateObjects.pop_back();
-	}
-
-	while(!renderObjects.empty())
-	{
-		delete renderObjects.back();
-		renderObjects.pop_back();
-	}
+	delete quadBackground;
+	delete currentController;
 }

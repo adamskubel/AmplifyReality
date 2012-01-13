@@ -31,7 +31,7 @@ public:
 	void ProcessFrame(Engine * engine, FrameItem * item);
 	void Initialize(Engine * engine);
 	//OpenGLRenderable Implementation
-//	void Render(OpenGL * openGL);
+	void Render(OpenGL * openGL);
 
 
 private:
@@ -39,7 +39,11 @@ private:
 	void getImages(Engine* engine, FrameItem * item);
 	void locateCodes(Engine* engine, FrameItem * item);	
 	void readGyroData(Engine * engine, FrameItem * item);
+	void initializeARView();
+
 	std::vector<Updateable*> updateObjects;
+	std::vector<OpenGLRenderable*> renderObjects;
+
 	QRLocator * qrLocator;
 	Label * translationVectorLabel, * gyroDataLabel;
 	//AugmentedView * augmentedView;

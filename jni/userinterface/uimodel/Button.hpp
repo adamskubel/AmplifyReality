@@ -16,14 +16,16 @@ public:
 	void AddClickDelegate(ClickEventDelegate myDelegate);
 	UIElement* GetChildAt(Point2i p);	
 	void Update(FrameItem * item);
-	void HandleInput();
+	void HandleInput(TouchEventArgs args);
 	cv::Rect buttonBoundaries;
 	cv::Scalar FillColor;
 	std::string label;
 
 private:
-	
+	Scalar PressColor;
 	std::vector<ClickEventDelegate> clickDelegateVector;
+
+	bool isPressed;
 
 };
 

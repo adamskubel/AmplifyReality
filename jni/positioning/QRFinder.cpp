@@ -30,21 +30,7 @@ QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector)
 		bottom_right.pt.y = (top_right.pt.y - top_left.pt.y) + bottom_left.pt.y;
 		bottom_right.hitCount = -1;
 		bottom_right.size = 0;
-
-	/*	Point_<int>* points = new Point_<int> [4];
-		points[0].x = (int) top_left.pt.x;
-		points[0].y = (int) top_left.pt.y;
-
-		points[1].x = (int) top_right.pt.x;
-		points[1].y = (int) top_right.pt.y;
-
-		points[2].x = (int) bottom_right.pt.x;
-		points[2].y = (int) bottom_right.pt.y;
-
-		points[3].x = (int) bottom_left.pt.x;
-		points[3].y = (int) bottom_left.pt.y;*/
-
-		
+				
 		SET_TIME(&end);
 		LOG_TIME("QR Search(Found)", start, end);
 		vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();

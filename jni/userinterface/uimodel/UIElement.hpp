@@ -2,6 +2,7 @@
 #include "ExceptionCodes.hpp"
 #include "DebugSettings.hpp"
 #include <opencv2/core/core.hpp>
+#include "userinterface/events/EventArgs.hpp"
 
 
 #ifndef UIELEMENT_HPP_
@@ -16,9 +17,8 @@ public:
 		LOGD(LOGTAG_MAIN,"NullElement");
 		return NULL;
 	};
-	virtual void HandleInput() {};
-	//virtual void TouchEnter() {};
-	//virtual void TouchLeave() {};
+	virtual void HandleInput(EventArgs eventArgs) {};
+	virtual void HandleInput(TouchEventArgs eventArgs) {};
 	std::string Name;
 
 };
