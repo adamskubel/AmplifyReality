@@ -1,0 +1,47 @@
+This document describes the steps required to setup the AmplifyReality project.
+
+1. Ensure the following are installed:
+- Eclipse 
+- EGit plugin for Eclipse
+- Android SDK
+- Android Developer Tools for Eclipse
+- Android NDK (r7 or later)
+- Visual Studio 2010 (Optional)
+
+2. Setup Environment
+- Download OpenCV 2.3.1 from http://sourceforge.net/projects/opencvlibrary/files/opencv-android/2.3.1/
+- Extract the folder "OpenCV-2.3.1" to somewhere on your drive. 
+- Create the windows environment variable "OPENCV_HOME", and point it to the OpenCV-2.3.1 folder. e.g. "C:\OpenCV-2.3.1"
+- Create another windows environment variable "NDK_HOME", and point it to the Android NDK installation folder. e.g. "C:\Android-NDK-r7"
+- In Eclipse, go to Window->Preferences. Under the Run-Debug item, select String Substitution. Add the two environment variables here, the same way they are defined above. 
+- Import the OpenCV project from OPENCV_HOME. In the Android item of the project properties, set it as a library
+
+3. Clone Repository and Setup Projects
+- Put the following line on the clipboard (replace <username> with your username)
+https://username@github.com/adamskubel/AmplifyReality.git
+- Open the "Git Repositories" tab in Eclipse. If this tab is not visible, it can be added through Window->Show View.
+- Right click and select "Paste Repository Path"
+- Enter password, hit next
+- Select on the "master" branch, and hit finish
+- Wait for clone to complete
+- Right click on repository in "Git Repositories" view, and click "Import Projects", select the AmplifyReality project
+- Once the project is created, right click on it and open the properties. Go to the Android item, and add the OpenCV project as a dependency.
+
+4. Editing, Building, and Deploying
+- There is no CDT project because CDT sucks. Eclipse is only used for building and deploying.
+- The project can be edited in Visual Studio by opening the project file in .../AmplifyReality/VisualStudio/
+- If the environment variables were set correctly, all the includes should be found. There will still be some intellisense errors (for external files) but these can be ignored.
+- To build, do a "Clean", with "Build immediately after" selected
+- To deploy, right click and press "Run as Android application". Probably won't work on emulator, reliably tested only on HTC sensation at present. 
+
+Logs:
+- Logs are best read using "adb logcat", because the Eclipse log reader tends to get overfilled quickly. For example log filter strings, see LogDefinitions.h
+
+
+Troubleshooting:
+- If project crashes on startup and/or some library errors are seen in the logs, then OpenCV libraries are probably missing. Make sure that the OpenCV project is in Eclipse and configured as a library, and make sure the AmplifyReality project has a reference to it. 
+
+
+
+
+
