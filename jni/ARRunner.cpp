@@ -13,6 +13,7 @@ ARRunner::ARRunner(Engine * engine)
 		items[i] = new FrameItem();
 	}
 	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
+	renderObjects = vector<OpenGLRenderable*>();
 		
 	if (USE_CALCULATED_CAMERA_MATRIX)
 	{
@@ -22,7 +23,7 @@ ARRunner::ARRunner(Engine * engine)
 	}
 	else
 	{
-		LocationController * qrCont = new LocationController();
+		currentController = new LocationController();
 		currentActionMode = QRTrack;
 		LOGI(LOGTAG_MAIN,"Starting with predefined camera matrix");
 	}
@@ -35,8 +36,28 @@ void ARRunner::Initialize(Engine * engine)
 	//BG quad must be last value in update vector
 	QuadBackground * quad = new QuadBackground(engine->imageWidth,engine->imageHeight);
 
+	/*vector<OpenGLRenderable*>::iterator it;
+	it = renderObjects.begin();
+	
+	renderObjects.insert(it,quad);*/
 	updateObjects.push_back(quad);
 	renderObjects.push_back(quad);
+
+	
+	//Create Augmented View
+	double data[] = HTC_SENSATION_CAMERA_MATRIX;
+	AugmentedView * augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
+	//Add some cubes
+	ARObject * myCube = new ARObject(OpenGLHelper::CreateCube(50,Scalar(255,0,0,100)),Point3f(0,0,0));
+	augmentedView->AddObject(myCube);	
+
+	//myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(0,255,0,100)),Point3f(20,20,-250));
+	//augmentedView->AddObject(myCube);
+	//myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(0,0,255,100)),Point3f(-20,-20,250));
+	//augmentedView->AddObject(myCube);
+
+	renderObjects.push_back(augmentedView);
+	updateObjects.push_back(augmentedView);
 }
 
 void ARRunner::ProcessFrame(Engine* engine)
@@ -71,11 +92,17 @@ void ARRunner::ProcessFrame(Engine* engine)
 	}
 	
 	//Render OpenGL Objects
-	LOGV(LOGTAG_MAIN,"OpenGL Render Phase");	
-	for (int i=0;i<renderObjects.size();i++)
-	{
+	
+	
+	engine->glRender->StartDraw();
+
+	//LOGV(LOGTAG_MAIN,"OpenGL Render Phase: %d objects to render",renderObjects.size());	
+		for (int i=0;i<renderObjects.size();i++)
+	{		
+		//LOGV(LOGTAG_MAIN,"Rendering object: %d",i);	
 		renderObjects.at(i)->Render(engine->glRender);
 	}
+	//LOGV(LOGTAG_MAIN,"Render phase complete, swapping buffers");	
 	
 	engine->glRender->Present();
 
@@ -102,7 +129,7 @@ void ARRunner::CheckControllerExpiry(Engine * engine)
 			{
 				currentController = new LocationController();
 			}
-			currentController->Initialize(engine);					
+			currentController->Initialize(engine);			
 			currentActionMode = QRTrack;		
 		}
 	}
@@ -110,7 +137,7 @@ void ARRunner::CheckControllerExpiry(Engine * engine)
 
 void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
 {	
-	LOGI(LOGTAG_MAIN,"Received button event: %d", args.ButtonCode);
+	LOGD(LOGTAG_MAIN,"Received button event: %d", args.ButtonCode);
 	if (args.ButtonCode == AKEYCODE_MENU)
 	{
 		ActionMode newMode;
@@ -123,8 +150,8 @@ void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args
 			break;
 		case (Calibrate):
 			currentActionMode = QRTrack;
-			delete currentController;
-			currentController = new LocationController();
+			delete currentController;	
+			currentController = new LocationController();	
 			break;
 		}
 	}

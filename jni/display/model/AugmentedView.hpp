@@ -17,12 +17,13 @@ public:
 	void Update(FrameItem * item);
 	void Render(OpenGL * openGL);
 
-	AugmentedView(cv::Mat * cameraMatrix);
+	AugmentedView(cv::Mat cameraMatrix);
+	~AugmentedView();
 	void AddObject(ARObject * arObject);
 
 private:
 	cv::Mat * cameraMatrix;
-	cv::Mat * rotationMatrix, * translationMatrix;
+	cv::Mat * rotation, * position;
 	std::vector<ARObject *> objectVector;
 	void SetCameraPosition();
 

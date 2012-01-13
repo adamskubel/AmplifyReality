@@ -21,12 +21,12 @@ public:
 
 private:
 	GLuint textureID;
-	GLObject * texturedQuad;
+	TexturedGLObject * texturedQuad;
 	static const int bgSize = 20; 
 	int textureWidth, textureHeight, imageWidth, imageHeight;
 	void * imagePixels;
 
-	void drawTexturedObject(GLObject *object);
+	void drawTexturedObject(TexturedGLObject *object);
 	void calculateTextureSize(int imageWidth, int imageHeight, int * textureWidth, int * textureHeight);
 	void SetMatrices(OpenGL * openGL);
 	void CreateTexture(int imageWidth, int imageHeight);

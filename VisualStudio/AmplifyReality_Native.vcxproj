@@ -73,6 +73,7 @@
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
     <ClCompile Include="..\jni\positioning\FindPattern.cpp" />
+    <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\QRFinder.cpp" />
     <ClCompile Include="..\jni\positioning\QRLocator.cpp" />
     <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp" />
@@ -101,9 +102,11 @@
     <ClInclude Include="..\jni\LogDefinitions.h" />
     <ClInclude Include="..\jni\model\Engine.hpp" />
     <ClInclude Include="..\jni\model\FrameItem.hpp" />
+    <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\positioning\FindPattern.h" />
     <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
+    <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\QRCode.hpp" />
     <ClInclude Include="..\jni\positioning\QRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\QRLocator.hpp" />

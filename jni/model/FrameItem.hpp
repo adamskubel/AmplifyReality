@@ -18,6 +18,28 @@ namespace Configuration
 	static const int DrawModeSize = 3;
 }
 
+namespace PositioningMethods
+{
+	enum PositioningMethod
+	{
+		QRCode, MotionSensors, Momentum
+	};
+
+}
+
+/*
+- How was the position determined?
+- What was the position?
+- What is the estimated accuracy of the position?
+*/
+class PositioningResults
+{
+public:
+	PositioningMethods::PositioningMethod positioningMethod;
+	cv::Mat Rotation, Position;
+	cv::Mat RotationError, PositionError;
+};
+
 //Stores the processing inputs and outputs for a given frame.
 //Is designed to be reused indefinitely. This saves the need to reallocate memory. 
 class FrameItem
@@ -35,6 +57,10 @@ public:
 	vector<FrameItem*> getLastFrames();
 	void clearOldData();
 	~FrameItem();
+
+	long nanoTimeStamp;
+
+	//PositioningResults * positioningResults;
 
 private:
 	FrameItem * lastFrame;

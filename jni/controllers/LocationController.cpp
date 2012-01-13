@@ -5,16 +5,24 @@ LocationController::LocationController()
 {
 	LOGD(LOGTAG_QR,"LocationController created. Using predefined camera matrix.");
 	double data[] = HTC_SENSATION_CAMERA_MATRIX;
-	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data));
-	initialized = false;
-}
+	double data2[] = HTC_SENSATION_DISTORTION_MATRIX;
 
+	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data), Mat(1,5,CV_64F,&data2));
+
+
+	initialized = false;
+	LOGD(LOGTAG_QR,"LocationController Instantiation Complete");
+}
 
 LocationController::LocationController(Mat cameraMatrix, Mat distortionMatrix)
 {
 	LOGD(LOGTAG_QR,"LocationController created. Using calculated camera and distortion matrices.");
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
+	
+	//augmentedView = new AugmentedView(cameraMatrix);
+
 	initialized = false;
+	LOGD(LOGTAG_QR,"LocationController Instantiation Complete");
 }
 
 void LocationController::Initialize(Engine * engine)
@@ -23,6 +31,12 @@ void LocationController::Initialize(Engine * engine)
 		return;
 		
 	LOGD(LOGTAG_QR,"Initializing LocationController");
+
+	//Set default position and rotation
+	double defaultRotationData[] = {0,0,0};
+	double defaultPositionData[] = {0,0,20};
+	defaultPosition = new Mat(3,1,CV_64F,&defaultPositionData);
+	defaultRotation = new Mat(3,1,CV_64F,&defaultRotationData);
 	
 	//Sensors - enable gyroscope
 	engine->sensorCollector->EnableSensors(false,true,false);
@@ -37,7 +51,10 @@ void LocationController::Initialize(Engine * engine)
 
 	engine->inputHandler->SetRootUIElement(grid);
 	updateObjects.push_back(grid);
-		
+	//End UI
+
+
+
 	initialized = true;
 	LOGD(LOGTAG_QR,"Initialization complete");
 }
@@ -55,7 +72,12 @@ void LocationController::ProcessFrame(Engine * engine, FrameItem * item)
 {
 	if (!initialized)
 		return;
-
+	
+	double defaultRotationData[] = {0,0,0};
+	double defaultPositionData[] = {0,0,-100};
+	defaultRotation = new Mat(1,3,CV_64F,&defaultRotationData);
+	defaultPosition = new Mat(1,3,CV_64F,&defaultPositionData);
+	
 	LOGV(LOGTAG_QR,"Processing frame");
 	getImages(engine,item);
 	item->qrCode = QRFinder::locateQRCode(*(item->binaryImage), item->ratioMatches);
@@ -71,13 +93,30 @@ void LocationController::ProcessFrame(Engine * engine, FrameItem * item)
 	}
 	drawDebugOverlay(item);	
 
+	if (item->rotationMatrix->size().area() < 3)
+	{
+		LOGD(LOGTAG_QR,"Using default rotation");
+		defaultRotation->copyTo(*(item->rotationMatrix));
+	}
+	if (item->translationMatrix->size().area() < 3)
+	{		
+		LOGD(LOGTAG_QR,"Using default position");
+		defaultPosition->copyTo(*(item->translationMatrix));
+	}
 	readGyroData(engine,item);
-	
+		
 	for (int i=0;i<updateObjects.size();i++)
 	{
 		updateObjects.at(i)->Update(item);
 	}
 }
+
+//void LocationController::Render(OpenGL * openGL)
+//{
+//	LOGV(LOGTAG_QR,"Rendering locationcontroller");
+//	if (augmentedView != NULL)
+//		augmentedView->Render(openGL);
+//}
 
 
 void LocationController::getImages(Engine * engine, FrameItem * item)
@@ -186,6 +225,7 @@ LocationController::~LocationController()
 		delete updateObjects.back();
 		updateObjects.pop_back();
 	}
+	//delete augmentedView;
 	delete qrLocator;
 }
 

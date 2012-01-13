@@ -89,16 +89,7 @@ void OpenGLHelper::gluLookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez,
 }
 
 
-void OpenGLHelper::freeGLObject(GLObject *object) 
-{
-	if (object == NULL)
-		return;
-	delete[] object->colorArray;
-	delete[] object->vertexArray;
-	delete object;
-}
-
-GLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textureHeight, int size) 
+TexturedGLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textureHeight, int size) 
 {
 
 	float aspectRatio = ((float)textureWidth)/textureHeight;
@@ -117,8 +108,7 @@ GLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textureHeight,
 	}
 
 	LOGD("OpenGL","Creating textured quad");
-	GLObject *result;
-	result = newGLObject(4, 3, 2);
+	TexturedGLObject * result = new TexturedGLObject(4, 2);
 
 	result->textureArray[0] = floatToFixed(0);
 	result->textureArray[1] = floatToFixed(0);
@@ -156,19 +146,133 @@ GLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textureHeight,
 	return result;
 }
 
-GLObject * OpenGLHelper::newGLObject(long vertices, int vertexComponents, int textureComponents) 
+void OpenGLHelper::PopulateVertices(GLObject * glObject, vector<cv::Point3f> * vertices)
 {
-	GLObject * result = new GLObject;
+	for (int i=0;i<vertices->size(); i++)
+	{
+		glObject->vertexArray[(i*3)+0] = floatToFixed(vertices->at(i).x); //x
+		glObject->vertexArray[(i*3)+1] = floatToFixed(vertices->at(i).y); //y
+		glObject->vertexArray[(i*3)+2] = floatToFixed(vertices->at(i).z); //z
+	}
+}
 
-	result->count = vertices;
-	result->vertexComponents = vertexComponents;
-	result->textureComponents = textureComponents;
+void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar> * colors)
+{
+	if (colors == NULL || colors->size() == 0)
+	{
+		LOGE("Null or empty vector passed to PopulateColors!");
+		return;
+	}
+	//More faces than colors, so populate until color vector is exhausted, then continue
+	//populating using the last value in the color vector
+	else if (colors->size() < colorObject->count)
+	{
+		LOGW(LOGTAG_OPENGL,"More faces than colors");
+		int colorVectorIndex = 0;
+		for (int i=0;i<colorObject->count;i++)
+		{
+			colorVectorIndex = (i < colors->size()) ? i : colors->size() -1;
+			for (int j=0;j<ColorGLObject::colorComponents;j++)
+			{
+				colorObject->colorArray[(ColorGLObject::colorComponents*i)+j] = (GLubyte) colors->at(colorVectorIndex)[j];
+			}
+		}
+	}
+	//There are enough colors for each face
+	else
+	{
+		for (int i=0;i<colorObject->count;i++)
+		{
+			for (int j=0;j<ColorGLObject::colorComponents;j++)
+			{
+				colorObject->colorArray[(ColorGLObject::colorComponents*i)+j] = (GLubyte) colors->at(i)[0];
+			}
+		}
+	}
+}
 
-	result->vertexArray = new GLfixed[vertices * vertexComponents];
-	result->textureArray = new GLfixed[vertices * textureComponents];
-	result->colorArray = new GLubyte[vertices * 4];
+ColorGLObject * OpenGLHelper::CreateCube(int _size, cv::Scalar color)
+{
+	LOGD(LOGTAG_OPENGL,"Creating cube");
+	ColorGLObject *glObject = new ColorGLObject(24);
 
-	return result;
+	float size = (float)_size/2.0f;
+
+	vector<cv::Point3f> vertices = vector<cv::Point3f>();
+
+	//vertices.push_back(cv::Point3f(size,size,size));
+	//vertices.push_back(cv::Point3f(-size,size,size));
+	//vertices.push_back(cv::Point3f(-size,-size,size));
+	//vertices.push_back(cv::Point3f(size,-size,size));
+
+	//vertices.push_back(cv::Point3f(size,size,-size));
+	//vertices.push_back(cv::Point3f(-size,size,-size));
+	//vertices.push_back(cv::Point3f(-size,-size,-size));
+	//vertices.push_back(cv::Point3f(size,-size,-size));
+	//	
+	//vertices.push_back(cv::Point3f(size,size,size));
+	//vertices.push_back(cv::Point3f(size,-size,size));
+	//vertices.push_back(cv::Point3f(size,-size,-size));
+	//vertices.push_back(cv::Point3f(size,size,-size));
+	//
+	//vertices.push_back(cv::Point3f(-size,size,size));
+	//vertices.push_back(cv::Point3f(-size,-size,size));
+	//vertices.push_back(cv::Point3f(-size,-size,-size));
+	//vertices.push_back(cv::Point3f(-size,size,-size));
+	//		
+	//vertices.push_back(cv::Point3f(size,size,size));
+	//vertices.push_back(cv::Point3f(-size,size,size));
+	//vertices.push_back(cv::Point3f(-size,size,-size));
+	//vertices.push_back(cv::Point3f(size,size,-size));
+	//
+	//vertices.push_back(cv::Point3f(size,-size,size));
+	//vertices.push_back(cv::Point3f(-size,-size,size));
+	//vertices.push_back(cv::Point3f(-size,-size,-size));
+	//vertices.push_back(cv::Point3f(size,-size,-size));
+
+	
+	vertices.push_back(cv::Point3f(-size, -size,  size));
+	vertices.push_back(cv::Point3f(size, -size,  size));
+	vertices.push_back(cv::Point3f(-size,  size,  size));
+	vertices.push_back(cv::Point3f(size,  size,  size));
+
+	vertices.push_back(cv::Point3f(-size, -size, -size));
+	vertices.push_back(cv::Point3f(-size,  size, -size));
+	vertices.push_back(cv::Point3f(size, -size, -size));
+	vertices.push_back(cv::Point3f(size,  size, -size));
+
+	vertices.push_back(cv::Point3f(-size, -size,  size));
+	vertices.push_back(cv::Point3f(-size,  size,  size));
+	vertices.push_back(cv::Point3f(-size, -size, -size));
+	vertices.push_back(cv::Point3f(-size,  size, -size));
+
+	vertices.push_back(cv::Point3f(size, -size, -size));
+	vertices.push_back(cv::Point3f(size,  size, -size));
+	vertices.push_back(cv::Point3f(size, -size,  size));
+	vertices.push_back(cv::Point3f(size,  size,  size));
+
+	vertices.push_back(cv::Point3f(-size,  size,  size));
+	vertices.push_back(cv::Point3f(size,  size,  size));
+	vertices.push_back(cv::Point3f(-size,  size, -size));
+	vertices.push_back(cv::Point3f(size,  size, -size));
+
+	vertices.push_back(cv::Point3f(-size, -size,  size));
+	vertices.push_back(cv::Point3f(-size, -size, -size));
+	vertices.push_back(cv::Point3f(size, -size,  size));
+	vertices.push_back(cv::Point3f(size, -size, -size));
+		
+	LOGD(LOGTAG_OPENGL,"Vertice vector is %d long",vertices.size());
+	PopulateVertices(glObject,&vertices);
+
+	vector<cv::Scalar> colorVector;
+	colorVector.push_back(color);
+	PopulateColors(glObject,&colorVector);
+
+	glObject->width = 2*size;
+	glObject->height = 2*size;
+
+	LOGD(LOGTAG_OPENGL,"Colored cube complete");
+	return glObject;
 }
 
 // Capped conversion from float to fixed.
@@ -181,12 +285,18 @@ long OpenGLHelper::floatToFixed(float value)
 	return (long) (value * 65536);
 }
 
-
-void OpenGLHelper::gluPerspective(GLfloat fovy,GLfloat aspectRatio, GLfloat zNear, GLfloat zFar)
+//Creates a perspective camera matrix centered at the origin facing (0,0,1)
+//FOV is in degrees
+void OpenGLHelper::gluPerspective(GLfloat fovy,GLfloat aspectRatio,  GLfloat zNear, GLfloat zFar)
 {
-	GLfloat top = zFar * tanf(fovy);  
-	GLfloat left = top * aspectRatio;
+	GLfloat fovy_RAD = (PI/180.0f) * fovy;
 
-	glFrustumf(left,-left,-top,top,zNear,zFar);
-	LOGD(LOGTAG_OPENGL,"Created frustum: fovy=%f,left=%f,top=%f",fovy,left,top);
+	GLfloat top = -zNear * tanf(fovy_RAD/2.0f);  
+	GLfloat left = top * aspectRatio;
+	//(left,top) is the upper left corner
+	GLfloat right = -left;
+	GLfloat bottom = -top;
+
+	glFrustumf(left,right,bottom,top,zNear,zFar);
+	LOGV(LOGTAG_OPENGL,"Created frustum: fovy=%f,fovy(RADIANS)=%f,left=%f,top=%f",fovy,fovy_RAD,left,top);
 }

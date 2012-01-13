@@ -40,6 +40,7 @@ public:
 	OpenGL(ANativeWindow* window);
 	void DrawGLObject(GLObject * object);
 	void Present();
+	void StartDraw();
 	~OpenGL();
 
 };

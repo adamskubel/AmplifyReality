@@ -11,6 +11,7 @@ include $(OPENCV_MK_PATH)
 LOCAL_MODULE    := amplify_reality
 LOCAL_SRC_FILES :=	\
 Main.cpp\
+ARRunner.cpp \
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 datacollection/ImageCollector.cpp \
@@ -18,15 +19,16 @@ datacollection/SensorCollector.cpp\
 display/opengl/OpenGLRenderer.cpp \
 display/opengl/OpenGLHelper.cpp \
 display/opengl/QuadBackground.cpp\
+display/model/AugmentedView.cpp\
+display/model/ARObject.cpp\
 controllers/CalibrationController.cpp \
+controllers/LocationController.cpp \
+controllers/Controller.cpp \
 positioning/QRLocator.cpp \
 model/FrameItem.cpp \
 datacollection/ImageProcessor.cpp \
-controllers/LocationController.cpp \
-controllers/Controller.cpp \
 userinterface/AndroidInputHandler.cpp  \
 userinterface/events/EventArgs.cpp \
-ARRunner.cpp \
 userinterface/uimodel/Button.cpp \
 userinterface/uimodel/Label.cpp \
 userinterface/uimodel/GridLayout.cpp \

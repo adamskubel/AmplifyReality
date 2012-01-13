@@ -26,12 +26,6 @@
     <Filter Include="Header Files\model">
       <UniqueIdentifier>{450ef34e-441d-4507-b891-ab381d96d817}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\userinterface">
-      <UniqueIdentifier>{825cf253-e183-4fee-9bba-bbf5b3b5eec4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\userinterface\uimodel">
-      <UniqueIdentifier>{f3d307b2-7cf7-43de-88da-d9772f8e87b7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\srutil">
       <UniqueIdentifier>{b389e50d-89b6-40db-942d-9214bb22fb00}</UniqueIdentifier>
     </Filter>
@@ -44,9 +38,6 @@
     <Filter Include="Header Files\srutil\delegate\detail">
       <UniqueIdentifier>{b1a9b163-3c5b-440f-90eb-0e815627ae0f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\userinterface\events">
-      <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\display">
       <UniqueIdentifier>{8096ab8f-f1df-42b5-b62d-7044c863c213}</UniqueIdentifier>
     </Filter>
@@ -55,6 +46,15 @@
     </Filter>
     <Filter Include="Header Files\display\model">
       <UniqueIdentifier>{a1bc6d4d-81d3-49ae-a062-4da6ba6a0eee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\userinterface">
+      <UniqueIdentifier>{825cf253-e183-4fee-9bba-bbf5b3b5eec4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\userinterface\uimodel">
+      <UniqueIdentifier>{f3d307b2-7cf7-43de-88da-d9772f8e87b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\userinterface\events">
+      <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +115,6 @@
     <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\display\model\AugmentedView.cpp">
-      <Filter>Header Files\display\model</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\display\model\ARObject.cpp">
       <Filter>Header Files\display\model</Filter>
     </ClCompile>
@@ -131,6 +128,12 @@
       <Filter>Header Files\datacollection</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\controllers\LocationController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\PositionPredictor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\model\AugmentedView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -239,6 +242,12 @@
     </ClInclude>
     <ClInclude Include="..\jni\positioning\QRCode.hpp">
       <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\PositionPredictor.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\SensorData.hpp">
+      <Filter>Header Files\model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

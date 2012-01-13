@@ -3,6 +3,10 @@
 #include "model/FrameItem.hpp"
 #include "model/Engine.hpp"
 
+#include "display/model/AugmentedView.hpp"
+#include "display/model/ARObject.hpp"
+#include "display/opengl/OpenGLRenderable.hpp"
+
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"
 
@@ -18,7 +22,7 @@
 using namespace cv;
 using namespace std;
 
-class LocationController : public Controller
+class LocationController : public Controller //,public OpenGLRenderable
 {
 public:
 	LocationController();
@@ -26,6 +30,9 @@ public:
 	~LocationController();
 	void ProcessFrame(Engine * engine, FrameItem * item);
 	void Initialize(Engine * engine);
+	//OpenGLRenderable Implementation
+//	void Render(OpenGL * openGL);
+
 
 private:
 	void drawDebugOverlay(FrameItem * item);
@@ -35,9 +42,12 @@ private:
 	std::vector<Updateable*> updateObjects;
 	QRLocator * qrLocator;
 	Label * translationVectorLabel, * gyroDataLabel;
+	//AugmentedView * augmentedView;
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);
+
+	Mat * defaultPosition, * defaultRotation;
 
 };
 

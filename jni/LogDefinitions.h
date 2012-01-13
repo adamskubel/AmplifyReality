@@ -21,6 +21,7 @@
 #define LOGTAG_INPUT "Input"
 #define LOGTAG_CALIBRATION "Calibration"
 #define LOGTAG_SENSOR "Sensor"
+#define LOGTAG_POSITION "Positioning"
 
 #define STR(tok) #tok
 
@@ -34,9 +35,9 @@
 
 //Disabling verbose and time logging *MAY* improve performance (these events fire really often)
 #ifndef DETAILED_LOGGING_ENABLED
-#define LOGV(TAG,...)  
-#define LOG_TIME(message,start,end)
-#define SET_TIME(timeObject)
+	#define LOGV(TAG,...)  
+	#define LOG_TIME(message,start,end)
+	#define SET_TIME(timeObject)
 #endif
 
 #define  LOGD(TAG,...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_BASE TAG,__VA_ARGS__)
@@ -53,7 +54,9 @@ Suggested logcat filters:
 #1
 AmplifyR:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:D AmplifyR-ImageProcessing:D *:S
 #2
-AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:D  AmplifyR-Calibration:I *:S
+AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:D  AmplifyR-Calibration:I AmplifyR-Positioning:I *:S
+
+AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:I AmplifyR-Positioning:V AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
 */
 
 
@@ -64,7 +67,7 @@ static void LOG_INTRO()
 {
 	LOGI(LOGTAG_MAIN,"******************************");
 	LOGI(LOGTAG_MAIN,"     --Amplified Reality--    ");
-	LOGI(LOGTAG_MAIN,"       Version %s             ","0.01");
+	LOGI(LOGTAG_MAIN,"       Version %s             ","0.02");
 	LOGI(LOGTAG_MAIN,"         Adam Skubel          ");
 	LOGI(LOGTAG_MAIN,"******************************");
 }
@@ -78,6 +81,11 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 	{
 		std::string prefix = std::string("AmplifyR-");
 		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s is NULL",matDescription);
+	}
+	else if (matrix->size().area() == 0)
+	{
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s is empty",matDescription);
 	}
 	else
 	{

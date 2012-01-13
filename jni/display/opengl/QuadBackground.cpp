@@ -21,10 +21,20 @@ void QuadBackground::Render(OpenGL * openGL)
 {
 	struct timespec start,end;
 	SET_TIME(&start);
-	glEnable(GL_TEXTURE_2D);
+
+	//Background Settings
+	/*glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);*/
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+	//glDisable(GL_LIGHTING);	
+	glEnable(GL_TEXTURE_2D);	
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);	
+	glDisableClientState(GL_COLOR_ARRAY);
+
 	SetMatrices(openGL);
-
-
+		
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	
 	//Debugging - Draw a solid color to texture
@@ -45,6 +55,14 @@ void QuadBackground::Render(OpenGL * openGL)
 	//Draw object
 	openGL->DrawGLObject(texturedQuad);
 
+	//Restore Matrix stacks
+	glMatrixMode(GL_PROJECTION); glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+
+	//Restore settings
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisable(GL_TEXTURE_2D);
+	
 	SET_TIME(&end);
 	LOG_TIME("QuadBG Render", start, end);	
 }
@@ -95,9 +113,7 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 	glClearColorx(0, 0, 0, 0); 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	//Define projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();	
+	
 
 	float aspectRatio = ((float)openGL->screenWidth)/openGL->screenHeight;
 
@@ -113,12 +129,15 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 		orthoWidth = bgSize;
 		orthoHeight = ((float)bgSize) / aspectRatio;
 	}
-	
-	glOrthof(0,orthoWidth,0,orthoHeight,-10,10);
 
+	//Define projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glOrthof(0,orthoWidth,0,orthoHeight,-10,10);
+	
 	//Define model matrix
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	glPushMatrix();
 
 	//Assume input image is mirrored on Y axis
 	//Assume X-Y scale is the same - choose Y
@@ -143,5 +162,5 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 QuadBackground::~QuadBackground()
 {	
 	glDeleteTextures(1, & textureID);
-	OpenGLHelper::freeGLObject(texturedQuad);
+	delete texturedQuad;
 }

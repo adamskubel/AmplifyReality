@@ -3,8 +3,12 @@
 
 QRLocator::QRLocator(Mat  _cameraMatrix, Mat  _distortionMatrix)
 {
-	cameraMatrix = new Mat(_cameraMatrix);
-	distortionMatrix = new Mat(_distortionMatrix);
+	cameraMatrix = new Mat();
+	_cameraMatrix.copyTo(*cameraMatrix);
+
+	distortionMatrix = new Mat();
+	_distortionMatrix.copyTo(*distortionMatrix);
+
 	LOGD_Mat(LOGTAG_QR,"Instantiated with camera matrix:",cameraMatrix);
 	LOGD_Mat(LOGTAG_QR,"and with distortion matrix:",distortionMatrix);
 }

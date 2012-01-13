@@ -40,25 +40,28 @@ OpenGL::OpenGL(ANativeWindow* window)
 	LOGI(LOGTAG_OPENGL,"Setting OpenGL parameters");
 	glShadeModel(GL_FLAT);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
+	
 	glViewport(0, 0,  screenWidth,  screenHeight);
 	LOGI(LOGTAG_OPENGL,"OpenGL initialization complete");		
 }
 
+void OpenGL::StartDraw()
+{		
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();	
 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
 
 void OpenGL::DrawGLObject(GLObject *object) 
 {
-	glVertexPointer(object->vertexComponents, GL_FIXED, 0, object->vertexArray);
-	glTexCoordPointer(object->textureComponents, GL_FIXED, 0,object->textureArray);
-	//glColorPointer(4, GL_UNSIGNED_BYTE, 0, object->colorArray);
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, object->count);
+	object->Draw();
 }
 
 void OpenGL::Present()
-{
+{	
+    glFlush();
 	eglSwapBuffers( display,  surface);
 }
 
