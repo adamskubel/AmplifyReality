@@ -8,6 +8,10 @@ class OpenGLRenderable
 {
 public:
 	virtual void Render(OpenGL * openGL);
+	virtual ~OpenGLRenderable()
+	{
+		;
+	}
 };
 
 #endif

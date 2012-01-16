@@ -14,6 +14,10 @@
 class Controller
 {
 public:
+	virtual ~Controller();
+	//{
+	//	LOGE("Controller:: Base destructor called");
+	//}
 	virtual void ProcessFrame(Engine * engine, FrameItem * frame);
 	virtual void Initialize(Engine * engine);
 	virtual bool isExpired();

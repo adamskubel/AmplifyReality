@@ -13,6 +13,7 @@ class Button : public UIElement, public Updateable
 
 public:
 	Button(std::string label, cv::Rect buttonBoundaries, cv::Scalar fillColor);
+	~Button();
 	void AddClickDelegate(ClickEventDelegate myDelegate);
 	UIElement* GetChildAt(Point2i p);	
 	void Update(FrameItem * item);

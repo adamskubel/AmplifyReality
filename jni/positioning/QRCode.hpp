@@ -27,13 +27,17 @@ public:
 	}
 
 	~QRCode() 
-	{
-		while (!finderPatterns->empty())
+	{		
+		if (finderPatterns != NULL)
 		{
-			delete finderPatterns->back();
-			finderPatterns->pop_back();
-		}
-		delete finderPatterns;
+			while (!finderPatterns->empty())
+			{
+				delete finderPatterns->back();
+				finderPatterns->pop_back();
+			}
+			delete finderPatterns;	
+			finderPatterns = NULL;
+		}			
 	}
 
 };

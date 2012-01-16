@@ -8,6 +8,11 @@ Label::Label(std::string text,  cv::Point2i center, cv::Scalar textColor,  cv::S
 	Text = text;
 }
 
+Label::~Label()
+{
+	;
+}
+
 UIElement * Label::GetChildAt(cv::Point2i point)
 {
 	return NULL;

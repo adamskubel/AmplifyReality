@@ -12,11 +12,16 @@
 class UIElement
 {
 public:
+	virtual ~UIElement()
+	{
+		;
+	}
 	virtual UIElement * GetChildAt(cv::Point2i p)
 	{
 		LOGD(LOGTAG_MAIN,"NullElement");
 		return NULL;
 	};
+
 	virtual void HandleInput(EventArgs eventArgs) {};
 	virtual void HandleInput(TouchEventArgs eventArgs) {};
 	std::string Name;

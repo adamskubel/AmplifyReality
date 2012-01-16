@@ -10,6 +10,11 @@ Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillC
 	clickDelegateVector = std::vector<ClickEventDelegate>();
 }
 
+Button::~Button()
+{
+	;
+}
+
 void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 {
 	LOGD(LOGTAG_INPUT,"Adding new delegate to button");

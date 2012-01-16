@@ -10,6 +10,10 @@ class Updateable
 {
 public:
 	virtual void Update(FrameItem * frameItem);
+	virtual ~Updateable()
+	{
+		;
+	}
 };
  
 #endif

@@ -6,7 +6,6 @@ CalibrationController::CalibrationController()
 	imagePoints = new vector<vector<Point2f> >();
 	collectionCount = 0;
 	chessBoardSize = Size_<int>(7, 7);
-	LOGI(LOGTAG_CALIBRATION,"Calibration Controller created");
 
 	updateObjects = vector<Updateable*>();
 
@@ -14,19 +13,25 @@ CalibrationController::CalibrationController()
 	isFinding = false;
 	calibrationComplete = false;
 	initialized = false;
+	LOGI(LOGTAG_CALIBRATION,"Calibration Controller created");
 }
 
 CalibrationController::~CalibrationController()
 {
+	LOGI(LOGTAG_CALIBRATION,"Cleaning up calibration controller");
+	delete objectPoints;
+	delete imagePoints;
+	
+	if (!initialized)
+		return;
+
 	while (!updateObjects.empty())
 	{
 		delete updateObjects.back();
 		updateObjects.pop_back();
 	}
-
-
-	delete objectPoints;
-	delete imagePoints;
+	delete quadBackground;
+	LOGI(LOGTAG_CALIBRATION, "CalibrationController deleted successfully");
 }
 
 void CalibrationController::Initialize(Engine * engine)
@@ -53,6 +58,9 @@ void CalibrationController::Initialize(Engine * engine)
 	engine->inputHandler->SetRootUIElement(layout);
 	updateObjects.push_back(layout);
 
+	//Create background quad
+	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
+
 	initialized = true;
 	LOGI(LOGTAG_CALIBRATION,"Initialization complete");
 }
@@ -77,12 +85,6 @@ void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
 		LOGI(LOGTAG_CALIBRATION,"Exiting by button");
 		exitRequested = true;
 	}
-
-	/*if (button->FillColor != Scalar(255,0,0,255))
-		button->FillColor = Scalar(255,0,0,255);
-	else
-		button->FillColor = Scalar(12,62,141,255);*/
-
 }
 
 bool CalibrationController::isExpired()
@@ -179,6 +181,16 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 	{
 		updateObjects.at(i)->Update(item);
 	}
+
+	quadBackground->SetImage(item->rgbImage);
 	
 	LOGV(LOGTAG_CALIBRATION,"End ProcessFrame");
+}
+
+
+void CalibrationController::Render(OpenGL * openGL)
+{	
+	if (!initialized)
+		return;
+	quadBackground->Render(openGL);
 }

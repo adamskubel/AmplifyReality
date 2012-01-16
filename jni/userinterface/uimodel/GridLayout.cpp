@@ -14,6 +14,7 @@ GridLayout::GridLayout(Engine * engine, Size_<int> _gridSize)
 
 GridLayout::~GridLayout()
 {
+	LOGD(LOGTAG_INPUT,"Deleting GridLayout");
 	while (!childUpdateElements.empty())
 	{
 		delete childUpdateElements.back();
@@ -22,9 +23,9 @@ GridLayout::~GridLayout()
 
 	while(!childUIElements.empty())
 	{
-		delete childUIElements.back();
-		childUIElements.pop_back();
+		childUIElements.pop_back(); //Don't delete again here since UI elements were already deleted above via update vector
 	}
+	LOGD(LOGTAG_INPUT,"Gridlayout deleted successfully.");
 }
 
 bool GridLayout::CheckGridFit(Point2i gridPoint, Size_<int> gridSpan)

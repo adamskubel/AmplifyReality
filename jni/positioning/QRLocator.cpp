@@ -22,6 +22,13 @@ QRLocator::QRLocator(Mat _cameraMatrix)
 	LOGD_Mat(LOGTAG_QR,"Instantiated with only camera matrix:",cameraMatrix);
 }
 
+QRLocator::~QRLocator()
+{
+	delete cameraMatrix;
+	delete distortionMatrix;
+	LOGD(LOGTAG_QR,"QRLocator Deleted Successfully");
+}
+
 //Transform a set of points from camera space to reality space 
 void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix)
 {
@@ -62,6 +69,8 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 	SET_TIME(&end);
 	LOG_TIME("Solve PnP",start,end);
 }
+
+
 
 
 

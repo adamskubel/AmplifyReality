@@ -1,9 +1,9 @@
-#include "controllers/LocationController.hpp"
+#include "controllers/ARController.hpp"
 
 
-LocationController::LocationController()
+ARController::ARController()
 {
-	LOGD(LOGTAG_QR,"LocationController created. Using predefined camera matrix.");
+	LOGD(LOGTAG_QR,"ARController created. Using predefined camera matrix.");
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	double data2[] = DEFAULT_DISTORTION_MATRIX;
 
@@ -11,25 +11,53 @@ LocationController::LocationController()
 
 
 	initialized = false;
-	LOGD(LOGTAG_QR,"LocationController Instantiation Complete");
+	LOGD(LOGTAG_QR,"ARController Instantiation Complete");
 }
 
-LocationController::LocationController(Mat cameraMatrix, Mat distortionMatrix)
+ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 {
-	LOGD(LOGTAG_QR,"LocationController created. Using calculated camera and distortion matrices.");
+	LOGD(LOGTAG_QR,"ARController created. Using calculated camera and distortion matrices.");
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 	
 	initialized = false;
-	LOGD(LOGTAG_QR,"LocationController Instantiation Complete");
+	LOGD(LOGTAG_QR,"ARController Instantiation Complete");
 }
 
 
-void LocationController::Initialize(Engine * engine)
+ARController::~ARController()
+{
+	LOGI(LOGTAG_QR,"Deleting ARController...");
+	
+	delete qrLocator;
+	
+	if (!initialized)
+		return;
+
+	while (!updateObjects.empty())
+	{
+		delete updateObjects.back();
+		updateObjects.pop_back();
+	}
+	
+	//while(!renderObjects.empty())
+	//{
+	//	delete renderObjects.back();
+	//	renderObjects.pop_back();
+	//}
+	delete defaultPosition;
+	delete defaultRotation;
+	delete quadBackground;
+	LOGI(LOGTAG_QR,"ARController deleted successfully");
+}
+
+
+
+void ARController::Initialize(Engine * engine)
 {
 	if (initialized)
 		return;
 		
-	LOGD(LOGTAG_QR,"Initializing LocationController");
+	LOGD(LOGTAG_QR,"Initializing ARController");
 
 	//Set default position and rotation
 	double defaultRotationData[] = {0,0,0};
@@ -48,17 +76,20 @@ void LocationController::Initialize(Engine * engine)
 	gyroDataLabel = new Label("Gyro",Point2i(0,0),Scalar::all(255),Scalar::all(0));
 	grid->AddChild(gyroDataLabel,Point2i(0,2));
 
-	engine->inputHandler->SetRootUIElement(grid);
+	//engine->inputHandler->SetRootUIElement(grid);
 	updateObjects.push_back(grid);
 	//End UI
 
 	initializeARView();
 
+	//Initialize textured quad to render camera image
+	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
+
 	initialized = true;
 	LOGD(LOGTAG_QR,"Initialization complete");
 }
 
-void LocationController::initializeARView()
+void ARController::initializeARView()
 {
 	LOGD(LOGTAG_QR,"Initializing AR View");
 	//Create Augmented View
@@ -74,7 +105,7 @@ void LocationController::initializeARView()
 	LOGD(LOGTAG_QR,"AR View Initialization Complete");
 }
 
-void LocationController::readGyroData(Engine * engine, FrameItem * item)
+void ARController::readGyroData(Engine * engine, FrameItem * item)
 {
 	cv::Mat rotationVector = engine->sensorCollector->GetRotation();
 	rotationVector *= (180.0/PI);
@@ -83,7 +114,7 @@ void LocationController::readGyroData(Engine * engine, FrameItem * item)
 	gyroDataLabel->Text = std::string(string);
 }
 
-void LocationController::ProcessFrame(Engine * engine, FrameItem * item)
+void ARController::ProcessFrame(Engine * engine, FrameItem * item)
 {
 	if (!initialized)
 		return;
@@ -124,11 +155,18 @@ void LocationController::ProcessFrame(Engine * engine, FrameItem * item)
 	{
 		updateObjects.at(i)->Update(item);
 	}
+
+	quadBackground->SetImage(item->rgbImage);
 }
 
-void LocationController::Render(OpenGL * openGL)
+void ARController::Render(OpenGL * openGL)
 {
-	LOGV(LOGTAG_QR,"Rendering locationcontroller. %d objects to render.", renderObjects.size());
+	LOGV(LOGTAG_QR,"Rendering ARController. %d objects to render.", renderObjects.size()+1);
+	if (!initialized)
+		return;
+
+	quadBackground->Render(openGL);
+
 	for (int i=0;i<renderObjects.size();i++)
 	{		
 		renderObjects.at(i)->Render(openGL);
@@ -136,7 +174,7 @@ void LocationController::Render(OpenGL * openGL)
 }
 
 
-void LocationController::getImages(Engine * engine, FrameItem * item)
+void ARController::getImages(Engine * engine, FrameItem * item)
 {
 	struct timespec start, end;
 	
@@ -178,7 +216,7 @@ void LocationController::getImages(Engine * engine, FrameItem * item)
 
 
 
-void LocationController::drawDebugOverlay(FrameItem * item)
+void ARController::drawDebugOverlay(FrameItem * item)
 {
 	LOGV(LOGTAG_QR,"Starting debug draw");
 	struct timespec start, end;
@@ -233,21 +271,5 @@ void LocationController::drawDebugOverlay(FrameItem * item)
 
 	SET_TIME(&end);
 	LOG_TIME("Debug Draw", start, end);
-}
-
-LocationController::~LocationController()
-{
-	while (!updateObjects.empty())
-	{
-		delete updateObjects.back();
-		updateObjects.pop_back();
-	}
-
-	while(!renderObjects.empty())
-	{
-		delete renderObjects.back();
-		renderObjects.pop_back();
-	}
-	delete qrLocator;
 }
 

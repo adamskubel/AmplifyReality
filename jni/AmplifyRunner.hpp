@@ -2,12 +2,11 @@
 
 #include "controllers/Controller.hpp"
 #include "controllers/CalibrationController.hpp"
-#include "controllers/LocationController.hpp"
+#include "controllers/ARController.hpp"
 
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"
 #include "display/opengl/OpenGL.hpp"
-#include "display/opengl/QuadBackground.hpp"
 
 #include "positioning/QRLocator.hpp"
 
@@ -24,12 +23,12 @@
 #ifndef ARRUNNER_HPP_
 #define ARRUNNER_HPP_
 
-class ARRunner
+class AmplifyRunner
 {	
 
 public:
-	ARRunner(Engine * engine);
-	~ARRunner();
+	AmplifyRunner(Engine * engine);
+	~AmplifyRunner();
 
 	void Initialize(Engine * engine);
 	void DoFrame(Engine * engine);
@@ -52,7 +51,7 @@ private:
 	void ControllerExpired(CalibrationController * calibrationController);
 
 	//Constants
-	static const int numItems = 2; //Number of previous frames to store
+	static const int numItems = 3; //Number of previous frames to store
 
 	//Fields
 	struct timespec lastFrameTimeStamp;	
@@ -61,7 +60,6 @@ private:
 	ActionMode currentActionMode;
 	Configuration::DrawMode drawMode;
 	Controller * currentController;
-	QuadBackground * quadBackground;
 
 	/*std::vector<Updateable*> updateObjects;
 	std::vector<OpenGLRenderable*> renderObjects;*/

@@ -2,6 +2,7 @@
 
 void Controller::ProcessFrame(Engine * engine, FrameItem * frame)
 {
+	LOGE("Called Controller::ProcessFrame(...) on base!");
 	throw exception();
 }
 
@@ -19,4 +20,9 @@ bool Controller::isExpired()
 bool Controller::wasSuccessful()
 {
 	return false;
+}
+
+Controller::~Controller()
+{
+	LOGE("Called ~Controller() on base");
 }

@@ -1,17 +1,37 @@
 #include "display/opengl/QuadBackground.hpp"
 
 
-void QuadBackground::Update(FrameItem * item) 
+
+QuadBackground::QuadBackground(int _imageWidth, int _imageHeight)
+{
+	//Create the texture object
+	calculateTextureSize(_imageWidth,_imageHeight,&textureWidth,&textureHeight);
+
+	LOGI(LOGTAG_OPENGL,"Creating texture, width=%d, height=%d", textureWidth, textureHeight);
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(1, &(textureID));
+	LOGD(LOGTAG_OPENGL,"Texture ID is %d", textureID);
+
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	//Initialize texture with blank data
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	texturedQuad = OpenGLHelper::CreateTexturedQuad(textureWidth,textureHeight,bgSize); 
+}
+
+void QuadBackground::SetImage(cv::Mat * image) 
 {	
 	struct timespec start,end;
 	SET_TIME(&start);
-	
-	
+		
 	//Store the size of the image for rendering step
-	imageWidth = item->rgbImage->cols;
-	imageHeight = item->rgbImage->rows;
+	imageWidth = image->cols;
+	imageHeight = image->rows;
 	//Store pointer to image data
-	imagePixels = item->rgbImage->ptr<uint32_t>(0);
+	imagePixels = image->ptr<uint32_t>(0);
 	
 	SET_TIME(&end);
 	LOG_TIME("QuadBG Update", start, end);	
@@ -86,25 +106,6 @@ void QuadBackground::calculateTextureSize(int imageWidth, int imageHeight, int *
 }
 
 
-QuadBackground::QuadBackground(int _imageWidth, int _imageHeight)
-{
-	//Create the texture object
-	calculateTextureSize(_imageWidth,_imageHeight,&textureWidth,&textureHeight);
-
-	LOGI(LOGTAG_OPENGL,"Creating texture, width=%d, height=%d", textureWidth, textureHeight);
-	glEnable(GL_TEXTURE_2D);
-	glGenTextures(1, &(textureID));
-	LOGD(LOGTAG_OPENGL,"Texture ID is %d", textureID);
-
-
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	//Initialize texture with blank data
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	texturedQuad = OpenGLHelper::CreateTexturedQuad(textureWidth,textureHeight,bgSize); 
-}
 
 void QuadBackground::SetMatrices(OpenGL * openGL)
 {	
@@ -163,4 +164,5 @@ QuadBackground::~QuadBackground()
 {	
 	glDeleteTextures(1, & textureID);
 	delete texturedQuad;
+	LOGD(LOGTAG_OPENGL,"QuadBackground Deleted Successfully");
 }

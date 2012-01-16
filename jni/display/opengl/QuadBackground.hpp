@@ -10,13 +10,13 @@
 #ifndef QUADBACKGROUND_HPP_
 #define QUADBACKGROUND_HPP_
 
-class QuadBackground : public OpenGLRenderable, public Updateable
+class QuadBackground : public OpenGLRenderable
 {
 public:
 	QuadBackground(int imageWidth, int imageHeight);
 	~QuadBackground();
 	void Render(OpenGL * openGL);
-	void Update(FrameItem * item);
+	void SetImage(cv::Mat * image);
 
 
 private:

@@ -6,6 +6,8 @@
 #include <opencv2/core/core.hpp>
 #include "opencv2/calib3d/calib3d.hpp"
 
+#include "display/opengl/QuadBackground.hpp"
+
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"
 
@@ -35,6 +37,7 @@ public:
 	void captureImage();
 	void getCameraMatrices(Mat& camera, Mat& distortion);
 	void HandleButtonClick(void * sender, EventArgs args);
+	void Render(OpenGL * openGL);
 
 private:
 	static const int SampleCount = NUM_CALIBRATION_SAMPLES;
@@ -47,7 +50,7 @@ private:
 	Size_<int> chessBoardSize;
 	Mat *distortionMatrix, * cameraMatrix;
 	Button * myCaptureButton;
-
+	QuadBackground * quadBackground;
 	vector<Point3f> generateChessboardPoints(Size_<int> boardDimensions, float squareSize);
 
 	vector<Updateable *> updateObjects;

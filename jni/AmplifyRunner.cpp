@@ -1,7 +1,7 @@
-#include "ARRunner.hpp"
+#include "AmplifyRunner.hpp"
 
 
-ARRunner::ARRunner(Engine * engine)
+AmplifyRunner::AmplifyRunner(Engine * engine)
 {
 	//Start in gray - configurable?
 	drawMode = Configuration::GrayImage;	
@@ -22,38 +22,38 @@ ARRunner::ARRunner(Engine * engine)
 	}
 	else
 	{
-		currentController = new LocationController();
+		currentController = new ARController();
 		currentActionMode = QRTrack;
 		LOGI(LOGTAG_MAIN,"Starting with predefined camera matrix");
 	}
 }
 
-void ARRunner::Initialize(Engine * engine)
+void AmplifyRunner::Initialize(Engine * engine)
 {	
-	InitializeUserInterface(engine);
-	
-	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
-	
+	InitializeUserInterface(engine);	
 }
 
-void ARRunner::ProcessFrame(Engine* engine)
+void AmplifyRunner::ProcessFrame(Engine* engine)
 {
 	struct timespec start, end;
 	LOGV("Main","Frame Start");		
 	
 	int lastFrameItem = currentFrameItem;
 	currentFrameItem = (currentFrameItem + 1) % numItems;
+	LOGV(LOGTAG_MAIN,"Using item %d",currentFrameItem);
+
 	FrameItem * item = items[currentFrameItem];
 
 	item->setPreviousFrame(items[lastFrameItem]);
+	
+	LOGV(LOGTAG_MAIN,"Clearing old data from item");
 	item->clearOldData();
 	item->drawMode = drawMode;
 	
-	SET_TIME(&start);
-
-	//Make sure current controller is initialized. NEED TO MOVE THIS!	
+	//Make sure current controller is initialized. Where should this be?
 	currentController->Initialize(engine);
 
+	SET_TIME(&start);
 	//The current controller does whatever it wants to here			
 	currentController->ProcessFrame(engine,item);
 
@@ -65,12 +65,10 @@ void ARRunner::ProcessFrame(Engine* engine)
 	
 	//Update
 	LOGV(LOGTAG_MAIN,"Update Phase");
-	quadBackground->Update(item);
 		
 	//OpenGL Rendering 
 	LOGV(LOGTAG_MAIN,"Render Phase");	
 	engine->glRender->StartFrame();
-	quadBackground->Render(engine->glRender);
 	currentController->Render(engine->glRender);
 	engine->glRender->EndFrame();
 
@@ -79,37 +77,35 @@ void ARRunner::ProcessFrame(Engine* engine)
 
 
 
-void ARRunner::CheckControllerExpiry()
+void AmplifyRunner::CheckControllerExpiry()
 {
 	if (currentController->isExpired())
 	{
 		if (currentActionMode == Calibrate)
-			ControllerExpired((CalibrationController*)currentController);
+		{
+			LOGI(LOGTAG_MAIN,"Calibration controller expired");
+			//If the camera matrices were created correctly, then create a QR controller with them
+			if (currentController->wasSuccessful())
+			{
+				Mat camera,distortion;
+				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
+				delete currentController;
+				currentController = new ARController(camera,distortion);	
+			}
+			//Otherwise, create the controller using the predefined matrix
+			else
+			{
+				delete currentController;
+				currentController = new ARController();
+			}		
+			currentActionMode = QRTrack;
+		}
 	}
 }
 
-void ARRunner::ControllerExpired(CalibrationController * calibrationController)
-{
-	LOGI(LOGTAG_MAIN,"Calibration controller expired");
-	//If the camera matrices were created correctly, then create a QR controller with them
-	if (calibrationController->wasSuccessful())
-	{
-		Mat camera,distortion;
-		((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
-	//	delete calibrationController;
-		currentController = new LocationController(camera,distortion);	
-	}
-	//Otherwise, create the controller using the predefined matrix
-	else
-	{
-	//	delete calibrationController;
-		currentController = new LocationController();
-	}		
-	currentActionMode = QRTrack;		
-}
 
 
-void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
+void AmplifyRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
 {	
 	LOGD(LOGTAG_MAIN,"Received button event: %d", args.ButtonCode);
 	if (args.ButtonCode == AKEYCODE_MENU)
@@ -118,20 +114,22 @@ void ARRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args
 		switch (currentActionMode)
 		{
 		case (QRTrack):
-			currentActionMode = Calibrate;
 			delete currentController;
+			LOGD(LOGTAG_MAIN,"Deleted ARController from Main");
 			currentController = new CalibrationController();
+			currentActionMode = Calibrate;
 			break;
 		case (Calibrate):
 			currentActionMode = QRTrack;
 			delete currentController;	
-			currentController = new LocationController();	
+			LOGD(LOGTAG_MAIN,"Creating new ARController");
+			currentController = new ARController();	
 			break;
 		}
 	}
 }
 
-void ARRunner::Main_HandleTouchInput(void* sender, TouchEventArgs args)
+void AmplifyRunner::Main_HandleTouchInput(void* sender, TouchEventArgs args)
 {
 	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
 	switch (drawMode)
@@ -150,15 +148,15 @@ void ARRunner::Main_HandleTouchInput(void* sender, TouchEventArgs args)
 
 
 
-void ARRunner::InitializeUserInterface(Engine * engine)
+void AmplifyRunner::InitializeUserInterface(Engine * engine)
 {
 	LOGD(LOGTAG_MAIN,"Initializing user interface");
-	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<ARRunner,&ARRunner::Main_HandleButtonInput>(this));
-	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARRunner,&ARRunner::Main_HandleTouchInput>(this));
+	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<AmplifyRunner,&AmplifyRunner::Main_HandleButtonInput>(this));
+	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<AmplifyRunner,&AmplifyRunner::Main_HandleTouchInput>(this));
 
 }
 
-void ARRunner::DoFrame(Engine* engine)
+void AmplifyRunner::DoFrame(Engine* engine)
 {
 	if (engine->app->window == NULL)
 	{
@@ -169,14 +167,13 @@ void ARRunner::DoFrame(Engine* engine)
 
 	struct timespec now;	
 	SET_TIME(&now);
-	LOG_TIME("Frame", lastFrameTimeStamp,now);
+	LOG_TIME_DEBUG("Frame", lastFrameTimeStamp,now);
 	SET_TIME(&lastFrameTimeStamp);
 }
 
 
 
-ARRunner::~ARRunner()
+AmplifyRunner::~AmplifyRunner()
 {
-	delete quadBackground;
 	delete currentController;
 }

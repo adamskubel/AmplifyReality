@@ -1,6 +1,12 @@
 #include "model/Updateable.hpp"
 #include "display/opengl/OpenGLRenderable.hpp"
 #include "display/opengl/GLObject.hpp"
+//#include "userinterface/uimodel/UIElement.hpp"
+
+//UIElement::~UIElement()
+//{
+//	LOGE("Base constructor called on UIElement");	
+//}
 
 void Updateable::Update(FrameItem * item)
 {
@@ -14,11 +20,11 @@ void OpenGLRenderable::Render(OpenGL * openGL)
 	throw new exception();
 }
 
-GLObject::~GLObject()
-{
-	LOGE("'~GLObject' called on virtual object");
-	throw new exception();
-}
+//GLObject::~GLObject()
+//{
+//	LOGE("'~GLObject' called on virtual object");
+//	throw new exception();
+//}
 
 void GLObject::Draw()
 {

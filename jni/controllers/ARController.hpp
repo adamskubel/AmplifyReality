@@ -16,18 +16,20 @@
 #include "userinterface/uimodel/Label.hpp"
 #include "userinterface/uimodel/GridLayout.hpp"
 
-#ifndef LocationController_HPP_
-#define LocationController_HPP_
+#include "display/opengl/QuadBackground.hpp"
+
+#ifndef ARController_HPP_
+#define ARController_HPP_
 
 using namespace cv;
 using namespace std;
 
-class LocationController : public Controller //,public OpenGLRenderable
+class ARController : public Controller //,public OpenGLRenderable
 {
 public:
-	LocationController();
-	LocationController(Mat camera, Mat distortion);
-	~LocationController();
+	ARController();
+	ARController(Mat camera, Mat distortion);
+	~ARController();
 	void ProcessFrame(Engine * engine, FrameItem * item);
 	void Initialize(Engine * engine);
 	//OpenGLRenderable Implementation
@@ -50,7 +52,8 @@ private:
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);
-
+	
+	QuadBackground * quadBackground;
 	Mat * defaultPosition, * defaultRotation;
 
 };

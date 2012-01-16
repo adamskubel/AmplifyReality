@@ -30,7 +30,8 @@
 
 #define calc_time(start,end) (((end.tv_sec*1000000000LL + end.tv_nsec) - (start.tv_sec*1000000000LL + start.tv_nsec))/1000000LL)
 #define LOGV(TAG,...)  __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_BASE TAG,__VA_ARGS__) 
-#define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
+#define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
+#define LOG_TIME_DEBUG(message,start,end) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
 #define SET_TIME(timeObject) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, timeObject);
 
 //Disabling verbose and time logging *MAY* improve performance (these events fire really often)
@@ -54,11 +55,11 @@ Suggested logcat filters:
 #1
 AmplifyR:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:D AmplifyR-ImageProcessing:D *:S
 #2
-AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:D  AmplifyR-Calibration:I AmplifyR-Positioning:I *:S
+AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:D  AmplifyR-Calibration:I AmplifyR-Positioning:I *:S
 
-AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:I AmplifyR-Positioning:V AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
+AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:I AmplifyR-Positioning:V AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
 
-AmplifyR:D AmplifyR-LocationController:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:I AmplifyR-Positioning:D AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
+AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:V AmplifyR-Positioning:D AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
 */
 
 

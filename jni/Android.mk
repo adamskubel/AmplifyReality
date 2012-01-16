@@ -11,7 +11,7 @@ include $(OPENCV_MK_PATH)
 LOCAL_MODULE    := amplify_reality
 LOCAL_SRC_FILES :=	\
 Main.cpp\
-ARRunner.cpp \
+AmplifyRunner.cpp \
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 datacollection/ImageCollector.cpp \
@@ -22,7 +22,7 @@ display/opengl/QuadBackground.cpp\
 display/model/AugmentedView.cpp\
 display/model/ARObject.cpp\
 controllers/CalibrationController.cpp \
-controllers/LocationController.cpp \
+controllers/ARController.cpp \
 controllers/Controller.cpp \
 positioning/QRLocator.cpp \
 model/FrameItem.cpp \

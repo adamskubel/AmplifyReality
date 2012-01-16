@@ -10,8 +10,11 @@ void FrameItem::setPreviousFrame(FrameItem * frame)
 void FrameItem::clearOldData()
 {
 	if (qrCode != NULL)
-		delete qrCode;	
-	ratioMatches.clear();
+	{
+		delete qrCode;		
+		qrCode = NULL;
+	}
+	ratioMatches.clear(); //Is this safe if vector isn't declard??
 }
 
 vector<FrameItem*> FrameItem::getLastFrames()
@@ -36,8 +39,6 @@ FrameItem::FrameItem()
 	translationMatrix = new Mat();
 	qrCode = NULL;
 	lastFrame = NULL;
-	//qrCode = new QRCode(std::vector<FinderPattern*>(),false);
-
 }
 
 FrameItem::~FrameItem()

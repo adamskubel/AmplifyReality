@@ -56,11 +56,11 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\jni\ARRunner.cpp" />
+    <ClCompile Include="..\jni\AmplifyRunner.cpp" />
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.hpp" />
-    <ClCompile Include="..\jni\controllers\LocationController.cpp" />
+    <ClCompile Include="..\jni\controllers\ARController.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp" />
@@ -84,9 +84,9 @@
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\jni\ARRunner.hpp" />
+    <ClInclude Include="..\jni\AmplifyRunner.hpp" />
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
-    <ClInclude Include="..\jni\controllers\LocationController.hpp" />
+    <ClInclude Include="..\jni\controllers\ARController.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp" />

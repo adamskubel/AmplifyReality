@@ -1,5 +1,5 @@
 #include "android_native_app_glue.h"
-#include "ARRunner.hpp"
+#include "AmplifyRunner.hpp"
 #include "android/sensor.h"
 
 
@@ -12,7 +12,7 @@ void shutdownEngine(Engine* engine);
 
 struct ARUserData
 {	
-	ARRunner * runner;
+	AmplifyRunner * runner;
 	Engine * engine;
 };
 
@@ -124,7 +124,7 @@ void android_main(struct android_app* state)
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
 	
-	ARRunner myRunner = ARRunner(&mainEngine);
+	AmplifyRunner myRunner = AmplifyRunner(&mainEngine);
 
 	struct ARUserData myData;
 	memset(&myData,0,sizeof(ARUserData));
@@ -172,7 +172,7 @@ void android_main(struct android_app* state)
 		}
 	}
 
-	myRunner.~ARRunner();
+	myRunner.~AmplifyRunner();
 	shutdownEngine(&mainEngine);
 
 }

@@ -13,6 +13,7 @@ class Label : public UIElement, public Updateable
 
 public:
 	Label(std::string text,  cv::Point2i center, cv::Scalar textColor,  cv::Scalar fillColor);
+	~Label();
 	UIElement* GetChildAt(Point2i p);	
 	void Update(FrameItem * item);
 	void HandleInput();

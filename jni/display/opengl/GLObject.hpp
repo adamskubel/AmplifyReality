@@ -21,7 +21,10 @@ class GLObject
 public:
 	static const GLint vertexComponents = 3; //Always has 3 vertex componenents (XYZ)
 
-	virtual ~GLObject() = 0;
+	virtual ~GLObject()
+	{
+		;//Base destructor
+	}
 	virtual void Draw();
 
 	GLfixed *vertexArray;
