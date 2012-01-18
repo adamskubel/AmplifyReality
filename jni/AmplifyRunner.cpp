@@ -2,18 +2,7 @@
 
 
 AmplifyRunner::AmplifyRunner(Engine * engine)
-{
-	//Start in gray - configurable?
-	drawMode = Configuration::GrayImage;	
-	currentFrameItem = 0;
-	
-	items = new FrameItem*[numItems];
-	for (int i=0;i < numItems; i ++)
-	{
-		items[i] = new FrameItem();
-	}
-	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
-		
+{		
 	if (USE_CALCULATED_CAMERA_MATRIX)
 	{
 		currentController = new CalibrationController();
@@ -33,32 +22,31 @@ void AmplifyRunner::Initialize(Engine * engine)
 	InitializeUserInterface(engine);	
 }
 
+void AmplifyRunner::Teardown(Engine * engine)
+{
+	if (currentController != NULL)
+	{	
+		currentController->Teardown(engine);
+		delete currentController;
+		currentController = NULL;
+	}
+	LOGI(LOGTAG_MAIN,"AmplifyRunner Teardown Complete");
+}
+
 void AmplifyRunner::ProcessFrame(Engine* engine)
 {
 	struct timespec start, end;
 	LOGV("Main","Frame Start");		
-	
-	int lastFrameItem = currentFrameItem;
-	currentFrameItem = (currentFrameItem + 1) % numItems;
-	LOGV(LOGTAG_MAIN,"Using item %d",currentFrameItem);
-
-	FrameItem * item = items[currentFrameItem];
-
-	item->setPreviousFrame(items[lastFrameItem]);
-	
-	LOGV(LOGTAG_MAIN,"Clearing old data from item");
-	item->clearOldData();
-	item->drawMode = drawMode;
-	
+			
 	//Make sure current controller is initialized. Where should this be?
 	currentController->Initialize(engine);
 
 	SET_TIME(&start);
 	//The current controller does whatever it wants to here			
-	currentController->ProcessFrame(engine,item);
+	currentController->ProcessFrame(engine);
 
 	//Check if controller is done
-	CheckControllerExpiry();
+	CheckControllerExpiry(engine);
 
 	SET_TIME(&end);
 	LOG_TIME("Controller",start,end);
@@ -77,28 +65,40 @@ void AmplifyRunner::ProcessFrame(Engine* engine)
 
 
 
-void AmplifyRunner::CheckControllerExpiry()
+void AmplifyRunner::CheckControllerExpiry(Engine * engine)
 {
-	if (currentController->isExpired())
+	if (currentController->IsExpired())
 	{
 		if (currentActionMode == Calibrate)
 		{
 			LOGI(LOGTAG_MAIN,"Calibration controller expired");
 			//If the camera matrices were created correctly, then create a QR controller with them
-			if (currentController->wasSuccessful())
-			{
+			if (((CalibrationController*)currentController)->wasSuccessful())
+			{				
+				LOGD(LOGTAG_MAIN,"Calibration was completed successfully");
 				Mat camera,distortion;
 				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
+				currentController->Teardown(engine);
 				delete currentController;
 				currentController = new ARController(camera,distortion);	
 			}
 			//Otherwise, create the controller using the predefined matrix
 			else
 			{
+				LOGD(LOGTAG_MAIN,"Calibration was not completed");
+				currentController->Teardown(engine);
 				delete currentController;
 				currentController = new ARController();
 			}		
 			currentActionMode = QRTrack;
+		}
+		else
+		{
+			LOGI(LOGTAG_MAIN,"ARController expired");
+			currentController->Teardown(engine);
+			delete currentController;
+			currentController = new CalibrationController();
+			currentActionMode = Calibrate;
 		}
 	}
 }
@@ -107,10 +107,11 @@ void AmplifyRunner::CheckControllerExpiry()
 
 void AmplifyRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
 {	
-	LOGD(LOGTAG_MAIN,"Received button event: %d", args.ButtonCode);
 	if (args.ButtonCode == AKEYCODE_MENU)
 	{
-		ActionMode newMode;
+		LOGD(LOGTAG_MAIN,"Menu button pressed. Expiring current controller");
+		currentController->SetExpired();
+		/*ActionMode newMode;
 		switch (currentActionMode)
 		{
 		case (QRTrack):
@@ -125,26 +126,10 @@ void AmplifyRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs
 			LOGD(LOGTAG_MAIN,"Creating new ARController");
 			currentController = new ARController();	
 			break;
-		}
+		}*/
 	}
 }
 
-void AmplifyRunner::Main_HandleTouchInput(void* sender, TouchEventArgs args)
-{
-	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
-	switch (drawMode)
-	{
-	case(Configuration::BinaryImage):
-		drawMode = Configuration::ColorImage;
-		break;
-	case(Configuration::GrayImage):
-		drawMode = Configuration::BinaryImage;
-		break;
-	case(Configuration::ColorImage):
-		drawMode = Configuration::GrayImage;
-		break;
-	}
-}
 
 
 
@@ -152,14 +137,13 @@ void AmplifyRunner::InitializeUserInterface(Engine * engine)
 {
 	LOGD(LOGTAG_MAIN,"Initializing user interface");
 	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<AmplifyRunner,&AmplifyRunner::Main_HandleButtonInput>(this));
-	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<AmplifyRunner,&AmplifyRunner::Main_HandleTouchInput>(this));
-
 }
 
 void AmplifyRunner::DoFrame(Engine* engine)
 {
 	if (engine->app->window == NULL)
 	{
+		LOGV(LOGTAG_MAIN,"Window not initialized yet");
 		return;
 	}
 
@@ -175,5 +159,6 @@ void AmplifyRunner::DoFrame(Engine* engine)
 
 AmplifyRunner::~AmplifyRunner()
 {
-	delete currentController;
+	if (currentController != NULL)
+		delete currentController;
 }

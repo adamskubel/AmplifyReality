@@ -56,6 +56,9 @@
     <Filter Include="Header Files\userinterface\events">
       <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{5cd79be5-d217-4cda-b30b-989009e0e824}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -97,9 +100,6 @@
     <ClCompile Include="..\jni\userinterface\AndroidInputHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\userinterface\uimodel\Button.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\userinterface\events\EventArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -115,12 +115,6 @@
     <ClCompile Include="..\jni\display\model\ARObject.cpp">
       <Filter>Header Files\display\model</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp">
-      <Filter>Header Files\userinterface\uimodel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp">
-      <Filter>Header Files\userinterface\uimodel</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp">
       <Filter>Header Files\datacollection</Filter>
     </ClCompile>
@@ -135,6 +129,21 @@
     </ClCompile>
     <ClCompile Include="..\jni\AmplifyRunner.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\PositionSelector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\Button.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\CertaintyIndicator.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -248,6 +257,18 @@
     </ClInclude>
     <ClInclude Include="..\jni\AmplifyRunner.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\InputScaler.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\Drawable.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\PositionSelector.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\CertaintyIndicator.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

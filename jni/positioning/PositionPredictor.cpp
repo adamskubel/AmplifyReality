@@ -1,5 +1,6 @@
 #include "positioning/PositionPredictor.hpp"
 
+/*
 void PositionPredictor::Update(FrameItem * item)
 {	
 	vector<Mat*> positionVectors = vector<Mat*>();
@@ -71,7 +72,7 @@ void PositionPredictor::UnprojectCode(QRCode * qrCode, Mat * predictedPosition, 
 
 /*
 Returns a vector of 3x1 matrices indicating all the past positions
-*/
+*
 void PositionPredictor::ExtractPosition(vector<FrameItem *> * previousItems , vector<Mat*> * positionVectors)
 {
 	for (int i = 0;i < previousItems->size(); i++)
@@ -81,3 +82,4 @@ void PositionPredictor::ExtractPosition(vector<FrameItem *> * previousItems , ve
 }
 
 
+*/

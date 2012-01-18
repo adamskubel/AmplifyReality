@@ -1,4 +1,4 @@
-#include "model/Updateable.hpp"
+#include "model/Drawable.hpp"
 #include "userinterface/uimodel/UIElement.hpp"
 #include "userinterface/events/EventArgs.hpp"
 #include "userinterface/events/EventDelegates.hpp"
@@ -8,7 +8,7 @@
 #ifndef BUTTON_HPP_
 #define BUTTON_HPP_
 
-class Button : public UIElement, public Updateable
+class Button : public UIElement, public Drawable
 {
 
 public:
@@ -16,7 +16,7 @@ public:
 	~Button();
 	void AddClickDelegate(ClickEventDelegate myDelegate);
 	UIElement* GetChildAt(Point2i p);	
-	void Update(FrameItem * item);
+	void Draw(Mat * rgbaImage);
 	void HandleInput(TouchEventArgs args);
 	cv::Rect buttonBoundaries;
 	cv::Scalar FillColor;

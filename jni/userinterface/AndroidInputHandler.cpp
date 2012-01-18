@@ -45,7 +45,7 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 
 void AndroidInputHandler::SetRootUIElement(UIElement * element)
 {
-	rootDefined = true;
+	LOGD(LOGTAG_INPUT,"Root UI Element set");
 	rootElement = element;
 }
 
@@ -111,6 +111,32 @@ void AndroidInputHandler::AddGlobalButtonDelegate(ButtonEventDelegate myDelegate
 void AndroidInputHandler::AddGlobalTouchDelegate(TouchEventDelegate myDelegate)
 {
 	globalTouchEventDelegates.push_back(myDelegate);
+}
+
+void AndroidInputHandler::RemoveDelegate(ButtonEventDelegate removeDelegate)
+{
+	for (int i=0;i<globalButtonEventDelegates.size();i++)
+	{
+		if (globalButtonEventDelegates.at(i) == removeDelegate)
+		{
+			globalButtonEventDelegates.erase(globalButtonEventDelegates.begin()+i);
+			LOGD(LOGTAG_INPUT,"Removed button event delegate at position: %d",i);
+			break;
+		}
+	}
+}
+
+void AndroidInputHandler::RemoveDelegate(TouchEventDelegate removeDelegate)
+{	
+	for (int i=0;i<globalTouchEventDelegates.size();i++)
+	{
+		if (globalTouchEventDelegates.at(i) == removeDelegate)
+		{
+			globalTouchEventDelegates.erase(globalTouchEventDelegates.begin()+i);
+			LOGD(LOGTAG_INPUT,"Removed touch event delegate at position: %d",i);
+			break;
+		}
+	}
 }
 
 bool AndroidInputHandler::CheckEventTime(AInputEvent * inputEvent, int eventTimeMillis)

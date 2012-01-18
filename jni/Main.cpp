@@ -80,8 +80,8 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	
 	//Camera preview size is hardcoded for now
 	//TODO: Read from VC
-	engine.imageWidth = HTC_SENSATION_CAMERA_IMAGE_WIDTH;
-	engine.imageHeight = HTC_SENSATION_CAMERA_IMAGE_HEIGHT;
+	engine.imageWidth = CAMERA_IMAGE_WIDTH;
+	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
 
 	//Initialize objects
 	engine.imageCollector = new ImageCollector(engine.imageWidth, engine.imageHeight);

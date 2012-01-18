@@ -19,7 +19,7 @@ using namespace std;
 class ImageProcessor
 {
 public:
-	static void SimpleThreshold(FrameItem * item);
+	static void SimpleThreshold(Mat * grayImage, Mat * binaryImage);
 	static void FeedbackBinarization(FrameItem * item);
 	static void LocalizedThreshold(FrameItem * item);
 

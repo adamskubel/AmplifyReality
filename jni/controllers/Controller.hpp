@@ -13,22 +13,39 @@
 
 class Controller
 {
-public:
-	virtual ~Controller();
-	//{
-	//	LOGE("Controller:: Base destructor called");
-	//}
-	virtual void ProcessFrame(Engine * engine, FrameItem * frame);
-	virtual void Initialize(Engine * engine);
-	virtual bool isExpired();
-	virtual bool wasSuccessful();
+public:	
+	virtual ~Controller()
+	{
+		LOGE("Controller:: Base destructor called");
+	}
+
+	virtual void ProcessFrame(Engine * engine)
+	{
+		;
+	}
+	virtual void Initialize(Engine * engine)
+	{
+		;
+	}
+	virtual void Teardown(Engine * engine)
+	{
+		;
+	}
+	virtual bool IsExpired()
+	{
+		return isExpired;
+	}
+	virtual bool SetExpired()
+	{
+		isExpired = true;
+	}
 	virtual void Render(OpenGL * openGL)
 	{
-		;//Do nothing
+		;
 	}
 
 protected:
-	bool initialized;
+	bool isInitialized, isExpired;
 
 
 };

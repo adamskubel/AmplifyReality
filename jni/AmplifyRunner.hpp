@@ -32,7 +32,7 @@ public:
 
 	void Initialize(Engine * engine);
 	void DoFrame(Engine * engine);
-	void Cleanup();
+	void Teardown(Engine * engine);
 
 private:
 	//Enumerations
@@ -47,18 +47,14 @@ private:
 	void Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args);
 	void HandleButtonClick(void * sender, EventArgs args);
 	void InitializeUserInterface(Engine * engine);
-	void CheckControllerExpiry();
+	void CheckControllerExpiry(Engine * engine);
 	void ControllerExpired(CalibrationController * calibrationController);
 
-	//Constants
-	static const int numItems = 3; //Number of previous frames to store
+	
 
 	//Fields
 	struct timespec lastFrameTimeStamp;	
-	FrameItem ** items;
-	int currentFrameItem;
 	ActionMode currentActionMode;
-	Configuration::DrawMode drawMode;
 	Controller * currentController;
 
 	/*std::vector<Updateable*> updateObjects;

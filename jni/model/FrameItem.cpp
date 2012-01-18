@@ -32,9 +32,7 @@ vector<FrameItem*> FrameItem::getLastFrames()
 
 FrameItem::FrameItem()
 {
-	rgbImage = new Mat();
-	grayImage = new Mat();
-	binaryImage = new Mat();
+	
 	rotationMatrix = new Mat();
 	translationMatrix = new Mat();
 	qrCode = NULL;
@@ -44,7 +42,4 @@ FrameItem::FrameItem()
 FrameItem::~FrameItem()
 {
 	clearOldData();
-	delete rgbImage;
-	delete grayImage;
-	delete binaryImage;
 }

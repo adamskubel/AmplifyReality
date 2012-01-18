@@ -51,12 +51,12 @@ void Button::HandleInput(TouchEventArgs args)
 }
 
 
-void Button::Update(FrameItem * item)
+void Button::Draw(Mat * rgbaImage)
 {
 	//Draw button background
-	cv::rectangle(*(item->rgbImage),buttonBoundaries,(isPressed) ? PressColor : FillColor,CV_FILLED);
+	cv::rectangle(*rgbaImage,buttonBoundaries,(isPressed) ? PressColor : FillColor,CV_FILLED);
 	//Draw border
-	cv::rectangle(*(item->rgbImage),buttonBoundaries,Scalar::all(0),2,CV_AA);
+	cv::rectangle(*rgbaImage,buttonBoundaries,Scalar::all(0),2,CV_AA);
 
 
 	//Draw button label
@@ -68,6 +68,6 @@ void Button::Update(FrameItem * item)
 
 	Point2i textLocation = Point2i(buttonBoundaries.x + (buttonBoundaries.width - textSize.width)/2,
 		baseline + buttonBoundaries.y + (buttonBoundaries.height - textSize.height)/2);
-	putText(*(item->rgbImage), label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
+	putText(*rgbaImage, label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
 }
 

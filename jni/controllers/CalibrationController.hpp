@@ -15,7 +15,7 @@
 #include "userinterface/uimodel/GridLayout.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include "userinterface/events/EventArgs.hpp"
-
+#include "model/Drawable.hpp"
 
 
 
@@ -31,8 +31,10 @@ public:
 	CalibrationController();
 	~CalibrationController();
 	void Initialize(Engine * engine);
-	void ProcessFrame(Engine * engine, FrameItem * frame);
-	bool isExpired();
+	void Teardown(Engine * engine);
+	void ProcessFrame(Engine * engine);
+	bool IsExpired();
+	bool SetExpired();
 	bool wasSuccessful();
 	void captureImage();
 	void getCameraMatrices(Mat& camera, Mat& distortion);
@@ -53,7 +55,11 @@ private:
 	QuadBackground * quadBackground;
 	vector<Point3f> generateChessboardPoints(Size_<int> boardDimensions, float squareSize);
 
-	vector<Updateable *> updateObjects;
+	cv::Mat *rgbImage, *binaryImage, *grayImage;
+
+	vector<Drawable *> drawObjects;
+
+	GridLayout * layout;
 };
 
 #endif

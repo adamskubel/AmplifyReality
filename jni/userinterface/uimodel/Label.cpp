@@ -23,7 +23,7 @@ void Label::HandleInput()
 	return;
 }
 
-void Label::Update(FrameItem * item)
+void Label::Draw(Mat * rgbaImage)
 {
 	//Draw label
 	int fontFace = FONT_HERSHEY_SIMPLEX;
@@ -35,6 +35,6 @@ void Label::Update(FrameItem * item)
 
 	//Point2i textLocation = Point2i(Center.x - textSize.width/2,Center.y - textSize.height/2);
 	
-	putText(*(item->rgbImage), Text.c_str(), Center, fontFace, fontScale, TextColor, thickness, 8);
+	putText(*rgbaImage, Text.c_str(), Center, fontFace, fontScale, TextColor, thickness, 8);
 }
 

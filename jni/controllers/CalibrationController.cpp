@@ -7,12 +7,17 @@ CalibrationController::CalibrationController()
 	collectionCount = 0;
 	chessBoardSize = Size_<int>(7, 7);
 
-	updateObjects = vector<Updateable*>();
+	drawObjects = vector<Drawable*>();
 
 	exitRequested = false;
 	isFinding = false;
 	calibrationComplete = false;
-	initialized = false;
+	isInitialized = false;
+
+	rgbImage = new Mat();
+	binaryImage = new Mat();
+	grayImage = new Mat();
+
 	LOGI(LOGTAG_CALIBRATION,"Calibration Controller created");
 }
 
@@ -21,14 +26,16 @@ CalibrationController::~CalibrationController()
 	LOGI(LOGTAG_CALIBRATION,"Cleaning up calibration controller");
 	delete objectPoints;
 	delete imagePoints;
-	
-	if (!initialized)
+	delete grayImage, binaryImage, rgbImage;
+
+
+	if (!isInitialized)
 		return;
 
-	while (!updateObjects.empty())
+	while (!drawObjects.empty())
 	{
-		delete updateObjects.back();
-		updateObjects.pop_back();
+		delete drawObjects.back();
+		drawObjects.pop_back();
 	}
 	delete quadBackground;
 	LOGI(LOGTAG_CALIBRATION, "CalibrationController deleted successfully");
@@ -36,11 +43,11 @@ CalibrationController::~CalibrationController()
 
 void CalibrationController::Initialize(Engine * engine)
 {	
-	if (initialized)
+	if (isInitialized)
 		return;
 	LOGI(LOGTAG_CALIBRATION,"Initializing calibration controller");
 
-	GridLayout * layout = new GridLayout(engine,Size_<int>(5,4));
+	layout = new GridLayout(engine,Size_<int>(5,4));
 
 	//Create image capture button
 	myCaptureButton = new Button(std::string("Capture"),cv::Rect(300,300,150,160),Scalar(12,62,141,255));
@@ -56,13 +63,22 @@ void CalibrationController::Initialize(Engine * engine)
 
 	//Set grid layout as the root UI element
 	engine->inputHandler->SetRootUIElement(layout);
-	updateObjects.push_back(layout);
+	drawObjects.push_back(layout);
 
 	//Create background quad
 	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
 
-	initialized = true;
+	isInitialized = true;
 	LOGI(LOGTAG_CALIBRATION,"Initialization complete");
+}
+
+void CalibrationController::Teardown(Engine * engine)
+{
+	if (!isInitialized)
+		return;
+
+	engine->inputHandler->SetRootUIElement(NULL);
+	LOGI(LOGTAG_CALIBRATION,"Teardown complete");
 }
 
 void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
@@ -87,20 +103,32 @@ void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
 	}
 }
 
-bool CalibrationController::isExpired()
+bool CalibrationController::IsExpired()
 {
 	return calibrationComplete || exitRequested;
 }
 
+bool CalibrationController::SetExpired()
+{
+	exitRequested = true;
+}
+
 bool CalibrationController::wasSuccessful()
 {
-	return !exitRequested;
+	return calibrationComplete;
 }
 
 void CalibrationController::getCameraMatrices(Mat &camera, Mat& distortion)
 {
-	camera = cameraMatrix->clone();
-	distortion = distortionMatrix->clone();
+	if (cameraMatrix != NULL && distortionMatrix != NULL)
+	{
+		camera = cameraMatrix->clone();
+		distortion = distortionMatrix->clone();
+	}
+	else
+	{
+		LOGE("CalibrationController: Attempted to clone camera matrices, but matrices were NULL");
+	}
 }
 
 vector<Point3f> CalibrationController::generateChessboardPoints(Size_<int> boardSize, float squareSize)
@@ -118,31 +146,31 @@ vector<Point3f> CalibrationController::generateChessboardPoints(Size_<int> board
 	return points;
 }
 
-void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
+void CalibrationController::ProcessFrame(Engine* engine)
 {
-	if (!initialized)
+	if (!isInitialized)
 		return;
 
 	LOGV(LOGTAG_CALIBRATION,"Begin ProcessFrame");
 	struct timespec start, end;
 	
 	engine->imageCollector->newFrame();	
-	engine->imageCollector->getGrayCameraImage(*(item->grayImage));
-	ImageProcessor::SimpleThreshold(item);	
-	cvtColor(*(item->grayImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
+	engine->imageCollector->getGrayCameraImage(*grayImage);
+	ImageProcessor::SimpleThreshold(grayImage, binaryImage);	
+	cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
 
 	if (isFinding)
 	{
 		vector<Point2f> corners;
 		LOGD(LOGTAG_CALIBRATION,"Finding corners");
-		bool wasFound = findChessboardCorners(*(item->grayImage), chessBoardSize, corners, CALIB_CB_FAST_CHECK);
+		bool wasFound = findChessboardCorners(*grayImage, chessBoardSize, corners, CALIB_CB_FAST_CHECK);
 
 		LOGD(LOGTAG_CALIBRATION,"Drawing corners");
-		drawChessboardCorners(*(item->rgbImage), chessBoardSize, corners, wasFound);
+		drawChessboardCorners(*rgbImage, chessBoardSize, corners, wasFound);
 
 		if (wasFound)
 		{
-			cornerSubPix(*(item->grayImage), corners, Size(10, 10), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+			cornerSubPix(*grayImage, corners, Size(10, 10), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 			objectPoints->push_back(generateChessboardPoints(chessBoardSize, 11.5f));
 			imagePoints->push_back(corners);
 			collectionCount++;
@@ -158,14 +186,14 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 			distortionMatrix = new Mat(3,3,CV_64F);
 			vector<Mat> rotations, translations;
 
-			calibrateCamera(*objectPoints, *imagePoints, (item->grayImage)->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
+			calibrateCamera(*objectPoints, *imagePoints, grayImage->size(), *cameraMatrix, *distortionMatrix, rotations, translations, 0);
 			SET_TIME(&end);
 			LOG_TIME("Camera Matrix Generation", start, end);
 			LOG_Mat(ANDROID_LOG_INFO,LOGTAG_CALIBRATION,"Camera Matrix",cameraMatrix);
 
 			double fovx,fovy,focalLength,aspectRatio;
 			Point2d principalPoint;
-			calibrationMatrixValues(*cameraMatrix,item->grayImage->size(),1,1,fovx,fovy,focalLength,principalPoint,aspectRatio);
+			calibrationMatrixValues(*cameraMatrix,grayImage->size(),1,1,fovx,fovy,focalLength,principalPoint,aspectRatio);
 			LOGI(LOGTAG_CALIBRATION,"Camera physical parameters: fovx=%lf,fovy=%lf,focalLength=%lf,PrincipalPoint=(%lf,%lf),aspectRatio=%lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
 
 			calibrationComplete = true;
@@ -177,12 +205,12 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 	sprintf(myString, "Capture (%d/%d)", collectionCount, SampleCount);
 	myCaptureButton->label = std::string(myString);
 
-	for (int i=0;i<updateObjects.size();i++)
+	for (int i=0;i<drawObjects.size();i++)
 	{
-		updateObjects.at(i)->Update(item);
+		drawObjects.at(i)->Draw(rgbImage);
 	}
 
-	quadBackground->SetImage(item->rgbImage);
+	quadBackground->SetImage(rgbImage);
 	
 	LOGV(LOGTAG_CALIBRATION,"End ProcessFrame");
 }
@@ -190,7 +218,7 @@ void CalibrationController::ProcessFrame(Engine* engine, FrameItem * item)
 
 void CalibrationController::Render(OpenGL * openGL)
 {	
-	if (!initialized)
+	if (!isInitialized)
 		return;
 	quadBackground->Render(openGL);
 }

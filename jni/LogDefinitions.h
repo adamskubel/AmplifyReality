@@ -59,7 +59,7 @@ AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageC
 
 AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:V AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:I AmplifyR-Positioning:V AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
 
-AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:V AmplifyR-Positioning:D AmplifyR-Sensor:I AmplifyR-OpenGL:D *:S
+AmplifyR:D AmplifyR-ARController:D AmplifyR-Main:D AmplifyR-QR:D AmplifyR-ImageCapture:I AmplifyR-ImageProcessing:I AmplifyR-Calibration:V AmplifyR-Positioning:D AmplifyR-Sensor:I AmplifyR-OpenGL:D AmplifyR-Input:D *:S
 */
 
 

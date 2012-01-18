@@ -9,16 +9,16 @@ GridLayout::GridLayout(Engine * engine, Size_<int> _gridSize)
 	LOGD(LOGTAG_INPUT,"Created Grid with cell size[%d,%d]",cellSize.width,cellSize.height);
 
 	childUIElements = vector<UIElement*>();
-	childUpdateElements = vector<Updateable*>();
+	childDrawElements = vector<Drawable*>();
 }
 
 GridLayout::~GridLayout()
 {
 	LOGD(LOGTAG_INPUT,"Deleting GridLayout");
-	while (!childUpdateElements.empty())
+	while (!childDrawElements.empty())
 	{
-		delete childUpdateElements.back();
-		childUpdateElements.pop_back();
+		delete childDrawElements.back();
+		childDrawElements.pop_back();
 	}
 
 	while(!childUIElements.empty())
@@ -38,6 +38,25 @@ bool GridLayout::CheckGridFit(Point2i gridPoint, Size_<int> gridSpan)
 	}
 }
 
+void GridLayout::AddChild(CertaintyIndicator * child, Point2i gridPoint, Size_<int> gridSpan)
+{
+	CheckGridFit(gridPoint,gridSpan);
+
+	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height); //top-left corner
+	float maxRadius = 0.5f * std::min(cellSize.width, cellSize.height);
+	newPoint = newPoint - Point2i(maxRadius,maxRadius);
+
+
+	child->CenterPoint = newPoint;
+	child->SetMaxRadius(maxRadius);
+
+	LOGD(LOGTAG_INPUT,"Adding certainty indicator to grid. Center=(%d,%d), Radius=(%f)",child->CenterPoint.x, child->CenterPoint.y, maxRadius);
+	
+	childUIElements.push_back(child);
+	childDrawElements.push_back(child);
+
+}
+
 void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan)
 {
 	CheckGridFit(gridPoint,gridSpan);
@@ -53,7 +72,7 @@ void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan
 		child->buttonBoundaries.width,child->buttonBoundaries.height);
 	
 	childUIElements.push_back(child);
-	childUpdateElements.push_back(child);
+	childDrawElements.push_back(child);
 
 }
 
@@ -67,14 +86,14 @@ void GridLayout::AddChild(Label * child, Point2i gridPoint, Size_<int> gridSpan)
 	child->Center.y = newPoint.y;
 
 	childUIElements.push_back(child);
-	childUpdateElements.push_back(child);
+	childDrawElements.push_back(child);
 }
 
-void GridLayout::Update(FrameItem * item)
+void GridLayout::Draw(Mat * rgbaImage)
 {
-	for (int i=0;i<childUpdateElements.size();i++)
+	for (int i=0;i<childDrawElements.size();i++)
 	{
-		childUpdateElements.at(i)->Update(item);
+		childDrawElements.at(i)->Draw(rgbaImage);
 	}
 }
 

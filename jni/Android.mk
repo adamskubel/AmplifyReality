@@ -14,6 +14,7 @@ Main.cpp\
 AmplifyRunner.cpp \
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
+positioning/PositionSelector.cpp\
 datacollection/ImageCollector.cpp \
 datacollection/SensorCollector.cpp\
 display/opengl/OpenGLRenderer.cpp \
@@ -32,6 +33,7 @@ userinterface/events/EventArgs.cpp \
 userinterface/uimodel/Button.cpp \
 userinterface/uimodel/Label.cpp \
 userinterface/uimodel/GridLayout.cpp \
+userinterface/uimodel/CertaintyIndicator.cpp\
 VirtualDeclarations.cpp
 
 

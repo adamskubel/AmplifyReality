@@ -5,17 +5,17 @@
 
 
 
-void ImageProcessor::SimpleThreshold(FrameItem * item)
+void ImageProcessor::SimpleThreshold(Mat * grayImage, Mat * binaryImage)
 {
 	LOGV(LOGTAG_IMAGEPROCESSING,"Performing Simple global threshold (Otsu)");
 
 	struct timespec start,end;
 	SET_TIME(&start);	
 
-	if (item->binaryImage == NULL)
-		item->binaryImage = new Mat(); 
+	if (binaryImage == NULL)
+		binaryImage = new Mat(); 
 
-	threshold(*(item->grayImage), *(item->binaryImage), 100, 255, THRESH_OTSU + THRESH_BINARY);	
+	threshold(*grayImage, *binaryImage, 100, 255, THRESH_OTSU + THRESH_BINARY);	
 
 	SET_TIME(&end);
 	LOG_TIME("Simple Threshold", start, end);
@@ -26,7 +26,7 @@ This method uses data from previous frames to determine how to binarize the
 camera image from the current frame.
 */
 void ImageProcessor::FeedbackBinarization(FrameItem * item)
-{
+{ /*
 	LOGV(LOGTAG_IMAGEPROCESSING,"Performing feedback-based threshold");
 	//If the binary image is NULL, initalize it
 	if (item->binaryImage == NULL)
@@ -79,7 +79,7 @@ void ImageProcessor::FeedbackBinarization(FrameItem * item)
 	{
 		//If no previous frames, use global threshold
 		SimpleThreshold(item);
-	}		
+	}		*/
 }
 
 void ImageProcessor::WindowedThreshold(Mat & inputImg, Mat & outputImg, Rect window)
@@ -173,7 +173,7 @@ void ImageProcessor::GetPointAttributes(vector<Point2i> points, Point2i & centro
 
 void ImageProcessor::LocalizedThreshold(FrameItem * item)
 {
-	struct timespec start,end;
+	/*struct timespec start,end;
 	SET_TIME(&start);
 
 	int windowWidth = 0, windowHeight =0;
@@ -181,7 +181,7 @@ void ImageProcessor::LocalizedThreshold(FrameItem * item)
 	localThresholding(*(item->grayImage),*(item->binaryImage),windowWidth,windowHeight);
 
 	SET_TIME(&end);
-	LOG_TIME("Local Threshold", start, end);
+	LOG_TIME("Local Threshold", start, end);*/
 }
 
 void ImageProcessor::calculateWindow(FrameItem item, int * windowWidth, int * windowHeight)

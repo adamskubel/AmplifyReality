@@ -17,6 +17,8 @@ public:
 	int32_t HandleInputEvent(struct android_app* app, AInputEvent* inputEvent);
 	void AddGlobalButtonDelegate(ButtonEventDelegate newDelegate);
 	void AddGlobalTouchDelegate(TouchEventDelegate newDelegate);
+	void RemoveDelegate(TouchEventDelegate removeDelegate);
+	void RemoveDelegate(ButtonEventDelegate removeDelegate);
 	void SetRootUIElement(UIElement * element);
 	
 private:

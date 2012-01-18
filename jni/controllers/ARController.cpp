@@ -9,8 +9,23 @@ ARController::ARController()
 
 	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data), Mat(1,5,CV_64F,&data2));
 
+	grayImage = new Mat();
+	rgbImage = new Mat();
+	binaryImage = new Mat();
 
-	initialized = false;
+	currentFrameItem = numItems-1;
+	items = new FrameItem*[numItems];
+	for (int i=0;i < numItems; i ++)
+	{
+		items[i] = new FrameItem();
+	}
+
+	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
+
+	drawMode = Configuration::DefaultDrawMode;
+
+	isInitialized = false;
+	isExpired = false;
 	LOGD(LOGTAG_QR,"ARController Instantiation Complete");
 }
 
@@ -19,7 +34,7 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 	LOGD(LOGTAG_QR,"ARController created. Using calculated camera and distortion matrices.");
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 	
-	initialized = false;
+	isInitialized = false;
 	LOGD(LOGTAG_QR,"ARController Instantiation Complete");
 }
 
@@ -29,21 +44,22 @@ ARController::~ARController()
 	LOGI(LOGTAG_QR,"Deleting ARController...");
 	
 	delete qrLocator;
+	delete rgbImage, grayImage, binaryImage;
 	
-	if (!initialized)
-		return;
-
-	while (!updateObjects.empty())
+	if (!isInitialized)
 	{
-		delete updateObjects.back();
-		updateObjects.pop_back();
+		LOGW(LOGTAG_QR,"Attempted to delete uninitialized controller");
+		return;
 	}
+
+	drawObjects.clear();
+
+	/*while (!drawObjects.empty())
+	{
+		delete drawObjects.back();
+		drawObjects.pop_back();
+	}*/
 	
-	//while(!renderObjects.empty())
-	//{
-	//	delete renderObjects.back();
-	//	renderObjects.pop_back();
-	//}
 	delete defaultPosition;
 	delete defaultRotation;
 	delete quadBackground;
@@ -54,39 +70,51 @@ ARController::~ARController()
 
 void ARController::Initialize(Engine * engine)
 {
-	if (initialized)
+	if (isInitialized)
 		return;
 		
 	LOGD(LOGTAG_QR,"Initializing ARController");
-
-	//Set default position and rotation
-	double defaultRotationData[] = {0,0,0};
-	double defaultPositionData[] = {0,0,20};
-	defaultPosition = new Mat(3,1,CV_64F,&defaultPositionData);
-	defaultRotation = new Mat(3,1,CV_64F,&defaultRotationData);
-	
+		
 	//Sensors - enable gyroscope
 	engine->sensorCollector->EnableSensors(false,true,false);
 	
 	//Initialize UI
-	GridLayout * grid = new GridLayout(engine,Size_<int>(3,3));
+	GridLayout * grid = new GridLayout(engine,Size_<int>(4,3));	
+	engine->inputHandler->SetRootUIElement(grid);
+	drawObjects.push_back(grid);
+
 	translationVectorLabel = new Label("T",Point2i(0,0),Scalar::all(255),Scalar::all(0));
 	grid->AddChild(translationVectorLabel,Point2i(0,1));
 
 	gyroDataLabel = new Label("Gyro",Point2i(0,0),Scalar::all(255),Scalar::all(0));
-	grid->AddChild(gyroDataLabel,Point2i(0,2));
+	grid->AddChild(gyroDataLabel,Point2i(0,2));	
 
-	//engine->inputHandler->SetRootUIElement(grid);
-	updateObjects.push_back(grid);
+	positionCertainty = new CertaintyIndicator(0);
+	grid->AddChild(positionCertainty,Point2i(2,2));
+	positionCertainty->SetMaxRadius(20); //Override radius set by grid <-- BAD
+
+	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));	
 	//End UI
-
+	
+	positionSelector = new PositionSelector();
+	
 	initializeARView();
 
 	//Initialize textured quad to render camera image
 	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
-
-	initialized = true;
+	
+	//Finished initialization
+	isInitialized = true;
 	LOGD(LOGTAG_QR,"Initialization complete");
+}
+
+void ARController::Teardown(Engine * engine)
+{
+	if (!isInitialized)
+		return;
+
+	engine->inputHandler->RemoveDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));
+	LOGI(LOGTAG_QR,"Teardown complete");
 }
 
 void ARController::initializeARView()
@@ -94,14 +122,13 @@ void ARController::initializeARView()
 	LOGD(LOGTAG_QR,"Initializing AR View");
 	//Create Augmented View
 	double data[] = DEFAULT_CAMERA_MATRIX;
-	AugmentedView * augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
+	augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
 
 	//Add some cubes
 	ARObject * myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(255,0,0,100)),Point3f(0,0,0));
 	augmentedView->AddObject(myCube);	
 	
 	renderObjects.push_back(augmentedView);
-	updateObjects.push_back(augmentedView);
 	LOGD(LOGTAG_QR,"AR View Initialization Complete");
 }
 
@@ -114,10 +141,21 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 	gyroDataLabel->Text = std::string(string);
 }
 
-void ARController::ProcessFrame(Engine * engine, FrameItem * item)
+void ARController::ProcessFrame(Engine * engine)
 {
-	if (!initialized)
+	if (!isInitialized)
 		return;
+
+	//Prepare the frame item
+	int lastFrameItem = currentFrameItem;
+	currentFrameItem = (currentFrameItem + 1) % numItems;
+	LOGV(LOGTAG_MAIN,"Using item %d",currentFrameItem);
+	FrameItem * item = items[currentFrameItem];
+	item->setPreviousFrame(items[lastFrameItem]);
+	
+	LOGV(LOGTAG_MAIN,"Clearing old data from item");
+	item->clearOldData();
+	item->drawMode = drawMode;
 	
 	double defaultRotationData[] = {0,0,0};
 	double defaultPositionData[] = {0,0,-100};
@@ -126,7 +164,7 @@ void ARController::ProcessFrame(Engine * engine, FrameItem * item)
 	
 	LOGV(LOGTAG_QR,"Processing frame");
 	getImages(engine,item);
-	item->qrCode = QRFinder::locateQRCode(*(item->binaryImage), item->ratioMatches);
+	item->qrCode = QRFinder::locateQRCode(*binaryImage, item->ratioMatches);
 	if (item->qrCode != NULL && item->qrCode->validCodeFound)
 	{
 		qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
@@ -137,32 +175,36 @@ void ARController::ProcessFrame(Engine * engine, FrameItem * item)
 			translationVectorLabel->Text = std::string(string);
 		}	
 	}
+	//Draw debugging overlay
 	drawDebugOverlay(item);	
-
-	if (item->rotationMatrix->size().area() < 3)
-	{
-		LOGD(LOGTAG_QR,"Using default rotation");
-		defaultRotation->copyTo(*(item->rotationMatrix));
-	}
-	if (item->translationMatrix->size().area() < 3)
-	{		
-		LOGD(LOGTAG_QR,"Using default position");
-		defaultPosition->copyTo(*(item->translationMatrix));
-	}
-	readGyroData(engine,item);
 		
-	for (int i=0;i<updateObjects.size();i++)
+	//Read data from gyroscope
+	readGyroData(engine,item);
+
+	//Evaluate the position
+	
+	float resultCertainty = positionSelector->UpdatePosition(item);
+	positionCertainty->SetCertainty(resultCertainty);
+
+	if (positionCertainty > 0)
 	{
-		updateObjects.at(i)->Update(item);
+		//Update the 3D AR layer, but only if position certainty is non-zero
+		augmentedView->Update(item);
+	}
+	//Draw objects onto camera texture
+	for (int i=0;i<drawObjects.size();i++)
+	{
+		drawObjects.at(i)->Draw(rgbImage);
 	}
 
-	quadBackground->SetImage(item->rgbImage);
+	//Update textured quad 
+	quadBackground->SetImage(rgbImage);
 }
 
 void ARController::Render(OpenGL * openGL)
 {
 	LOGV(LOGTAG_QR,"Rendering ARController. %d objects to render.", renderObjects.size()+1);
-	if (!initialized)
+	if (!isInitialized)
 		return;
 
 	quadBackground->Render(openGL);
@@ -182,19 +224,19 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	if (item->drawMode == Configuration::ColorImage)
 	{		
 		engine->imageCollector->newFrame();
-		engine->imageCollector->getCameraImages(*(item->rgbImage), *(item->grayImage));
+		engine->imageCollector->getCameraImages(*rgbImage, *grayImage);
 	} 
 	else if (item->drawMode == Configuration::GrayImage || item->drawMode == Configuration::BinaryImage)
 	{
 		SET_TIME(&start);
 		engine->imageCollector->newFrame();
-		engine->imageCollector->getGrayCameraImage(*(item->grayImage));
+		engine->imageCollector->getGrayCameraImage(*grayImage);
 		SET_TIME(&end);
 		LOG_TIME("Image Capture", start, end);
 
 		//Copy gray image to RGB image to be used by the following stages (rendering, debug overlay, etc)
 		SET_TIME(&start)
-		cvtColor(*(item->grayImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
+		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
 		LOG_TIME("Gray->RGBA", start, end);
 	} 
@@ -202,12 +244,12 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	if (USE_FEEDBACK_THRESH)
 		ImageProcessor::FeedbackBinarization(item);
 	else
-		ImageProcessor::SimpleThreshold(item);
+		ImageProcessor::SimpleThreshold(grayImage, binaryImage);
 	
 	if (item->drawMode == Configuration::BinaryImage)
 	{
 		SET_TIME(&start)
-		cvtColor(*(item->binaryImage), *(item->rgbImage), CV_GRAY2RGBA, 4);
+		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
 		LOG_TIME("Binary->RGBA", start, end);
 	}
@@ -231,7 +273,7 @@ void ARController::drawDebugOverlay(FrameItem * item)
 			points[i] = pattern.pt;
 		}
 
-		fillConvexPoly(*(item->rgbImage),points, 4, Scalar(0, 255, 0, 255));	
+		fillConvexPoly(*rgbImage,points, 4, Scalar(0, 255, 0, 255));	
 		delete points;
 	}
 	else if (item->qrCode != NULL)
@@ -260,16 +302,32 @@ void ARController::drawDebugOverlay(FrameItem * item)
 			//const Point_<int> * pArray[] = {&(item->qrCode->finderPatterns.at(i)->pt)};
 			const Point2i * pArray[] = {points};
 
-			polylines(*(item->rgbImage),pArray,&npts,1,true,Scalar(0,0,255,255),4);
+			polylines(*rgbImage,pArray,&npts,1,true,Scalar(0,0,255,255),4);
 			delete points;
 		}
 	}
 	for (size_t i = 0; i < item->ratioMatches.size(); i++)
 	{
-		circle(*(item->rgbImage), Point2i((item->ratioMatches)[i].x, (item->ratioMatches)[i].y), (item->ratioMatches)[i].z, Scalar(255, 0, 0, 255), 1);
+		circle(*rgbImage, Point2i((item->ratioMatches)[i].x, (item->ratioMatches)[i].y), (item->ratioMatches)[i].z, Scalar(255, 0, 0, 255), 1);
 	}
 
 	SET_TIME(&end);
 	LOG_TIME("Debug Draw", start, end);
 }
 
+void ARController::HandleTouchInput(void* sender, TouchEventArgs args)
+{
+	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
+	switch (drawMode)
+	{
+	case(Configuration::BinaryImage):
+		drawMode = Configuration::ColorImage;
+		break;
+	case(Configuration::GrayImage):
+		drawMode = Configuration::BinaryImage;
+		break;
+	case(Configuration::ColorImage):
+		drawMode = Configuration::GrayImage;
+		break;
+	}
+}
