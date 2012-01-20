@@ -36,16 +36,10 @@ public:
 	Configuration::DrawMode drawMode;
 	QRCode * qrCode;
 
-	void setPreviousFrame(FrameItem * frame);
-	vector<FrameItem*> getLastFrames();
 	void clearOldData();
 	~FrameItem();
 
-	long nanoTimeStamp;
-
-private:
-	FrameItem * lastFrame;
-
+	long nanotime;
 
 };
 

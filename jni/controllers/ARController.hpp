@@ -43,7 +43,7 @@ public:
 
 private:
 	//Constants
-	static const int numItems = 3; //Number of previous frames to store
+	static const int numItems = 6; //Number of previous frames to store
 
 	void drawDebugOverlay(FrameItem * item);
 	void getImages(Engine* engine, FrameItem * item);

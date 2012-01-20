@@ -3,12 +3,14 @@
 
 PositionSelector::PositionSelector()
 {
-	//pastResults = deque<PositioningResults*>();
+	pastResults = new CircularList<PositioningResults*>(resultsToKeep);
 }
 
 PositionSelector::~PositionSelector()
 {
-	pastResults.clear();
+	pastResults->clear();
+	delete pastResults;
+	LOGD(LOGTAG_POSITION,"Position Selector Deleted");
 }
 
 /* Set the rotation and translation matrices in the FrameItem to the
@@ -29,6 +31,8 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 	{
 		if (qrCode->validCodeFound)
 		{
+			LOGV(LOGTAG_POSITION,"Using position from code found this frame");
+
 			//Just save the results
 			currentResults = new PositioningResults();
 
@@ -36,37 +40,28 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			currentResults->Rotation = *(item->rotationMatrix);
 			currentResults->positioningMethod = PositioningMethods::QRCode;
 
-			if (pastResults.size() >= resultsToKeep)
-			{
-				delete pastResults.front();
-				pastResults.pop_front();
-			}
-			pastResults.push_back(&(*currentResults));
-
+			pastResults->add(currentResults);
+			
 			return 1.0f;
 		}
 		else //Partial or no code. Ignore partial case for now.
 		{
-			if (pastResults.size() > 0)
+			if (pastResults->size() > 0)
 			{
+				LOGV(LOGTAG_POSITION,"Using last frame's position");
+
 				currentResults = new PositioningResults();
-				PositioningResults * lastResults = pastResults.back();
+				PositioningResults * lastResults = pastResults->front();
 				*(item->translationMatrix) = lastResults->Position;
 				*(item->rotationMatrix) = lastResults->Rotation;
 
 				currentResults->Position = lastResults->Position;
 				currentResults->Rotation = lastResults->Rotation;
 				currentResults->positioningMethod = PositioningMethods::Momentum;
-				
-				if (pastResults.size() >= resultsToKeep)
-				{
-					delete pastResults.front();
-					pastResults.pop_front();
-				}
 
-				pastResults.push_back(currentResults);
+				pastResults->add(currentResults);
+		
 				
-				LOGV(LOGTAG_POSITION,"Using last frame's position");
 				return 0.5f;
 			}
 			else //Just started and there are no past results. Position is completely unknown.
@@ -80,8 +75,6 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 
 void PositionSelector::FirstOrderPrediction(FrameItem * item)
 {
-	//vector<FrameItem *> previousItems = item->getLastFrames();
-
 	//vector<FrameItem *> validFrames = vector<FrameItem*>();
 	////Collect all the frames that have positions found using QRCodes	
 	//for (int i=0;i<previousItems.size();i++)
@@ -97,7 +90,7 @@ void PositionSelector::FirstOrderPrediction(FrameItem * item)
 	//	vector<Mat> velocities;
 	//	for (int i=0;i<validFrames.size() - 1;i++)
 	//	{
-	//		velocities.push_back(CalculateVelocity(validFrames.at(i),validFrames.at(i+1)));
+	//		//velocities.push_back(CalculateVelocity(validFrames.at(i),validFrames.at(i+1)));
 	//	}
 	//	//Average velocities
 	//	for (int i=0;i<velocities.size();i++)
@@ -106,4 +99,10 @@ void PositionSelector::FirstOrderPrediction(FrameItem * item)
 	//	}
 	//
 	//}
+}
+
+//Calculate the difference over time between two points
+static Mat * CalculateVelocity(Mat * p1, Mat * p2, long timedelta)
+{
+
 }

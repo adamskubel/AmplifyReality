@@ -59,6 +59,9 @@
     <Filter Include="Source Files\UI">
       <UniqueIdentifier>{5cd79be5-d217-4cda-b30b-989009e0e824}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\datastructures">
+      <UniqueIdentifier>{6b67b632-5ce4-4b65-9613-8da18ddb3a43}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -144,6 +147,9 @@
     </ClCompile>
     <ClCompile Include="..\jni\userinterface\uimodel\CertaintyIndicator.cpp">
       <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\datastructures\CircularList.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -270,8 +276,12 @@
     <ClInclude Include="..\jni\userinterface\uimodel\CertaintyIndicator.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
+    <ClInclude Include="..\jni\datastructures\CircularList.hpp">
+      <Filter>Header Files\datastructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />
+    <None Include="..\jni\Application.mk" />
   </ItemGroup>
 </Project>

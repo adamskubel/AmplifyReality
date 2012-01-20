@@ -134,6 +134,7 @@ void android_main(struct android_app* state)
 
 
 	state->userData = &myData;
+
 	
 
 	while (1)

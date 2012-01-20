@@ -20,7 +20,7 @@ public:
 	cv::Point2i CenterPoint;
 
 private:
-	float certainty,maxRadius;
+	float percentRadius,maxRadius;
 	cv::Scalar determineColor();
 
 };

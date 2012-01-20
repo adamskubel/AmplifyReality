@@ -64,6 +64,7 @@
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp" />
+    <ClCompile Include="..\jni\datastructures\CircularList.cpp" />
     <ClCompile Include="..\jni\display\model\ARObject.cpp" />
     <ClCompile Include="..\jni\display\model\AugmentedView.cpp" />
     <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp" />
@@ -92,6 +93,7 @@
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp" />
+    <ClInclude Include="..\jni\datastructures\CircularList.hpp" />
     <ClInclude Include="..\jni\DebugSettings.hpp" />
     <ClInclude Include="..\jni\display\model\ARObject.hpp" />
     <ClInclude Include="..\jni\display\model\AugmentedView.hpp" />
@@ -130,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />
+    <None Include="..\jni\Application.mk" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

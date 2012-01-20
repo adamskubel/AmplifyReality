@@ -4,14 +4,20 @@ include $(CLEAR_VARS)
 
 OPENCV_CAMERA_MODULES:=off
 
+#LIB_STL_PATH = C:\Android\android-ndk-r7\sources\cxx-stl\gnu-libstdc++\Android.mk
+#include $(LIB_STL_PATH)
+
 OPENCV_MK_PATH= ${OPENCV_HOME}/share/OpenCV/OpenCV.mk
 include $(OPENCV_MK_PATH)
+
+
 
 
 LOCAL_MODULE    := amplify_reality
 LOCAL_SRC_FILES :=	\
 Main.cpp\
 AmplifyRunner.cpp \
+datastructures/CircularList.cpp\
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 positioning/PositionSelector.cpp\

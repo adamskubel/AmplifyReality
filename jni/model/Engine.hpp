@@ -31,6 +31,13 @@ public:
 	//Camera matrices
 	Mat * cameraMatrix;
 	Mat * distortionMatrix;
+
+
+	//Retrieve current time
+	void getTime(struct timespec * time)
+	{
+		clock_gettime(CLOCK_REALTIME,time);
+	}
 };
 
 

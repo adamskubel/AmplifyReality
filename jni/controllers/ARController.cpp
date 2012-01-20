@@ -63,6 +63,7 @@ ARController::~ARController()
 	delete defaultPosition;
 	delete defaultRotation;
 	delete quadBackground;
+	delete positionSelector;
 	LOGI(LOGTAG_QR,"ARController deleted successfully");
 }
 
@@ -90,7 +91,7 @@ void ARController::Initialize(Engine * engine)
 	grid->AddChild(gyroDataLabel,Point2i(0,2));	
 
 	positionCertainty = new CertaintyIndicator(0);
-	grid->AddChild(positionCertainty,Point2i(2,2));
+	grid->AddChild(positionCertainty,Point2i(3,2));
 	positionCertainty->SetMaxRadius(20); //Override radius set by grid <-- BAD
 
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));	
@@ -128,7 +129,7 @@ void ARController::initializeARView()
 	ARObject * myCube = new ARObject(OpenGLHelper::CreateCube(30,Scalar(255,0,0,100)),Point3f(0,0,0));
 	augmentedView->AddObject(myCube);	
 	
-	renderObjects.push_back(augmentedView);
+	//renderObjects.push_back(augmentedView);
 	LOGD(LOGTAG_QR,"AR View Initialization Complete");
 }
 
@@ -151,16 +152,22 @@ void ARController::ProcessFrame(Engine * engine)
 	currentFrameItem = (currentFrameItem + 1) % numItems;
 	LOGV(LOGTAG_MAIN,"Using item %d",currentFrameItem);
 	FrameItem * item = items[currentFrameItem];
-	item->setPreviousFrame(items[lastFrameItem]);
-	
+
+
 	LOGV(LOGTAG_MAIN,"Clearing old data from item");
 	item->clearOldData();
 	item->drawMode = drawMode;
 	
-	double defaultRotationData[] = {0,0,0};
-	double defaultPositionData[] = {0,0,-100};
-	defaultRotation = new Mat(1,3,CV_64F,&defaultRotationData);
-	defaultPosition = new Mat(1,3,CV_64F,&defaultPositionData);
+	//Set frame timestamp
+	struct timespec time;
+	engine->getTime(&time);
+	item->nanotime = time.tv_nsec;
+
+	
+	//double defaultRotationData[] = {0,0,0};
+	//double defaultPositionData[] = {0,0,-100};
+	//defaultRotation = new Mat(1,3,CV_64F,&defaultRotationData);
+	//defaultPosition = new Mat(1,3,CV_64F,&defaultPositionData);
 	
 	LOGV(LOGTAG_QR,"Processing frame");
 	getImages(engine,item);
@@ -184,16 +191,19 @@ void ARController::ProcessFrame(Engine * engine)
 	//Evaluate the position
 	
 	float resultCertainty = positionSelector->UpdatePosition(item);
+	LOGD(LOGTAG_QR,"Position certainty of %f",resultCertainty);
 	positionCertainty->SetCertainty(resultCertainty);
-
-	if (positionCertainty > 0)
+	if (positionCertainty > 0 && augmentedView != NULL)
 	{
 		//Update the 3D AR layer, but only if position certainty is non-zero
+		LOGD(LOGTAG_QR,"Updating ARView");
 		augmentedView->Update(item);
+		LOGD(LOGTAG_QR,"Update complete");
 	}
 	//Draw objects onto camera texture
 	for (int i=0;i<drawObjects.size();i++)
 	{
+		LOGV(LOGTAG_QR,"Drawing object %d",i);
 		drawObjects.at(i)->Draw(rgbImage);
 	}
 
@@ -203,11 +213,14 @@ void ARController::ProcessFrame(Engine * engine)
 
 void ARController::Render(OpenGL * openGL)
 {
-	LOGV(LOGTAG_QR,"Rendering ARController. %d objects to render.", renderObjects.size()+1);
 	if (!isInitialized)
 		return;
-
+	
+	LOGV(LOGTAG_QR,"Rendering ARController. %d objects to render.", renderObjects.size()+1);
 	quadBackground->Render(openGL);
+
+	if (augmentedView != NULL)
+		augmentedView->Render(openGL);
 
 	for (int i=0;i<renderObjects.size();i++)
 	{		

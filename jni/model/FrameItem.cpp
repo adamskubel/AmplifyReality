@@ -1,10 +1,5 @@
 #include <model/FrameItem.hpp>
 
-void FrameItem::setPreviousFrame(FrameItem * frame)
-{
-	lastFrame = frame;
-}
-
 
 //Empty lists/vectors
 void FrameItem::clearOldData()
@@ -15,28 +10,15 @@ void FrameItem::clearOldData()
 		qrCode = NULL;
 	}
 	ratioMatches.clear(); //Is this safe if vector isn't declard??
+	nanotime = 0;
 }
 
-vector<FrameItem*> FrameItem::getLastFrames()
-{
-	vector<FrameItem *> frameVector = vector<FrameItem *>();
-
-	FrameItem * lastFramePointer = lastFrame;
-	while (lastFramePointer != NULL && lastFramePointer != this)
-	{
-		frameVector.push_back(lastFramePointer);
-		lastFramePointer = lastFramePointer->lastFrame;
-	}
-	return frameVector;
-}
 
 FrameItem::FrameItem()
-{
-	
+{	
 	rotationMatrix = new Mat();
 	translationMatrix = new Mat();
 	qrCode = NULL;
-	lastFrame = NULL;
 }
 
 FrameItem::~FrameItem()

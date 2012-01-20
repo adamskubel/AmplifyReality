@@ -1,5 +1,5 @@
 #include "model/FrameItem.hpp"
-#include "bits/stl_deque.h"
+#include "datastructures/CircularList.hpp"
 
 #ifndef POSITION_SELECTOR_HPP_
 #define POSITION_SELECTOR_HPP_
@@ -37,8 +37,8 @@ public:
 
 private:
 	void FirstOrderPrediction(FrameItem * item);
-	std::deque<PositioningResults*> pastResults;
-	static const int resultsToKeep = 10;
+	CircularList<PositioningResults*> * pastResults;
+	static const int resultsToKeep = 20;
 
 
 };
