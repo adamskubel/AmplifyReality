@@ -1,6 +1,6 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 #include "display/opengl/OpenGLRenderable.hpp"
 #include "display/opengl/OpenGL.hpp"
 #include "display/opengl/OpenGLHelper.hpp"
@@ -10,7 +10,7 @@
 #ifndef QUADBACKGROUND_HPP_
 #define QUADBACKGROUND_HPP_
 
-class QuadBackground : public OpenGLRenderable
+class QuadBackground : public OpenGLRenderable, public IDeletable
 {
 public:
 	QuadBackground(int imageWidth, int imageHeight);

@@ -1,4 +1,4 @@
-#include "userinterface/uimodel/UIElement.hpp"
+#include "userinterface/uimodel/UIElementCollection.hpp"
 #include "model/FrameItem.hpp"
 #include "userinterface/uimodel/Button.hpp"
 #include "userinterface/uimodel/Label.hpp"
@@ -11,7 +11,7 @@
 
 using namespace cv;
 
-class GridLayout : public UIElement, public Drawable
+class GridLayout : public UIElementCollection, public Drawable
 {
 public:	
 	GridLayout(Engine * engine, Size_<int> gridSize);
@@ -22,11 +22,9 @@ public:
 	void AddChild(Button * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
 	void AddChild(Label * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
 
-	UIElement * GetChildAt(Point2i p);	
 	void Draw(Mat * rgbaImage);
 
 private:
-	vector<UIElement*> childUIElements;
 	vector<Drawable*> childDrawElements;
 	Size_<int> gridSize, cellSize;
 

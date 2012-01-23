@@ -177,9 +177,6 @@
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp">
       <Filter>Header Files\datacollection</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\DebugSettings.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\model\FrameItem.hpp">
       <Filter>Header Files\model</Filter>
     </ClInclude>
@@ -278,6 +275,15 @@
     </ClInclude>
     <ClInclude Include="..\jni\datastructures\CircularList.hpp">
       <Filter>Header Files\datastructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\IDeletable.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\UIElementCollection.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\AmplifyRealityGlobals.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

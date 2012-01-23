@@ -12,8 +12,6 @@ class Engine
 public:
 	int imageHeight;
 	int imageWidth;
-	int screenWidth;
-	int screenHeight;
 	struct android_app* app;
 	int animating;
 	

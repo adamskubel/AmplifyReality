@@ -1,5 +1,15 @@
 #include "userinterface/uimodel/Button.hpp"
 
+Button::Button(std::string _label, cv::Scalar _fillColor)
+{
+	buttonBoundaries = Rect(0,0,1,1);
+	FillColor = _fillColor;
+	label = _label;
+	isPressed = false;
+	PressColor = Scalar(124,225,252,255);
+	clickDelegateVector = std::vector<ClickEventDelegate>();
+}
+
 Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillColor)
 {
 	buttonBoundaries = _buttonBoundaries;
@@ -21,7 +31,7 @@ void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 	clickDelegateVector.push_back(myDelegate);
 }
 
-UIElement * Button::GetChildAt(cv::Point2i point)
+UIElement * Button::GetElementAt(cv::Point2i point)
 {
 	LOGD(LOGTAG_INPUT,"Button: Testing point (%d,%d)",point.x,point.y);
 	if (buttonBoundaries.contains(point))

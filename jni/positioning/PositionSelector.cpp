@@ -48,8 +48,6 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 		{
 			if (pastResults->size() > 0)
 			{
-				LOGV(LOGTAG_POSITION,"Using last frame's position");
-
 				currentResults = new PositioningResults();
 				PositioningResults * lastResults = pastResults->front();
 				*(item->translationMatrix) = lastResults->Position;
@@ -58,7 +56,7 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 				currentResults->Position = lastResults->Position;
 				currentResults->Rotation = lastResults->Rotation;
 				currentResults->positioningMethod = PositioningMethods::Momentum;
-
+				LowpassFilter(currentResults, pastResults->front());
 				pastResults->add(currentResults);
 		
 				
@@ -71,6 +69,11 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 		}
 	}
 
+}
+
+void PositionSelector::LowpassFilter(PositioningResults * current, PositioningResults * previous)
+{
+	current->Position = current->Position * 0.9f + previous->Position * 0.1f;
 }
 
 void PositionSelector::FirstOrderPrediction(FrameItem * item)

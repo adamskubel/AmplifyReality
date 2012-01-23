@@ -2,7 +2,7 @@
 
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 
 #include "model/FrameItem.hpp"
 #include "model/Engine.hpp"
@@ -11,7 +11,7 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-class Controller
+class Controller : public IDeletable
 {
 public:	
 	virtual ~Controller()

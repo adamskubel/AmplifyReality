@@ -19,6 +19,10 @@ AmplifyRunner::AmplifyRunner(Engine * engine)
 
 void AmplifyRunner::Initialize(Engine * engine)
 {	
+	LOGI(LOGTAG_MAIN,
+		"Initalizing application. Engine = [screenWidth = %d, screenHeight = %d, imageWidth = %d, imageHeight = %d]",
+		engine->glRender->screenWidth,engine->glRender->screenHeight,engine->imageWidth,engine->imageHeight);
+	
 	InitializeUserInterface(engine);	
 }
 

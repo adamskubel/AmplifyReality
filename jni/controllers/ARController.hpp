@@ -18,6 +18,7 @@
 
 #include "userinterface/uimodel/Label.hpp"
 #include "userinterface/uimodel/GridLayout.hpp"
+#include "userinterface/uimodel/InputScaler.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 
 #include "display/opengl/QuadBackground.hpp"
@@ -40,10 +41,13 @@ public:
 
 	void Render(OpenGL * openGL);
 	void HandleTouchInput(void* sender, TouchEventArgs args);
+	void IncreaseQRScore(void * sender, EventArgs args);
+	void DecreaseQRScore(void * sender, EventArgs args);
 
 private:
 	//Constants
 	static const int numItems = 6; //Number of previous frames to store
+	int minQRScore;
 
 	void drawDebugOverlay(FrameItem * item);
 	void getImages(Engine* engine, FrameItem * item);
@@ -53,6 +57,7 @@ private:
 
 	std::vector<Drawable*> drawObjects;
 	std::vector<OpenGLRenderable*> renderObjects;
+	std::vector<IDeletable*> deletableObjects;
 
 	QRLocator * qrLocator;
 	AugmentedView * augmentedView;
@@ -60,6 +65,7 @@ private:
 	//UI objects
 	Label * translationVectorLabel, * gyroDataLabel;
 	CertaintyIndicator * positionCertainty;
+	GridLayout * grid;
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);

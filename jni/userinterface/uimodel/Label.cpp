@@ -1,19 +1,27 @@
 #include "userinterface/uimodel/Label.hpp"
 
-Label::Label(std::string text,  cv::Point2i center, cv::Scalar textColor,  cv::Scalar fillColor)
+
+Label::Label(std::string text,  cv::Point2i position, cv::Scalar textColor,  cv::Scalar fillColor)
 {
-	Center = center;
+	Position = position;
 	TextColor = textColor;
 	FillColor = fillColor;
 	Text = text;
+
+	FontScale = 1.5;
+	FontThickness = 2;
+	FontFace = FONT_HERSHEY_SIMPLEX;
+
+	fontBaseline = 0;
 }
+
 
 Label::~Label()
 {
 	;
 }
 
-UIElement * Label::GetChildAt(cv::Point2i point)
+UIElement * Label::GetElementAt(cv::Point2i point)
 {
 	return NULL;
 }
@@ -23,18 +31,29 @@ void Label::HandleInput()
 	return;
 }
 
-void Label::Draw(Mat * rgbaImage)
+void Label::SetCenter(Point2i centerPoint)
 {
-	//Draw label
-	int fontFace = FONT_HERSHEY_SIMPLEX;
-	double fontScale = 1.5;
-	int thickness = 2;
-	int baseline = 0;
-	Size textSize = getTextSize(Text.c_str(), fontFace, fontScale, thickness, &baseline);
-	baseline += thickness;
+	Size2i size = GetTextSize();
+	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
+}
 
-	//Point2i textLocation = Point2i(Center.x - textSize.width/2,Center.y - textSize.height/2);
-	
-	putText(*rgbaImage, Text.c_str(), Center, fontFace, fontScale, TextColor, thickness, 8);
+cv::Size2i Label::GetTextSize()
+{
+	fontBaseline = 0;
+	Size textSize = getTextSize(Text.c_str(), FontFace, FontScale, FontThickness, &fontBaseline);
+	fontBaseline += FontThickness;
+	return textSize;
+}
+
+void Label::Draw(Mat * rgbaImage)
+{	
+	//If FillColor has nonzero alpha, draw background rectangle
+	if(FillColor[3] > 0)
+	{
+		Size2i fontSize = GetTextSize();
+		rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
+	}
+
+	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, CV_AA);	
 }
 

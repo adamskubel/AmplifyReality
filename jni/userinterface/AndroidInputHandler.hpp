@@ -1,6 +1,6 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 #include "android_native_app_glue.h"
 #include "userinterface/events/EventDelegates.hpp"
 #include "userinterface/events/EventArgs.hpp"

@@ -12,10 +12,11 @@ class Button : public UIElement, public Drawable
 {
 
 public:
+	Button(std::string label, cv::Scalar fillColor);
 	Button(std::string label, cv::Rect buttonBoundaries, cv::Scalar fillColor);
 	~Button();
 	void AddClickDelegate(ClickEventDelegate myDelegate);
-	UIElement* GetChildAt(Point2i p);	
+	UIElement* GetElementAt(Point2i p);	
 	void Draw(Mat * rgbaImage);
 	void HandleInput(TouchEventArgs args);
 	cv::Rect buttonBoundaries;

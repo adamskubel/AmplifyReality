@@ -37,6 +37,7 @@ CalibrationController::~CalibrationController()
 		delete drawObjects.back();
 		drawObjects.pop_back();
 	}
+	delete inputScaler;
 	delete quadBackground;
 	LOGI(LOGTAG_CALIBRATION, "CalibrationController deleted successfully");
 }
@@ -62,7 +63,9 @@ void CalibrationController::Initialize(Engine * engine)
 	layout->AddChild(exitButton,Point2i(4,0),Size_<int>(1,1));
 
 	//Set grid layout as the root UI element
-	engine->inputHandler->SetRootUIElement(layout);
+	inputScaler = new InputScaler(max((float)engine->imageWidth/engine->glRender->screenWidth,(float)engine->imageHeight/engine->glRender->screenHeight),layout);
+
+	engine->inputHandler->SetRootUIElement(inputScaler);
 	drawObjects.push_back(layout);
 
 	//Create background quad

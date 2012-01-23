@@ -1,7 +1,7 @@
 #include <android/log.h>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 
 #ifndef LOGDEF_HPP_
 #define LOGDEF_HPP_
@@ -14,6 +14,7 @@
 #define  LOG_TAG_TIME_BASE    "AmplifyR-Time-"
 
 #define LOGTAG_QR "QR"
+#define LOGTAG_ARCONTROLLER "ARController"
 #define LOGTAG_MAIN "Main"
 #define LOGTAG_OPENGL "OpenGL"
 #define LOGTAG_IMAGECAPTURE "ImageCapture"

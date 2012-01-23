@@ -48,6 +48,5 @@ void CertaintyIndicator::SetMaxRadius(float _maxRadius)
 
 void CertaintyIndicator::Draw(cv::Mat * rgbaImage)
 {
-	LOGD(LOGTAG_INPUT,"Radius=%f",maxRadius*percentRadius);
 	cv::circle(*rgbaImage,CenterPoint,maxRadius*percentRadius,determineColor(),-1,CV_AA);
 }

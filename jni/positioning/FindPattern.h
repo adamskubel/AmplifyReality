@@ -16,6 +16,7 @@ struct FinderPattern
    cv::Point2i pt;
    long size;
    long hitCount;
+   int patternWidths[5];
 
    static long Distance(const FinderPattern& a, const FinderPattern& b);
    static long AcuteAngleGeometry(const FinderPattern& a, const FinderPattern& b, const FinderPattern& c);

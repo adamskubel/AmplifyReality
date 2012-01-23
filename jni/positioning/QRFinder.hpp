@@ -32,11 +32,12 @@ private:
 struct QRFinder
 {
 public:
-	static QRCode * locateQRCode(cv::Mat& M, vector<Point3i>&  debugVector);
+	static QRCode * locateQRCode(cv::Mat& M, vector<Point3i>&  debugVector, int minScore);
+	static int minScore;
 
 private:
-	static bool CheckRatios(int bw[]);
-	static bool CheckRatios(int bw[], int bw2[]);
+	static bool CheckRatios(int * bw, int  * oldBw);
+	static bool CheckRatios2(int bw[], int bw2[]);
 	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[]);
 	static int FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[]);
 	static void FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Point3i>& debugVector);
@@ -48,7 +49,7 @@ private:
 	static float SquareCharacteristic(int *x, int * y);
 	static float RatioCharacteristic(int * x);
 	static float SymmetryAlgorithm(int * X, int * Y, int * R, int * S);
-	static bool CheckArea(const Mat& image, Point2i center, int bwLengths[], FinderPattern * result);
+	static bool CheckArea(const Mat& image, Point2i center, int bwLengths[], FinderPattern & result);
 };
 
 #endif /* QR_FINDER_HPP_ */

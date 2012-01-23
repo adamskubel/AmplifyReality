@@ -13,6 +13,7 @@
 
 #include "userinterface/uimodel/Button.hpp"
 #include "userinterface/uimodel/GridLayout.hpp"
+#include "userinterface/uimodel/InputScaler.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include "userinterface/events/EventArgs.hpp"
 #include "model/Drawable.hpp"
@@ -60,6 +61,7 @@ private:
 	vector<Drawable *> drawObjects;
 
 	GridLayout * layout;
+	InputScaler * inputScaler;
 };
 
 #endif

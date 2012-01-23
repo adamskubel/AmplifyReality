@@ -1,22 +1,38 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 #include <opencv2/core/core.hpp>
 #include "userinterface/events/EventArgs.hpp"
+#include "model/IDeletable.hpp"
 
 
 #ifndef UIELEMENT_HPP_
 #define UIELEMENT_HPP_
 
+namespace HorizontalAlignments
+{
+	enum HorizontalAlignment
+	{
+		Left, Center, Right
+	};
+}
 
-class UIElement
+namespace VerticalAlignments
+{
+	enum VerticalAlignment
+	{
+		Top, Center, Bottom
+	};
+}
+
+class UIElement : public IDeletable
 {
 public:
 	virtual ~UIElement()
 	{
 		;
 	}
-	virtual UIElement * GetChildAt(cv::Point2i p)
+	virtual UIElement * GetElementAt(cv::Point2i p)
 	{
 		LOGD(LOGTAG_MAIN,"NullElement");
 		return NULL;

@@ -14,7 +14,7 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 			UIElement * childElement = NULL;
 			if (rootElement != NULL)
 			{
-				childElement = rootElement->GetChildAt(*(touchEvent.TouchLocations));
+				childElement = rootElement->GetElementAt(*(touchEvent.TouchLocations));
 				if (childElement != NULL)
 					childElement->HandleInput(touchEvent);
 				else

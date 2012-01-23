@@ -1,6 +1,6 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 #include <opencv2/core/core.hpp>
 
 

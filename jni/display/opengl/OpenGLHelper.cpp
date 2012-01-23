@@ -158,79 +158,99 @@ void OpenGLHelper::PopulateVertices(GLObject * glObject, vector<cv::Point3f> * v
 
 void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar> * colors)
 {
-	if (colors == NULL || colors->size() == 0)
+	if (colors == NULL || colors->empty())
 	{
 		LOGE("Null or empty vector passed to PopulateColors!");
 		return;
 	}
-	//More faces than colors, so populate until color vector is exhausted, then continue
+	//More vertices than colors, so populate until color vector is exhausted, then continue
 	//populating using the last value in the color vector
 	else if (colors->size() < colorObject->count)
 	{
-		LOGW(LOGTAG_OPENGL,"More faces than colors");
+		LOGW(LOGTAG_OPENGL,"More vertices than colors");
 		int colorVectorIndex = 0;
-		for (int i=0;i<colorObject->count;i++)
+		for (int i=0;i<colorObject->count ;i++)
 		{
 			colorVectorIndex = (i < colors->size()) ? i : colors->size() -1;
-			for (int j=0;j<ColorGLObject::colorComponents;j++)
-			{
-				colorObject->colorArray[(ColorGLObject::colorComponents*i)+j] = (GLubyte) colors->at(colorVectorIndex)[j];
-			}
+			
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLubyte) colors->at(colorVectorIndex)[0];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLubyte) colors->at(colorVectorIndex)[1];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLubyte) colors->at(colorVectorIndex)[2];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLubyte) colors->at(colorVectorIndex)[3];			
 		}
 	}
 	//There are enough colors for each face
 	else
 	{
+		LOGW(LOGTAG_OPENGL,"Enough colors for each vertex");
 		for (int i=0;i<colorObject->count;i++)
 		{
-			for (int j=0;j<ColorGLObject::colorComponents;j++)
-			{
-				colorObject->colorArray[(ColorGLObject::colorComponents*i)+j] = (GLubyte) colors->at(i)[0];
-			}
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLubyte) colors->at(i)[0];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLubyte) colors->at(i)[1];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLubyte) colors->at(i)[2];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLubyte) colors->at(i)[3];
 		}
 	}
 }
 
-ColorGLObject * OpenGLHelper::CreateCube(int _size, cv::Scalar color)
+ColorGLObject * OpenGLHelper::CreateMultiColorCube(int _size)
+{
+	ColorGLObject* cube = CreateCube(_size);
+
+	vector<cv::Scalar> colorVector;
+	colorVector.push_back(Colors::MidnightBlue);
+	colorVector.push_back(Colors::MidnightBlue);
+	colorVector.push_back(Colors::MidnightBlue);
+	colorVector.push_back(Colors::MidnightBlue); 
+		
+	colorVector.push_back(Colors::CornflowerBlue);
+	colorVector.push_back(Colors::CornflowerBlue);
+	colorVector.push_back(Colors::CornflowerBlue);
+	colorVector.push_back(Colors::CornflowerBlue);
+		
+	colorVector.push_back(Colors::OliveDrab);
+	colorVector.push_back(Colors::OliveDrab);
+	colorVector.push_back(Colors::OliveDrab);
+	colorVector.push_back(Colors::OliveDrab);
+	
+	colorVector.push_back(Colors::Green);
+	colorVector.push_back(Colors::Green);
+	colorVector.push_back(Colors::Green);
+	colorVector.push_back(Colors::Green);
+
+	colorVector.push_back(Colors::Gold);
+	colorVector.push_back(Colors::Gold);
+	colorVector.push_back(Colors::Gold);
+	colorVector.push_back(Colors::Gold);
+	
+	colorVector.push_back(Colors::Aqua);
+	colorVector.push_back(Colors::Aqua);
+	colorVector.push_back(Colors::Aqua);
+	colorVector.push_back(Colors::Aqua);
+
+	PopulateColors(cube,&colorVector);
+
+	return cube;
+}
+
+ColorGLObject * OpenGLHelper::CreateSolidColorCube(int _size, cv::Scalar color)
+{
+	ColorGLObject* cube = CreateCube(_size);
+	vector<cv::Scalar> colorVector;
+	colorVector.push_back(color);
+	PopulateColors(cube,&colorVector);
+	return cube;
+}
+
+ColorGLObject * OpenGLHelper::CreateCube(int _size)
 {
 	LOGD(LOGTAG_OPENGL,"Creating cube");
-	ColorGLObject *glObject = new ColorGLObject(24);
+	ColorGLObject *glObject = new ColorGLObject(24,4);
 
 	float size = (float)_size/2.0f;
 
 	vector<cv::Point3f> vertices = vector<cv::Point3f>();
-
-	//vertices.push_back(cv::Point3f(size,size,size));
-	//vertices.push_back(cv::Point3f(-size,size,size));
-	//vertices.push_back(cv::Point3f(-size,-size,size));
-	//vertices.push_back(cv::Point3f(size,-size,size));
-
-	//vertices.push_back(cv::Point3f(size,size,-size));
-	//vertices.push_back(cv::Point3f(-size,size,-size));
-	//vertices.push_back(cv::Point3f(-size,-size,-size));
-	//vertices.push_back(cv::Point3f(size,-size,-size));
-	//	
-	//vertices.push_back(cv::Point3f(size,size,size));
-	//vertices.push_back(cv::Point3f(size,-size,size));
-	//vertices.push_back(cv::Point3f(size,-size,-size));
-	//vertices.push_back(cv::Point3f(size,size,-size));
-	//
-	//vertices.push_back(cv::Point3f(-size,size,size));
-	//vertices.push_back(cv::Point3f(-size,-size,size));
-	//vertices.push_back(cv::Point3f(-size,-size,-size));
-	//vertices.push_back(cv::Point3f(-size,size,-size));
-	//		
-	//vertices.push_back(cv::Point3f(size,size,size));
-	//vertices.push_back(cv::Point3f(-size,size,size));
-	//vertices.push_back(cv::Point3f(-size,size,-size));
-	//vertices.push_back(cv::Point3f(size,size,-size));
-	//
-	//vertices.push_back(cv::Point3f(size,-size,size));
-	//vertices.push_back(cv::Point3f(-size,-size,size));
-	//vertices.push_back(cv::Point3f(-size,-size,-size));
-	//vertices.push_back(cv::Point3f(size,-size,-size));
-
-	
+		
 	vertices.push_back(cv::Point3f(-size, -size,  size));
 	vertices.push_back(cv::Point3f(size, -size,  size));
 	vertices.push_back(cv::Point3f(-size,  size,  size));
@@ -264,14 +284,12 @@ ColorGLObject * OpenGLHelper::CreateCube(int _size, cv::Scalar color)
 	LOGD(LOGTAG_OPENGL,"Vertice vector is %d long",vertices.size());
 	PopulateVertices(glObject,&vertices);
 
-	vector<cv::Scalar> colorVector;
-	colorVector.push_back(color);
-	PopulateColors(glObject,&colorVector);
+	
 
 	glObject->width = 2*size;
 	glObject->height = 2*size;
 
-	LOGD(LOGTAG_OPENGL,"Colored cube complete");
+	LOGD(LOGTAG_OPENGL,"Blank cube complete");
 	return glObject;
 }
 

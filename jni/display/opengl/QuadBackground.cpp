@@ -31,6 +31,8 @@ void QuadBackground::SetImage(cv::Mat * image)
 	imageWidth = image->cols;
 	imageHeight = image->rows;
 	//Store pointer to image data
+	if (DRAW_BACKGROUND_BORDER)
+		cv::rectangle(*image,Rect(0,0,imageWidth,imageHeight),cv::Scalar(0,255,0,255),3,CV_AA);
 	imagePixels = image->ptr<uint32_t>(0);
 	
 	SET_TIME(&end);

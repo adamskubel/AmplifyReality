@@ -68,10 +68,13 @@ class ColorGLObject : public GLObject
 public:
 	static const GLint colorComponents = 4; //Always has 4 color components (RGBA)
 
+	int renderGroupSize;
 
-	ColorGLObject(int _vertices)
-	{		
+	ColorGLObject(int _vertices, int _renderGroupSize = 1)
+	{			
+		renderGroupSize = _renderGroupSize;
 		count = _vertices;
+
 
 		vertexArray = new GLfixed[count * GLObject::vertexComponents];
 		colorArray = new GLubyte[count * ColorGLObject::colorComponents];
@@ -86,7 +89,15 @@ public:
 	{
 		glVertexPointer( GLObject::vertexComponents, GL_FIXED, 0, vertexArray);
 		glColorPointer(ColorGLObject::colorComponents, GL_UNSIGNED_BYTE, 0, colorArray);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+		if (renderGroupSize > 1)
+		{
+			for (int i=0;i<count;i+=renderGroupSize)
+			{
+				glDrawArrays(GL_TRIANGLE_STRIP, i, renderGroupSize);
+			}
+		}
+		else
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
 	}
 
 	

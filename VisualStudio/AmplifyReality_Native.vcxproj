@@ -94,7 +94,7 @@
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp" />
     <ClInclude Include="..\jni\datastructures\CircularList.hpp" />
-    <ClInclude Include="..\jni\DebugSettings.hpp" />
+    <ClInclude Include="..\jni\AmplifyRealityGlobals.hpp" />
     <ClInclude Include="..\jni\display\model\ARObject.hpp" />
     <ClInclude Include="..\jni\display\model\AugmentedView.hpp" />
     <ClInclude Include="..\jni\display\opengl\GLObject.hpp" />
@@ -104,6 +104,7 @@
     <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp" />
     <ClInclude Include="..\jni\ExceptionCodes.hpp" />
     <ClInclude Include="..\jni\LogDefinitions.h" />
+    <ClInclude Include="..\jni\model\IDeletable.hpp" />
     <ClInclude Include="..\jni\model\Drawable.hpp" />
     <ClInclude Include="..\jni\model\Engine.hpp" />
     <ClInclude Include="..\jni\model\FrameItem.hpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\UIElementCollection.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />

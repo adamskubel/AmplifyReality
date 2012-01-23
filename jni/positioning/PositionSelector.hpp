@@ -1,5 +1,6 @@
 #include "model/FrameItem.hpp"
 #include "datastructures/CircularList.hpp"
+#include "model/IDeletable.hpp"
 
 #ifndef POSITION_SELECTOR_HPP_
 #define POSITION_SELECTOR_HPP_
@@ -28,7 +29,7 @@ public:
 };
 
 
-class PositionSelector
+class PositionSelector : public IDeletable
 {
 public:
 	PositionSelector();
@@ -39,6 +40,7 @@ private:
 	void FirstOrderPrediction(FrameItem * item);
 	CircularList<PositioningResults*> * pastResults;
 	static const int resultsToKeep = 20;
+	void LowpassFilter(PositioningResults * current, PositioningResults * previous);
 
 
 };

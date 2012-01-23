@@ -1,6 +1,6 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
-#include "DebugSettings.hpp"
+#include "AmplifyRealityGlobals.hpp"
 
 #include "math.h"
 #include "android_native_app_glue.h"
