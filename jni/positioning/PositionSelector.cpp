@@ -1,8 +1,9 @@
 #include "positioning/PositionSelector.hpp"
 
 
-PositionSelector::PositionSelector()
+PositionSelector::PositionSelector(ARConfigurator * _config)
 {
+	config = _config;
 	pastResults = new CircularList<PositioningResults*>(resultsToKeep);
 }
 
@@ -40,6 +41,10 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			currentResults->Rotation = *(item->rotationMatrix);
 			currentResults->positioningMethod = PositioningMethods::QRCode;
 
+			if (!pastResults->empty())
+			{
+				LowpassFilter(currentResults, pastResults->front());
+			}
 			pastResults->add(currentResults);
 			
 			return 1.0f;
@@ -73,7 +78,11 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 
 void PositionSelector::LowpassFilter(PositioningResults * current, PositioningResults * previous)
 {
-	current->Position = current->Position * 0.9f + previous->Position * 0.1f;
+	float alpha = config->PositionFilterAlpha;
+	current->Position = current->Position * alpha + previous->Position * (1-alpha);
+		
+	alpha = config->RotationFilterAlpha;
+	current->Rotation = current->Rotation * alpha + previous->Rotation * (1-alpha);
 }
 
 void PositionSelector::FirstOrderPrediction(FrameItem * item)

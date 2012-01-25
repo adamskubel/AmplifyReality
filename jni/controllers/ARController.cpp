@@ -12,8 +12,7 @@ ARController::ARController()
 	grayImage = new Mat();
 	rgbImage = new Mat();
 	binaryImage = new Mat();
-	minQRScore = 190;
-
+	
 	currentFrameItem = numItems-1;
 	items = new FrameItem*[numItems];
 	for (int i=0;i < numItems; i ++)
@@ -73,49 +72,53 @@ void ARController::Initialize(Engine * engine)
 	//engine->sensorCollector->EnableSensors(false,true,false);
 	
 	//Initialize UI
-	grid = new GridLayout(engine,Size_<int>(4,4));	
+
+	UIElementCollection * collection = new UIElementCollection();
+		
 	float scaleFactor = max((float)(engine->imageWidth)/(float)(engine->glRender->screenWidth),(float)(engine->imageHeight)/(float)(engine->glRender->screenHeight));
-	InputScaler * inputScaler = new InputScaler(scaleFactor,grid);
+	InputScaler * inputScaler = new InputScaler(scaleFactor,collection);
+		
 	engine->inputHandler->SetRootUIElement(inputScaler);
+	
+	grid = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(4,4));	
 	drawObjects.push_back(grid);
+	collection->AddChild(grid);
 
 	translationVectorLabel = new Label("T",Point2i(0,0),Scalar::all(255),Scalar::all(0));
-	grid->AddChild(translationVectorLabel,Point2i(0,1));
+	translationVectorLabel->FontScale = 0.9f;
+	grid->AddChild(translationVectorLabel,Point2i(0,2));
 
-	gyroDataLabel = new Label("Gyro",Point2i(0,0),Scalar::all(255),Scalar::all(0));
-	grid->AddChild(gyroDataLabel,Point2i(0,2));	
+	gyroDataLabel = new Label("R",Point2i(0,0),Scalar::all(255),Scalar::all(0));
+	gyroDataLabel->FontScale = 0.9f;
+	grid->AddChild(gyroDataLabel,Point2i(0,3));	
 
 	positionCertainty = new CertaintyIndicator(0);
 	grid->AddChild(positionCertainty,Point2i(3,3));
 	positionCertainty->SetMaxRadius(20); //Override radius set by grid <<<<---- Bad practice! ...but saves time
 
-	Button * upButton = new Button("+", Colors::MidnightBlue);
-	upButton->AddClickDelegate(ClickEventDelegate::from_method<ARController,&ARController::IncreaseQRScore>(this));
-	grid->AddChild(upButton,Point2i(3,0));
-
-	Label * scoreLabel = new Label("150",Point2i(),Colors::Black,Colors::CornflowerBlue);
-	scoreLabel->Name = "ScoreLabel";
-	grid->AddChild(scoreLabel,Point2i(3,1));
+	config = new ARConfigurator(engine, collection,Point2i(0,0));
+	drawObjects.push_back(config);
 	
-	Button * downButton = new Button("-", Colors::Crimson);
-	downButton->AddClickDelegate(ClickEventDelegate::from_method<ARController,&ARController::DecreaseQRScore>(this));
-	grid->AddChild(downButton,Point2i(3,2));
-	
+	Button * toggleConfigButton = new Button("Config", Colors::MidnightBlue);
+	toggleConfigButton->AddClickDelegate(ClickEventDelegate::from_method<ARConfigurator,&ARConfigurator::ToggleVisibility>(config));
+	grid->AddChild(toggleConfigButton,Point2i(3,0));
 
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));	
 	//End UI
 	
-	positionSelector = new PositionSelector();
+	positionSelector = new PositionSelector(config);
 	
 	initializeARView();
 
 	//Initialize textured quad to render camera image
 	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
 
+	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(grid);
 	deletableObjects.push_back(gyroDataLabel);
 	deletableObjects.push_back(quadBackground);
+	deletableObjects.push_back(config);
 	//Finished initialization
 	isInitialized = true;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");
@@ -140,7 +143,7 @@ void ARController::initializeARView()
 	//Add some cubes
 	ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(30),Point3f(0,0,0));
 	augmentedView->AddObject(myCube);	
-	myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(10,0,0));
+	myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(0,0,-40));
 	augmentedView->AddObject(myCube);	
 	
 	LOGD(LOGTAG_ARCONTROLLER,"AR View Initialization Complete");
@@ -151,8 +154,8 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 	cv::Mat rotationVector = engine->sensorCollector->GetRotation();
 	rotationVector *= (180.0/PI);
 	char string[100];
-	sprintf(string,"[%4.2lf,%4.2lf,%4.2lf]",rotationVector.at<double>(0,0),rotationVector.at<double>(0,1),rotationVector.at<double>(0,2));
-	gyroDataLabel->Text = std::string(string);
+	sprintf(string,"[%.2lf,%.2lf,%.2lf]",rotationVector.at<double>(0,0),rotationVector.at<double>(0,1),rotationVector.at<double>(0,2));
+	gyroDataLabel->SetText(string);
 }
 
 void ARController::ProcessFrame(Engine * engine)
@@ -178,23 +181,24 @@ void ARController::ProcessFrame(Engine * engine)
 		
 	LOGV(LOGTAG_ARCONTROLLER,"Processing frame");
 	getImages(engine,item);
-	item->qrCode = QRFinder::locateQRCode(*binaryImage, item->ratioMatches, minQRScore);
+	
+	QRFinder::minAlignmentScore = config->MinAlignmentScore;
+	item->qrCode = QRFinder::locateQRCode(*binaryImage, item->ratioMatches, config->MinFinderPatternScore);
+	
 	if (item->qrCode != NULL && item->qrCode->validCodeFound)
 	{
 		qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
 		if (translationVectorLabel != NULL)
 		{
 			char string[300];
-			sprintf(string,"[%.3lf, \n %.3lf, \n %.3lf]",item->translationMatrix->at<double>(0,0),item->translationMatrix->at<double>(0,1),item->translationMatrix->at<double>(0,2));
-			translationVectorLabel->Text = std::string(string);
+			sprintf(string,"[%.2lf, %.2lf, %.2lf]",item->translationMatrix->at<double>(0,0),item->translationMatrix->at<double>(0,1),item->translationMatrix->at<double>(0,2));
+			translationVectorLabel->SetText(string);
 		}	
 		if (gyroDataLabel != NULL)
-		{
-		
+		{		
 			char string[300];
-			sprintf(string,"[%.3lf,%.3lf,%.3lf]",item->rotationMatrix->at<double>(0,0),item->rotationMatrix->at<double>(0,1),item->rotationMatrix->at<double>(0,2));
-			gyroDataLabel->Text = std::string(string);
-		
+			sprintf(string,"[%.2lf,%.2lf,%.2lf]",item->rotationMatrix->at<double>(0,0),item->rotationMatrix->at<double>(0,1),item->rotationMatrix->at<double>(0,2));
+			gyroDataLabel->SetText(string);		
 		}
 	}
 	//Draw debugging overlay
@@ -207,7 +211,7 @@ void ARController::ProcessFrame(Engine * engine)
 	
 	float resultCertainty = positionSelector->UpdatePosition(item);
 	positionCertainty->SetCertainty(resultCertainty);
-	if (positionCertainty > 0 && augmentedView != NULL)
+	if (resultCertainty > 0 && augmentedView != NULL)
 	{
 		//Update the 3D AR layer, but only if position certainty is non-zero
 		augmentedView->Update(item);
@@ -215,8 +219,11 @@ void ARController::ProcessFrame(Engine * engine)
 	//Draw objects onto camera texture
 	for (int i=0;i<drawObjects.size();i++)
 	{
-		LOGV(LOGTAG_ARCONTROLLER,"Drawing object %d",i);
-		drawObjects.at(i)->Draw(rgbImage);
+		if (drawObjects.at(i)->IsVisible())
+		{
+			LOGV(LOGTAG_ARCONTROLLER,"Drawing object %d",i);
+			drawObjects.at(i)->Draw(rgbImage);
+		}
 	}
 
 	//Update textured quad 
@@ -298,7 +305,7 @@ void ARController::drawDebugOverlay(FrameItem * item)
 			points[i] = pattern.pt;
 		}
 
-		fillConvexPoly(*rgbImage,points, 4, Scalar(0, 255, 0, 255));	
+		fillConvexPoly(*rgbImage,points, 4, Colors::Lime);	
 		delete points;
 	}
 	else if (item->qrCode != NULL)
@@ -324,10 +331,14 @@ void ARController::drawDebugOverlay(FrameItem * item)
 			points[3].y = (int) pattern.pt.y + size;
 
 			int npts = 4;
-			//const Point_<int> * pArray[] = {&(item->qrCode->finderPatterns.at(i)->pt)};
 			const Point2i * pArray[] = {points};
 
-			polylines(*rgbImage,pArray,&npts,1,true,Scalar(0,0,255,255),4);
+			if (!pattern.isAlignment)				
+				polylines(*rgbImage,pArray,&npts,1,true,Colors::Blue,4);
+			else
+				polylines(*rgbImage,pArray,&npts,1,true,Colors::Red,4);
+			
+			
 			delete points;
 		}
 	}
@@ -354,33 +365,5 @@ void ARController::HandleTouchInput(void* sender, TouchEventArgs args)
 	case(Configuration::ColorImage):
 		drawMode = Configuration::GrayImage;
 		break;
-	}
-}
-
-void ARController::IncreaseQRScore(void * sender, EventArgs args)
-{
-	minQRScore += 10;
-	Button * button = (Button*)sender;
-	
-	Label * scoreLabel = (Label*)grid->GetElementByName("ScoreLabel");
-	if (scoreLabel != NULL)
-	{
-		char myString[100];
-		sprintf(myString, "%d", minQRScore);
-		scoreLabel->Text = std::string(myString);
-	}
-}
-
-void ARController::DecreaseQRScore(void * sender, EventArgs args)
-{
-	if (minQRScore > 9)
-		minQRScore -= 10;
-
-	Label * scoreLabel = (Label*)grid->GetElementByName("ScoreLabel");
-	if (scoreLabel != NULL)
-	{
-		char myString[100];
-		sprintf(myString, "%d", minQRScore);
-		scoreLabel->Text = std::string(myString);
 	}
 }

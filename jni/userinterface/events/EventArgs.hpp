@@ -46,4 +46,14 @@ public:
 	cv::Point2i * TouchLocations;
 };
 
+class NumberSpinnerEventArgs : public EventArgs
+{
+public:
+	NumberSpinnerEventArgs(float value)
+	{
+		NewValue = value;
+	}
+	float NewValue;
+};
+
 #endif

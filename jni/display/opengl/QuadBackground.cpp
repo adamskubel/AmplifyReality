@@ -44,13 +44,6 @@ void QuadBackground::Render(OpenGL * openGL)
 	struct timespec start,end;
 	SET_TIME(&start);
 
-	//Background Settings
-	/*glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);*/
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-	//glDisable(GL_LIGHTING);	
 	glEnable(GL_TEXTURE_2D);	
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);	
 	glDisableClientState(GL_COLOR_ARRAY);

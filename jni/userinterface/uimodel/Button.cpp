@@ -60,6 +60,20 @@ void Button::HandleInput(TouchEventArgs args)
 	}
 }
 
+void Button::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan)
+{
+	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height);
+
+	newPoint += offset;
+
+	buttonBoundaries.x = newPoint.x;
+	buttonBoundaries.y = newPoint.y;
+	buttonBoundaries.width = cellSize.width * gridSpan.width;
+	buttonBoundaries.height = cellSize.height * gridSpan.height;
+	
+	LOGD(LOGTAG_INPUT,"Adding myself(Button) to grid. X=%d,Y=%d,W=%d,H=%d",buttonBoundaries.x,buttonBoundaries.y,
+		buttonBoundaries.width,buttonBoundaries.height);
+}
 
 void Button::Draw(Mat * rgbaImage)
 {

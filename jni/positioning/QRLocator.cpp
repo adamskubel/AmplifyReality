@@ -47,20 +47,11 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 	for (int i=0;i<qrCode->finderPatterns->size();i++)
 	{
 		imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(i)->pt.x,qrCode->finderPatterns->at(i)->pt.y));
-		//Point2f((float)pointArray[i].x,(float)pointArray[i].y));
 	}
-	//LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"Input Points",&imagePointVector);
-
 	LOGV(LOGTAG_QR,"Calling solvePnP");
 	try
 	{
-
-	/*	LOGD_Mat(LOGTAG_QR,"Camera Matrix",cameraMatrix);
-		LOGD_Mat(LOGTAG_QR,"Distortion Matrix",distortionMatrix);*/
 		solvePnP(qrVector,imagePointVector,*cameraMatrix,*distortionMatrix,rotationMatrix,translationMatrix,false);
-	//	LOGD_Mat(LOGTAG_QR,"Rotation",&rotationMatrix);
-	/*	LOGD_Mat(LOGTAG_QR,"Translation",&translationMatrix);*/
-
 	} catch (exception& e)
 	{
 		LOGE("Exception from solvePnP: %s", e.what());

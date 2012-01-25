@@ -17,9 +17,12 @@
 #include "positioning/PositionSelector.hpp"
 
 #include "userinterface/uimodel/Label.hpp"
+#include "userinterface/uimodel/CertaintyIndicator.hpp"
 #include "userinterface/uimodel/GridLayout.hpp"
 #include "userinterface/uimodel/InputScaler.hpp"
 #include "userinterface/events/EventDelegates.hpp"
+
+#include "positioning/ARConfigurator.hpp"
 
 #include "display/opengl/QuadBackground.hpp"
 
@@ -47,7 +50,7 @@ public:
 private:
 	//Constants
 	static const int numItems = 6; //Number of previous frames to store
-	int minQRScore;
+	//int minQRScore;
 
 	void drawDebugOverlay(FrameItem * item);
 	void getImages(Engine* engine, FrameItem * item);
@@ -62,6 +65,7 @@ private:
 	QRLocator * qrLocator;
 	AugmentedView * augmentedView;
 
+	ARConfigurator * config;
 	//UI objects
 	Label * translationVectorLabel, * gyroDataLabel;
 	CertaintyIndicator * positionCertainty;

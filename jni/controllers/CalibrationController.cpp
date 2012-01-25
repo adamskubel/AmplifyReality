@@ -48,7 +48,7 @@ void CalibrationController::Initialize(Engine * engine)
 		return;
 	LOGI(LOGTAG_CALIBRATION,"Initializing calibration controller");
 
-	layout = new GridLayout(engine,Size_<int>(5,4));
+	layout = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(5,4));
 
 	//Create image capture button
 	myCaptureButton = new Button(std::string("Capture"),cv::Rect(300,300,150,160),Scalar(12,62,141,255));

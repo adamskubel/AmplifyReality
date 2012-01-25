@@ -5,7 +5,7 @@ OpenGL::OpenGL(ANativeWindow* window)
 {
 	LOGI(LOGTAG_OPENGL,"Initializing OpenGL");
 	const EGLint attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_BLUE_SIZE,
-		8, EGL_GREEN_SIZE, 8, EGL_RED_SIZE, 8, EGL_NONE };
+		8, EGL_GREEN_SIZE, 8, EGL_RED_SIZE, 8, EGL_DEPTH_SIZE, 4, EGL_NONE };
 
 	EGLint dummy, format;
 	EGLint numConfigs;
@@ -36,6 +36,10 @@ OpenGL::OpenGL(ANativeWindow* window)
 	eglQuerySurface(display, surface, EGL_WIDTH, &screenWidth);
 	eglQuerySurface(display, surface, EGL_HEIGHT, &screenHeight);
 	LOGI(LOGTAG_OPENGL,"Surface parameters: width=%d, height=%d", screenWidth,screenHeight);
+
+	int depthBits[1] = {0};
+    glGetIntegerv(GL_DEPTH_BITS, depthBits);
+    LOGD(LOGTAG_OPENGL, "Depth Bits = %d",depthBits[0]);
 	
 	LOGI(LOGTAG_OPENGL,"Setting OpenGL parameters");
 	glShadeModel(GL_FLAT);
@@ -52,6 +56,7 @@ void OpenGL::StartFrame()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	
 }
 
 void OpenGL::DrawGLObject(GLObject *object) 
@@ -61,6 +66,7 @@ void OpenGL::DrawGLObject(GLObject *object)
 
 void OpenGL::EndFrame()
 {	
+    //glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glFlush();
 	eglSwapBuffers( display,  surface);
 }

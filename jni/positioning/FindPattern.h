@@ -17,6 +17,7 @@ struct FinderPattern
    long size;
    long hitCount;
    int patternWidths[5];
+   bool isAlignment;
 
    static long Distance(const FinderPattern& a, const FinderPattern& b);
    static long AcuteAngleGeometry(const FinderPattern& a, const FinderPattern& b, const FinderPattern& c);

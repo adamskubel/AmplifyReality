@@ -84,7 +84,14 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
 
 	//Initialize objects
-	engine.imageCollector = new ImageCollector(engine.imageWidth, engine.imageHeight);
+	try
+	{
+		engine.imageCollector = new ImageCollector(engine.imageWidth, engine.imageHeight);
+	}
+	catch (Exception & e)
+	{
+		engine.imageCollector = NULL;
+	}
 	engine.inputHandler = new AndroidInputHandler();
 	engine.sensorCollector = new SensorCollector(ASensorManager_getInstance(), state->looper);
 }

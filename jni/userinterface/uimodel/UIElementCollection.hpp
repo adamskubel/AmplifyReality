@@ -7,7 +7,17 @@
 class UIElementCollection : public UIElement
 {
 public:
-	virtual UIElement * GetElementByName(std::string name)
+	UIElementCollection()
+	{
+		;
+	}
+			
+	void AddChild(UIElement * child)
+	{
+		Children.push_back(child);
+	}
+
+	UIElement * GetElementByName(std::string name)
 	{
 		for (int i=0;i<Children.size();i++)
 		{
@@ -17,7 +27,7 @@ public:
 		return NULL;
 	}
 
-	virtual UIElement * GetElementAt(cv::Point2i point)
+	UIElement * GetElementAt(cv::Point2i point)
 	{
 		for (int i=0;i<Children.size();i++)
 		{

@@ -16,24 +16,12 @@
 using namespace cv;
 using namespace std;
 
-class QR_vector: public vector<bool>
-{
-public:
-	inline bool SetDimension(long d);
-	inline long GetDimension()
-	{
-		return dimension;
-	}
-
-private:
-	long dimension;
-};
 
 struct QRFinder
 {
 public:
 	static QRCode * locateQRCode(cv::Mat& M, vector<Point3i>&  debugVector, int minScore);
-	static int minScore;
+	static int minScore, minAlignmentScore;
 
 private:
 	static bool CheckRatios(int * bw, int  * oldBw);
@@ -50,6 +38,13 @@ private:
 	static float RatioCharacteristic(int * x);
 	static float SymmetryAlgorithm(int * X, int * Y, int * R, int * S);
 	static bool CheckArea(const Mat& image, Point2i center, int bwLengths[], FinderPattern & result);
+
+	//Alignment Patterns
+	static bool CheckAlignmentRatios(int * bw, int moduleUnitSize);
+	static int FindAlignmentCenterVertical(const Mat& image, int x, int y, int maxSize);
+	static int FindAlignmentCenterHorizontal(const Mat& image, int x, int y, int maxSize);
+	static void FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& debugVector);
+	static bool CheckPoint(Mat & M, Point2i searchCenter, Size2i searchRange, int moduleSize);
 };
 
-#endif /* QR_FINDER_HPP_ */
+#endif 

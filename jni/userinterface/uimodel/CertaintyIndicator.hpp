@@ -1,5 +1,5 @@
 #include "model/Drawable.hpp"
-#include "userinterface/uimodel/UIElement.hpp"
+#include "userinterface/uimodel/GridLayout.hpp"
 #include "userinterface/events/EventArgs.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include <opencv2/core/core.hpp>
@@ -9,7 +9,7 @@
 #define CERTAINTY_INDICATOR_HPP_
 
 //A UI object that changes size and color based on its value
-class CertaintyIndicator : public UIElement, public Drawable
+class CertaintyIndicator : public GridCompatible
 {
 public:
 	CertaintyIndicator(float initialCertainty);
@@ -18,6 +18,7 @@ public:
 	void SetCertainty(float certainty);
 	void SetMaxRadius(float maxRadius);
 	cv::Point2i CenterPoint;
+	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
 
 private:
 	float percentRadius,maxRadius;

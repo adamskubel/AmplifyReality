@@ -107,25 +107,26 @@ static void OpenGLSettings()
 {
 	glEnableClientState(GL_COLOR_ARRAY);	
 
-	
 	glDisable(GL_LIGHTING);
 	//setLights();
+	
+	glDepthMask(true);
+	glClearDepthf(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
-	//glEnable(GL_DEPTH_TEST); 
-	//glEnable(GL_CULL_FACE); 
-	//glCullFace(GL_BACK);	
+	glDisable(GL_CULL_FACE); 
 
 	glEnable(GL_BLEND);	
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glShadeModel (GL_SMOOTH);
+	//glShadeModel (GL_SMOOTH);	
 }
 
 static void ResetGLSettings()
 {
 	glDisable(GL_LIGHTING);	
 	glDisable(GL_DEPTH_TEST); 
-	glDisable(GL_CULL_FACE); 
 	glDisable(GL_BLEND);	
 
 }

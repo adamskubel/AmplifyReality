@@ -259,7 +259,7 @@ ColorGLObject * OpenGLHelper::CreateCube(int _size)
 	vertices.push_back(cv::Point3f(-size, -size, -size));
 	vertices.push_back(cv::Point3f(-size,  size, -size));
 	vertices.push_back(cv::Point3f(size, -size, -size));
-	vertices.push_back(cv::Point3f(size,  size, -size));
+	vertices.push_back(cv::Point3f(size,  size, -size));	
 
 	vertices.push_back(cv::Point3f(-size, -size,  size));
 	vertices.push_back(cv::Point3f(-size,  size,  size));

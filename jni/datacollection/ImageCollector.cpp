@@ -26,7 +26,6 @@ ImageCollector::ImageCollector(int width, int height)
 	LOGI(LOGTAG_IMAGECAPTURE,"Initializing VideoCapture with width=%d and height=%d", width, height);
 
 	myCapture = new VideoCapture(CV_CAP_ANDROID);
-	
 	double addr = myCapture->get(CV_CAP_PROP_SUPPORTED_PREVIEW_SIZES_STRING);
 
 	char* result = *((char**)&addr);
@@ -34,16 +33,13 @@ ImageCollector::ImageCollector(int width, int height)
 
 	if (!myCapture->isOpened())
 	{
-		LOGE("Whoops! VideoCapture failed to open! Try opening the camera app, and if that also fails, try restarting your phone. ");
-		Exception ex =  Exception(0,"Unable to open VideoCapture","ImageCollector()","ImageCollector.cpp",107);
-		throw ex;
+		LOGE("Whoops! VideoCapture failed to open! Try opening the camera app, and if that also fails, try restarting your phone. ");		
 	}
-
 	myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
 	myCapture->set(CV_CAP_PROP_FRAME_HEIGHT, height);
 
 	LOGI(LOGTAG_IMAGECAPTURE,"VideoCapture Initialized");
-
+	
 }
 
 void ImageCollector::undistortImage(Mat* inputImage, Mat* outputImage)

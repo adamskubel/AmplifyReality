@@ -114,6 +114,26 @@ static void LOGD_Mat(std::string matrixTag, const char * matDescription,cv::Mat 
 }
 
 
+static void LOG_Vector(android_LogPriority logPriority, std::string vectorTag, const char * vectorDescription,std::vector<cv::Point3f> * pointVector)
+{
+	if (pointVector == NULL)
+	{
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(logPriority,(prefix.append(vectorTag)).c_str(),"%s is NULL",vectorDescription);
+	}
+
+	char string[300];
+	sprintf(string,"[");
+	for (int i = 0; i < pointVector->size();i++)
+	{		
+		sprintf(string,"%s,(%f,%f,%f)",string,pointVector->at(i).x,pointVector->at(i).y, pointVector->at(i).z);
+	}
+	sprintf(string,"%s]",string);
+	std::string prefix = std::string("AmplifyR-");
+	__android_log_print(logPriority,(prefix.append(vectorTag)).c_str(),"%s=%s",vectorDescription,string);
+}
+
+
 static void LOG_Vector(android_LogPriority logPriority, std::string vectorTag, const char * vectorDescription,std::vector<cv::Point2f> * pointVector)
 {
 	if (pointVector == NULL)

@@ -1,6 +1,7 @@
 #include "model/FrameItem.hpp"
 #include "datastructures/CircularList.hpp"
 #include "model/IDeletable.hpp"
+#include "ARConfigurator.hpp"
 
 #ifndef POSITION_SELECTOR_HPP_
 #define POSITION_SELECTOR_HPP_
@@ -24,24 +25,22 @@ class PositioningResults
 public:
 	PositioningMethods::PositioningMethod positioningMethod;
 	cv::Mat Rotation, Position;
-	
-	//cv::Mat RotationError, PositionError;
 };
 
 
 class PositionSelector : public IDeletable
 {
 public:
-	PositionSelector();
+	PositionSelector(ARConfigurator * config);
 	~PositionSelector();
 	float UpdatePosition(FrameItem * item);
 
 private:
 	void FirstOrderPrediction(FrameItem * item);
 	CircularList<PositioningResults*> * pastResults;
-	static const int resultsToKeep = 20;
+	static const int resultsToKeep = 40;
 	void LowpassFilter(PositioningResults * current, PositioningResults * previous);
-
+	ARConfigurator * config;
 
 };
 

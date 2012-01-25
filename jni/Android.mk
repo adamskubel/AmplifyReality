@@ -21,6 +21,7 @@ datastructures/CircularList.cpp\
 positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 positioning/PositionSelector.cpp\
+positioning/ARConfigurator.cpp\
 datacollection/ImageCollector.cpp \
 datacollection/SensorCollector.cpp\
 display/opengl/OpenGLRenderer.cpp \
@@ -40,6 +41,7 @@ userinterface/uimodel/Button.cpp \
 userinterface/uimodel/Label.cpp \
 userinterface/uimodel/GridLayout.cpp \
 userinterface/uimodel/CertaintyIndicator.cpp\
+userinterface/uimodel/NumberSpinner.cpp\
 VirtualDeclarations.cpp
 
 

@@ -47,6 +47,12 @@
     <Filter Include="Header Files\display\model">
       <UniqueIdentifier>{a1bc6d4d-81d3-49ae-a062-4da6ba6a0eee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{5cd79be5-d217-4cda-b30b-989009e0e824}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\datastructures">
+      <UniqueIdentifier>{6b67b632-5ce4-4b65-9613-8da18ddb3a43}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\userinterface">
       <UniqueIdentifier>{825cf253-e183-4fee-9bba-bbf5b3b5eec4}</UniqueIdentifier>
     </Filter>
@@ -55,12 +61,6 @@
     </Filter>
     <Filter Include="Header Files\userinterface\events">
       <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\UI">
-      <UniqueIdentifier>{5cd79be5-d217-4cda-b30b-989009e0e824}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\datastructures">
-      <UniqueIdentifier>{6b67b632-5ce4-4b65-9613-8da18ddb3a43}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +150,12 @@
     </ClCompile>
     <ClCompile Include="..\jni\datastructures\CircularList.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\ARConfigurator.cpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -284,6 +290,15 @@
     </ClInclude>
     <ClInclude Include="..\jni\AmplifyRealityGlobals.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\ARConfigurator.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

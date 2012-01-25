@@ -37,6 +37,14 @@ void Label::SetCenter(Point2i centerPoint)
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
 }
 
+void Label::SetText(std::string newText)
+{
+	Size2i size = GetTextSize();
+	Point2i originalPosition = Point2i(Position.x + size.width/2, Position.y - size.height/2);
+	Text = newText;
+	SetCenter(originalPosition);
+}
+
 cv::Size2i Label::GetTextSize()
 {
 	fontBaseline = 0;
@@ -54,6 +62,18 @@ void Label::Draw(Mat * rgbaImage)
 		rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
 	}
 
-	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, CV_AA);	
+	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	
+}
+
+
+void Label::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size_<int> gridSpan)
+{	
+	Point2i newPoint = Point2i(gridPoint.x * cellSize.width + (gridSpan.width*cellSize.width/2),
+		gridPoint.y * cellSize.height  + (gridSpan.height*cellSize.height/2));
+	
+	newPoint += offset;
+	SetCenter(newPoint);	
+
+	LOGI(LOGTAG_INPUT,"Adding myself(Label) to grid. Position = (%d,%d)",newPoint.x,newPoint.y);
 }
 

@@ -1,5 +1,5 @@
 #include "model/Drawable.hpp"
-#include "userinterface/uimodel/UIElement.hpp"
+#include "userinterface/uimodel/GridLayout.hpp"
 #include "userinterface/events/EventArgs.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include <opencv2/core/core.hpp>
@@ -8,7 +8,7 @@
 #ifndef LABEL_HPP_
 #define LABEL_HPP_
 
-class Label : public UIElement, public Drawable
+class Label : public GridCompatible
 {
 
 public:
@@ -20,15 +20,19 @@ public:
 	void SetCenter(Point2i centerPoint);
 	Size2i GetTextSize();
 	
+	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
+
 	cv::Scalar FillColor, TextColor;
-	std::string Text;
 	//Bottom left corner
 	cv::Point2i Position;
 	int FontThickness, FontFace;
 	float FontScale;
 
+	void SetText(std::string newText);
+
 private:
 	int fontBaseline;
+	std::string Text;
 };
 
 #endif

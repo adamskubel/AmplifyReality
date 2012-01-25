@@ -1,30 +1,30 @@
 #include "userinterface/uimodel/GridLayout.hpp"
 
 
-GridLayout::GridLayout(Engine * engine, Size_<int> _gridSize)
+GridLayout::GridLayout()
 {
-	cellSize = Size_<int>((int)((float)engine->imageWidth/_gridSize.width),(int)((float)engine->imageHeight/_gridSize.height));
+	cellSize = Size2i(10,10);
+	gridSize = Size2i(1,1);
+	Position = Point2i(0,0);
+}
+
+
+GridLayout::GridLayout(Size2i windowSize, Size_<int> _gridSize, Point2i position)
+{
+	cellSize = Size_<int>((int)((float)windowSize.width/_gridSize.width),(int)((float)windowSize.height/_gridSize.height));
 	gridSize = _gridSize;
+	Position = position;
 
 	LOGD(LOGTAG_INPUT,"Created Grid with cell size[%d,%d]",cellSize.width,cellSize.height);
-
-	Children = vector<UIElement*>();
-	childDrawElements = vector<Drawable*>();
 }
+
 
 GridLayout::~GridLayout()
 {
 	LOGD(LOGTAG_INPUT,"Deleting GridLayout");
-	while (!childDrawElements.empty())
-	{
-		delete childDrawElements.back();
-		childDrawElements.pop_back();
-	}
 
-	while(!Children.empty())
-	{
-		Children.pop_back(); //Don't delete again here since UI elements were already deleted above via update vector
-	}
+	Children.clear();
+
 	LOGD(LOGTAG_INPUT,"Gridlayout deleted successfully.");
 }
 
@@ -38,74 +38,59 @@ bool GridLayout::CheckGridFit(Point2i gridPoint, Size_<int> gridSpan)
 	}
 }
 
-void GridLayout::AddChild(CertaintyIndicator * child, Point2i gridPoint, Size_<int> gridSpan)
+void GridLayout::AddChild(GridCompatible * child, Point2i gridPoint, Size_<int> gridSpan)
 {
 	CheckGridFit(gridPoint,gridSpan);
 
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height); //top-left corner
-	float maxRadius = 0.5f * std::min(cellSize.width, cellSize.height);
-	newPoint = newPoint + Point2i(maxRadius,maxRadius);
-
-
-	child->CenterPoint = newPoint;
-	child->SetMaxRadius(maxRadius);
-
-	LOGD(LOGTAG_INPUT,"Adding certainty indicator to grid. Center=(%d,%d), Radius=(%f)",child->CenterPoint.x, child->CenterPoint.y, maxRadius);
-	
+	child->gridPoint = gridPoint;
+	child->gridSpan = gridSpan;
+	child->DoGridLayout(Position, cellSize, gridPoint,gridSpan);	
 	Children.push_back(child);
-	childDrawElements.push_back(child);
-
 }
 
-void GridLayout::AddChild(Button * child, Point2i gridPoint, Size_<int> gridSpan)
+UIElement * GridLayout::GetElementAt(Point2i point)
 {
-	CheckGridFit(gridPoint,gridSpan);
-
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height);
-
-	child->buttonBoundaries.x = newPoint.x;
-	child->buttonBoundaries.y = newPoint.y;
-	child->buttonBoundaries.width = cellSize.width * gridSpan.width;
-	child->buttonBoundaries.height = cellSize.height * gridSpan.height;
-
-	LOGD(LOGTAG_INPUT,"Adding button to grid. X=%d,Y=%d,W=%d,H=%d",child->buttonBoundaries.x,child->buttonBoundaries.y,
-		child->buttonBoundaries.width,child->buttonBoundaries.height);
-	
-	Children.push_back(child);
-	childDrawElements.push_back(child);
-
+	for (int i=0;i<Children.size();i++)
+	{
+		UIElement * child = Children.at(i)->GetElementAt(point);
+		if (child != NULL)
+			return child;
+	}
+	return NULL;
 }
 
-void GridLayout::AddChild(Label * child, Point2i gridPoint, Size_<int> gridSpan)
+UIElement * GridLayout::GetElementByName(std::string name)
 {
-	CheckGridFit(gridPoint,gridSpan);
-	
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width + cellSize.width/2,
-		gridPoint.y * cellSize.height  + cellSize.height/2);
-	
-	child->SetCenter(newPoint);	
+	for (int i=0;i<Children.size();i++)
+	{
+		if (!Children.at(i)->Name.empty() && name.compare(Children.at(i)->Name) == 0)
+			return Children.at(i);
+	}
+	return NULL;
+}
 
-	LOGI(LOGTAG_INPUT,"Adding label to grid. Position = (%d,%d)",newPoint.x,newPoint.y);
+void GridLayout::DoGridLayout(Point2i offset, Size2i parentCellSize, Point2i gridPoint, Size2i gridSpan)
+{
+	Size2i windowSize = Size2i(parentCellSize.width * gridSpan.width, parentCellSize.height * gridSpan.height);
+	cellSize = Size_<int>((int)((float)windowSize.width/gridSize.width),(int)((float)windowSize.height/gridSize.height));
+	Position = offset + Point2i(gridPoint.x * parentCellSize.width,gridPoint.y * parentCellSize.height);
+	
+	LOGD(LOGTAG_INPUT,"Adding self(GridLayout) to grid. WindowSize=[%d,%d], Position=(%d,%d)",windowSize.width, windowSize.height, Position.x,Position.y);
 
-	Children.push_back(child);
-	childDrawElements.push_back(child);
+
+	for (int i=0;i<Children.size();i++)
+	{
+		GridCompatible * gridChild = Children.at(i);
+		gridChild->DoGridLayout(Position,cellSize,gridChild->gridPoint,gridChild->gridSpan);
+	}
+
 }
 
 void GridLayout::Draw(Mat * rgbaImage)
 {
-	for (int i=0;i<childDrawElements.size();i++)
+	for (int i=0;i<Children.size();i++)
 	{
-		childDrawElements.at(i)->Draw(rgbaImage);
+		if (Children.at(i)->IsVisible())
+			Children.at(i)->Draw(rgbaImage);
 	}
 }
-
-//UIElement *  GridLayout::GetElementAt(Point2i point)
-//{
-//	for (int i=0;i<Children.size();i++)
-//	{
-//		UIElement * element = Children.at(i)->GetElementAt(point);
-//		if (element != NULL)
-//			return element;
-//	}
-//	return NULL;
-//}

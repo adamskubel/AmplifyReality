@@ -1,31 +1,49 @@
 #include "userinterface/uimodel/UIElementCollection.hpp"
 #include "model/FrameItem.hpp"
-#include "userinterface/uimodel/Button.hpp"
-#include "userinterface/uimodel/Label.hpp"
-#include "userinterface/uimodel/CertaintyIndicator.hpp"
 #include "model/Engine.hpp"
 #include "model/Drawable.hpp"
+
 
 #ifndef GRIDLAYOUT_HPP_
 #define GRIDLAYOUT_HPP_
 
+
+
 using namespace cv;
 
-class GridLayout : public UIElementCollection, public Drawable
+
+class GridCompatible : public UIElement, public Drawable
+{
+public:
+	virtual void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan)
+	{
+		;
+	}
+
+	Point2i gridPoint;
+	Size2i gridSpan;
+};
+
+
+class GridLayout : public GridCompatible
 {
 public:	
-	GridLayout(Engine * engine, Size_<int> gridSize);
+	GridLayout();
+	GridLayout(Size2i windowSize, Size_<int> gridSize, Point2i position = Point2i(0,0));
 	~GridLayout();
 
 	//Point determines (x,y) position in grid. Top-left cell is (0,0)
-	void AddChild(CertaintyIndicator * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
-	void AddChild(Button * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
-	void AddChild(Label * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
-
+	void AddChild(GridCompatible * child, Point2i position, Size_<int> gridSpan = Size_<int>(1,1));
+	
 	void Draw(Mat * rgbaImage);
+	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
 
-private:
-	vector<Drawable*> childDrawElements;
+	UIElement * GetElementByName(std::string name);
+	UIElement * GetElementAt(cv::Point2i point);
+
+protected:
+	Point2i Position;
+	vector<GridCompatible*> Children;
 	Size_<int> gridSize, cellSize;
 
 	bool CheckGridFit(Point2i gridPoint, Size_<int> gridSpan);

@@ -17,6 +17,11 @@ public:
 	{
 		;
 	}
+
+	virtual bool IsVisible()
+	{
+		return true;
+	}
 };
  
 #endif

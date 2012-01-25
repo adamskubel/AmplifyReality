@@ -74,6 +74,7 @@
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
     <ClCompile Include="..\jni\positioning\FindPattern.cpp" />
+    <ClCompile Include="..\jni\positioning\ARConfigurator.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
     <ClCompile Include="..\jni\positioning\QRFinder.cpp" />
@@ -84,6 +85,7 @@
     <ClCompile Include="..\jni\userinterface\uimodel\CertaintyIndicator.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -112,6 +114,7 @@
     <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\positioning\FindPattern.h" />
     <ClInclude Include="..\jni\positioning\PerspectiveTransform.h" />
+    <ClInclude Include="..\jni\positioning\ARConfigurator.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />
     <ClInclude Include="..\jni\positioning\QRCode.hpp" />
@@ -128,6 +131,8 @@
     <ClInclude Include="..\jni\userinterface\uimodel\CertaintyIndicator.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\InputScaler.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElementCollection.hpp" />
