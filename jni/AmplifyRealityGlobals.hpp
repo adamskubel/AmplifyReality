@@ -15,7 +15,7 @@
 
 	#define VERSION_STRING "0.01";
 
-
+	#define NO_ICONV true //Required for compiling zxing
 
 	//#define IS_NEXUS_S  //<--- UNCOMMENT THIS LINE FOR NEXUS S AND COMMENT FOR HTC SENSATION
 

@@ -37,6 +37,19 @@ void Label::SetCenter(Point2i centerPoint)
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
 }
 
+void Label::FitTextToBoundary(Rect boundary)
+{
+	Size2i size = GetTextSize();
+
+	float ySpace = boundary.height/(float)size.height;
+	float xSpace = boundary.width/(float)size.width;
+
+	float max = std::max(xSpace,ySpace);
+	
+
+
+}
+
 void Label::SetText(std::string newText)
 {
 	Size2i size = GetTextSize();

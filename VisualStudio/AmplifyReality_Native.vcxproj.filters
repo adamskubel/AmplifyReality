@@ -65,6 +65,24 @@
     <Filter Include="Source Files\QR">
       <UniqueIdentifier>{5d24c69b-b2f7-4b23-8824-acdc425b5244}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\zxing">
+      <UniqueIdentifier>{5b4294f2-92fc-448e-8931-542af6e5057c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\zxing\qrcode">
+      <UniqueIdentifier>{516d95af-1ba9-4e8b-8309-423eb48b03d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\zxing\qrcode\decoder">
+      <UniqueIdentifier>{f31fa040-a3c9-4eb9-b3e5-961cf95768e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\positioning\qrcode">
+      <UniqueIdentifier>{c3597c39-2965-4fc6-a091-27a083de0eed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\zxing\common">
+      <UniqueIdentifier>{933f5429-72bb-4a7a-b388-9e027892c237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\zxing\qrcode\detector">
+      <UniqueIdentifier>{66e40f3d-eee0-46bb-bc6d-16e5a5dfff41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -145,35 +163,170 @@
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\AlignmentPatternHelper.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\QRFinder.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\QRLocator.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\FinderPatternHelper.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\PerspectiveTransform.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\FinderPatternHelper_Symmetry.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\controllers\StartupController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\FindPattern.cpp">
+    <ClCompile Include="..\jni\zxing\qrcode\ErrorCorrectionLevel.cpp">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\FormatInformation.cpp">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\QRCodeReader.cpp">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\Version.cpp">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\BitMatrixParser.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\DataBlock.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\DataMask.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\DecodedBitStreamParser.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\Decoder.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\decoder\Mode.cpp">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\ResultPointCallback.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\Binarizer.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\BinaryBitmap.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\DecodeHints.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\Exception.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\LuminanceSource.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\MultiFormatReader.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\Reader.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\ReaderException.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\Result.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\ResultPoint.cpp">
+      <Filter>Header Files\zxing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\QRLocator.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\QRDecoder.cpp">
+    <ClCompile Include="..\jni\positioning\qrcode\QRFinder.cpp">
       <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\QRDecoder.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\PerspectiveTransform.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\FindPattern.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\Array.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\BitArray.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\BitMatrix.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\BitSource.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\Counted.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\DecoderResult.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\DetectorResult.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\EdgeDetector.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\GlobalHistogramBinarizer.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\GreyscaleLuminanceSource.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\GreyscaleRotatedLuminanceSource.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\GridSampler.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\HybridBinarizer.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\IllegalArgumentException.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\PerspectiveTransform.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\Str.cpp">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\AlignmentPattern.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\AlignmentPatternFinder.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\Detector.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\FinderPattern.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\FinderPatternFinder.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\FinderPatternInfo.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\qrcode\detector\QREdgeDetector.cpp">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -185,18 +338,6 @@
     </ClInclude>
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp">
       <Filter>Header Files\controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\QRFinder.hpp">
-      <Filter>Header Files\positioning</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\QRLocator.hpp">
-      <Filter>Header Files\positioning</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\FindPattern.h">
-      <Filter>Header Files\positioning</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\PerspectiveTransform.h">
-      <Filter>Header Files\positioning</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp">
       <Filter>Header Files\datacollection</Filter>
@@ -270,9 +411,6 @@
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp">
       <Filter>Header Files\datacollection</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\QRCode.hpp">
-      <Filter>Header Files\positioning</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp">
       <Filter>Header Files\positioning</Filter>
     </ClInclude>
@@ -327,14 +465,170 @@
     <ClInclude Include="..\jni\controllers\StartupController.hpp">
       <Filter>Header Files\controllers</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\AlignmentPatternHelper.hpp">
-      <Filter>Header Files\positioning</Filter>
+    <ClInclude Include="..\jni\zxing\BarcodeFormat.h">
+      <Filter>Header Files\zxing</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\FinderPatternHelper.hpp">
-      <Filter>Header Files\positioning</Filter>
+    <ClInclude Include="..\jni\zxing\Binarizer.h">
+      <Filter>Header Files\zxing</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\QRDecoder.hpp">
-      <Filter>Header Files\positioning</Filter>
+    <ClInclude Include="..\jni\zxing\BinaryBitmap.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\DecodeHints.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\Exception.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\LuminanceSource.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\MultiFormatReader.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\Reader.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\ReaderException.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\Result.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\ResultPoint.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\ResultPointCallback.h">
+      <Filter>Header Files\zxing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\ErrorCorrectionLevel.h">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\FormatInformation.h">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\QRCodeReader.h">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\Version.h">
+      <Filter>Header Files\zxing\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\BitMatrixParser.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\DataBlock.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\DataMask.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\DecodedBitStreamParser.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\Decoder.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\decoder\Mode.h">
+      <Filter>Header Files\zxing\qrcode\decoder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\FindPattern.h">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\PerspectiveTransform.h">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\QRCode.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\QRDecoder.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\QRFinder.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\QRLocator.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\Array.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\BitArray.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\BitMatrix.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\BitSource.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\Counted.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\DecoderResult.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\DetectorResult.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\EdgeDetector.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\GlobalHistogramBinarizer.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\GreyscaleLuminanceSource.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\GreyscaleRotatedLuminanceSource.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\GridSampler.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\HybridBinarizer.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\IllegalArgumentException.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\PerspectiveTransform.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\Point.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\Str.h">
+      <Filter>Header Files\zxing\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\AlignmentPattern.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\AlignmentPatternFinder.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\Detector.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\FinderPattern.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\FinderPatternFinder.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\FinderPatternInfo.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\qrcode\detector\QREdgeDetector.h">
+      <Filter>Header Files\zxing\qrcode\detector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

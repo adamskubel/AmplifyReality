@@ -22,6 +22,8 @@ public:
 	
 	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
 
+	void FitTextToBoundary(Rect boundary);
+
 	cv::Scalar FillColor, TextColor;
 	//Bottom left corner
 	cv::Point2i Position;

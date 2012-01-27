@@ -7,7 +7,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <model/FrameItem.hpp>
-#include "positioning/QRCode.hpp"
+#include "positioning/qrcode/QRCode.hpp"
 
 
 #ifndef IMGPROCESSOR_HPP_

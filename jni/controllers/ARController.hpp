@@ -12,8 +12,8 @@
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"
 
-#include "positioning/QRLocator.hpp"
-#include "positioning/QRFinder.hpp"
+#include "positioning/qrcode/QRLocator.hpp"
+#include "positioning/qrcode/QRFinder.hpp"
 #include "positioning/PositionSelector.hpp"
 
 #include "userinterface/uimodel/Label.hpp"

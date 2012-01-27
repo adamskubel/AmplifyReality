@@ -14,39 +14,63 @@ include $(OPENCV_MK_PATH)
 
 
 LOCAL_MODULE    := amplify_reality
-LOCAL_SRC_FILES :=	\
-Main.cpp\
-AmplifyRunner.cpp \
-datastructures/CircularList.cpp\
-positioning/QRFinder.cpp\
-positioning/FindPattern.cpp \
-positioning/PositionSelector.cpp\
-positioning/ARConfigurator.cpp\
-positioning/AlignmentPatternHelper.cpp\
-positioning/FinderPatternHelper.cpp\
-positioning/PerspectiveTransform.cpp\
-datacollection/ImageCollector.cpp \
-datacollection/SensorCollector.cpp\
-display/opengl/OpenGLRenderer.cpp \
-display/opengl/OpenGLHelper.cpp \
-display/opengl/QuadBackground.cpp\
-display/model/AugmentedView.cpp\
-display/model/ARObject.cpp\
-controllers/CalibrationController.cpp \
-controllers/ARController.cpp \
-controllers/Controller.cpp \
-controllers/StartupController.cpp\
-positioning/QRLocator.cpp \
-model/FrameItem.cpp \
-datacollection/ImageProcessor.cpp \
-userinterface/AndroidInputHandler.cpp  \
-userinterface/events/EventArgs.cpp \
-userinterface/uimodel/Button.cpp \
-userinterface/uimodel/Label.cpp \
-userinterface/uimodel/GridLayout.cpp \
-userinterface/uimodel/CertaintyIndicator.cpp\
-userinterface/uimodel/NumberSpinner.cpp\
-VirtualDeclarations.cpp
+# LOCAL_SRC_FILES :=	\
+# Main.cpp\
+# AmplifyRunner.cpp \
+# datastructures/CircularList.cpp\
+# positioning/PositionSelector.cpp\
+# positioning/ARConfigurator.cpp\
+# positioning/qrcode/QRFinder.cpp\
+# positioning/qrcode/FindPattern.cpp \
+# positioning/qrcode/AlignmentPatternHelper.cpp\
+# positioning/qrcode/FinderPatternHelper.cpp\
+# positioning/qrcode/PerspectiveTransform.cpp\
+# positioning/qrcode/QRLocator.cpp \
+# datacollection/ImageCollector.cpp \
+# datacollection/SensorCollector.cpp\
+# display/opengl/OpenGLRenderer.cpp \
+# display/opengl/OpenGLHelper.cpp \
+# display/opengl/QuadBackground.cpp\
+# display/model/AugmentedView.cpp\
+# display/model/ARObject.cpp\
+# controllers/CalibrationController.cpp \
+# controllers/ARController.cpp \
+# controllers/Controller.cpp \
+# controllers/StartupController.cpp\
+# model/FrameItem.cpp \
+# datacollection/ImageProcessor.cpp \
+# userinterface/AndroidInputHandler.cpp  \
+# userinterface/events/EventArgs.cpp \
+# userinterface/uimodel/Button.cpp \
+# userinterface/uimodel/Label.cpp \
+# userinterface/uimodel/GridLayout.cpp \
+# userinterface/uimodel/CertaintyIndicator.cpp\
+# userinterface/uimodel/NumberSpinner.cpp\
+# VirtualDeclarations.cpp
+
+
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/*.cpp) 
+# LOCAL_SRC_FILES += $(MY_SOURCES:$(MY_PREFIX)%=%) 
+
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/**/*.cpp) 
+# LOCAL_SRC_FILES += $(MY_SOURCES:$(MY_PREFIX)%=%) 
+
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/**/**/*.cpp) 
+# LOCAL_SRC_FILES += $(MY_SOURCES:$(MY_PREFIX)%=%) 
+
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/**/**/**/*.cpp) 
+# LOCAL_SRC_FILES += $(MY_SOURCES:$(MY_PREFIX)%=%) 
+
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/**/**/**/*.cpp) 
+LOCAL_SRC_FILES +=  $(wildcard *.cpp) $(wildcard */*.cpp)  $(wildcard */*/*.cpp)  $(wildcard */*/*/*.cpp)
+
+
+
+# MY_PREFIX := $(LOCAL_PATH)/zxing/common
+# MY_SOURCES := $(wildcard $(MY_PREFIX)/*.cpp) 
+# LOCAL_SRC_FILES += $(MY_SOURCES:$(MY_PREFIX)%=%) 
+
+
 
 
 LOCAL_LDLIBS +=  -llog -ldl -landroid -lGLESv1_CM -lEGL

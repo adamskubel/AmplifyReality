@@ -1,7 +1,7 @@
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
 #include <opencv2/core/core.hpp>
-#include "positioning/QRCode.hpp"
+#include "positioning/qrcode/QRCode.hpp"
 
 
 #ifndef FRAME_ITEM_HPP_

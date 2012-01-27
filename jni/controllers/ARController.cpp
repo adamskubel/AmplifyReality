@@ -204,8 +204,9 @@ void ARController::ProcessFrame(Engine * engine)
 			sprintf(string,"[%.2lf,%.2lf,%.2lf]",item->rotationMatrix->at<double>(0,0),item->rotationMatrix->at<double>(0,1),item->rotationMatrix->at<double>(0,2));
 			gyroDataLabel->SetText(string);		
 		}
-	}
-	
+	}	
+
+	LOGV(LOGTAG_ARCONTROLLER,"Drawing QRCode");
 	item->qrCode->Draw(rgbImage);
 	for (int i=0;i<debugVector.size();i++)
 	{

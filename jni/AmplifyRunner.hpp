@@ -5,18 +5,12 @@
 #include "controllers/ARController.hpp"
 #include "controllers/StartupController.hpp"
 
-#include "datacollection/ImageCollector.hpp"
-#include "datacollection/ImageProcessor.hpp"
 #include "display/opengl/OpenGL.hpp"
 
-#include "positioning/QRLocator.hpp"
-
-#include "model/FrameItem.hpp"
 #include "model/Engine.hpp"
 #include "model/Updateable.hpp"
 
 #include "userinterface/AndroidInputHandler.hpp"
-#include "userinterface/uimodel/Button.hpp"
 
 #include "srutil/delegate/delegate.hpp"
 
