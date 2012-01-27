@@ -182,9 +182,12 @@ void ARController::ProcessFrame(Engine * engine)
 	LOGV(LOGTAG_ARCONTROLLER,"Processing frame");
 	getImages(engine,item);
 	
-	QRFinder::minAlignmentScore = config->MinAlignmentScore;
+	//lol static. THIS IS BAD!
+	AlignmentPatternHelper::MinimumAlignmentPatternScore = config->MinAlignmentScore;
+	FinderPatternHelper::MinimumFinderPatternScore = config->MinFinderPatternScore;
+
 	vector<Drawable*> debugVector;
-	item->qrCode = QRFinder::locateQRCode(*binaryImage, debugVector, config->MinFinderPatternScore);
+	item->qrCode = QRFinder::LocateQRCodes(*binaryImage, debugVector);
 	
 	if (item->qrCode != NULL && item->qrCode->validCodeFound)
 	{

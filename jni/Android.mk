@@ -22,6 +22,9 @@ positioning/QRFinder.cpp\
 positioning/FindPattern.cpp \
 positioning/PositionSelector.cpp\
 positioning/ARConfigurator.cpp\
+positioning/AlignmentPatternHelper.cpp\
+positioning/FinderPatternHelper.cpp\
+positioning/PerspectiveTransform.cpp\
 datacollection/ImageCollector.cpp \
 datacollection/SensorCollector.cpp\
 display/opengl/OpenGLRenderer.cpp \

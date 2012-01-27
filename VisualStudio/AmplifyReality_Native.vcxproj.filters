@@ -62,6 +62,9 @@
     <Filter Include="Header Files\userinterface\events">
       <UniqueIdentifier>{4f4b4ab1-dad7-446a-a8fc-d6c423a14511}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\QR">
+      <UniqueIdentifier>{5d24c69b-b2f7-4b23-8824-acdc425b5244}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -70,22 +73,10 @@
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\display\NativeWindowRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\FindPattern.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\QRFinder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\QRLocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\model\FrameItem.cpp">
@@ -117,9 +108,6 @@
     </ClCompile>
     <ClCompile Include="..\jni\display\model\ARObject.cpp">
       <Filter>Header Files\display\model</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\datacollection\SensorCollector.cpp">
-      <Filter>Header Files\datacollection</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp">
       <Filter>Source Files</Filter>
@@ -157,8 +145,35 @@
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\positioning\AlignmentPatternHelper.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\QRFinder.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\QRLocator.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\FinderPatternHelper.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\PerspectiveTransform.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\FinderPatternHelper_Symmetry.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
     <ClCompile Include="..\jni\controllers\StartupController.cpp">
-      <Filter>Header Files\controllers</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\datacollection\SensorCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\FindPattern.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\QRDecoder.cpp">
+      <Filter>Source Files\QR</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -311,6 +326,15 @@
     </ClInclude>
     <ClInclude Include="..\jni\controllers\StartupController.hpp">
       <Filter>Header Files\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\AlignmentPatternHelper.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\FinderPatternHelper.hpp">
+      <Filter>Header Files\positioning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\QRDecoder.hpp">
+      <Filter>Header Files\positioning</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
