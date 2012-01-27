@@ -21,17 +21,17 @@ ARConfigurator::ARConfigurator(Engine * engine, UIElementCollection * parent, Po
 	rotationSpinner->SetMaximum(1.0f);
 	rotationSpinner->SetMinimum(0.0f);
 
-	NumberSpinner * numberSpinner2 = new NumberSpinner("MinScore",MinFinderPatternScore,10.0f,"%3.1f");
+	NumberSpinner * numberSpinner2 = new NumberSpinner("MinFPScore",MinFinderPatternScore,10.0f,"%3.1f");
 	numberSpinner2->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARConfigurator,&ARConfigurator::MinimumFinderPatternScoreChanged>(this));
 	myGrid->AddChild(numberSpinner2,Point2i(2,0));
 	numberSpinner2->SetMinimum(100.0f);
 	numberSpinner2->SetMaximum(300.0f);
 
-	NumberSpinner * minAlignmentSpinner = new NumberSpinner("MinAlignScore",MinFinderPatternScore,10.0f,"%3.1f");
-	minAlignmentSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARConfigurator,&ARConfigurator::MinimumFinderPatternScoreChanged>(this));
+	NumberSpinner * minAlignmentSpinner = new NumberSpinner("MinAlignScore",MinAlignmentScore,10.0f,"%3.1f");
+	minAlignmentSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARConfigurator,&ARConfigurator::MinimumAlignmentPatternScoreChanged>(this));
 	myGrid->AddChild(minAlignmentSpinner,Point2i(2,1));
-	minAlignmentSpinner->SetMinimum(50.0f);
-	minAlignmentSpinner->SetMaximum(200.0f);
+	minAlignmentSpinner->SetMinimum(100.0f);
+	minAlignmentSpinner->SetMaximum(300.0f);
 
 
 	parent->AddChild(myGrid);
@@ -50,6 +50,7 @@ void ARConfigurator::SetDefaults()
 	PositionFilterAlpha = 0.9f;	
 	RotationFilterAlpha = 0.9f;	
 	MinFinderPatternScore = 190;
+	MinAlignmentScore = 180;
 }
 
 bool ARConfigurator::IsVisible()
@@ -80,6 +81,12 @@ void ARConfigurator::MinimumFinderPatternScoreChanged(void * sender, NumberSpinn
 {
 	MinFinderPatternScore = args.NewValue;
 }
+
+void ARConfigurator::MinimumAlignmentPatternScoreChanged(void * sender, NumberSpinnerEventArgs args)
+{
+	MinAlignmentScore = args.NewValue;
+}
+
 
 void ARConfigurator::ToggleVisibility(void * sender, EventArgs args)
 {

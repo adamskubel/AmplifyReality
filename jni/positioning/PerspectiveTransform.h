@@ -4,6 +4,9 @@
 #define PT_H
 
 #include "FindPattern.h"
+#include <opencv2/core/core.hpp>
+
+using namespace cv;
 
 class PerspectiveTransform
 {
@@ -12,18 +15,18 @@ public:
                         long a12 = 0, long a22 = 0, long a32 = 0,
                         long a13 = 0, long a23 = 0, long a33 = 0);
 
-   bool TransformPoint(POINT& pt) const;
+   bool TransformPoint(Point2i& pt) const;
 
-   static PerspectiveTransform QuadrilateralToQuadrilateral(POINT x0, POINT x1,
-                                                            POINT x2, POINT x3,
-                                                            POINT x0p, POINT x1p,
-                                                            POINT x2p, POINT x3p);
+   static PerspectiveTransform QuadrilateralToQuadrilateral(Point2i x0, Point2i x1,
+                                                            Point2i x2, Point2i x3,
+                                                            Point2i x0p, Point2i x1p,
+                                                            Point2i x2p, Point2i x3p);
 
-   static PerspectiveTransform SquareToQuadrilateral(POINT a, POINT b,
-                                                     POINT c, POINT d);
+   static PerspectiveTransform SquareToQuadrilateral(Point2i a, Point2i b,
+                                                     Point2i c, Point2i d);
 
-   static PerspectiveTransform QuadrilateralToSquare(POINT a, POINT b,
-                                                     POINT c, POINT d);
+   static PerspectiveTransform QuadrilateralToSquare(Point2i a, Point2i b,
+                                                     Point2i c, Point2i d);
 
 private:
    PerspectiveTransform BuildAdjoint();

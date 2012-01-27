@@ -81,6 +81,7 @@ private:
 		
 	FrameItem ** items;	
 	int currentFrameItem;
+	bool isExpired, isInitialized;
 
 	PositionSelector * positionSelector;
 

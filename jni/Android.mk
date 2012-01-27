@@ -32,6 +32,7 @@ display/model/ARObject.cpp\
 controllers/CalibrationController.cpp \
 controllers/ARController.cpp \
 controllers/Controller.cpp \
+controllers/StartupController.cpp\
 positioning/QRLocator.cpp \
 model/FrameItem.cpp \
 datacollection/ImageProcessor.cpp \

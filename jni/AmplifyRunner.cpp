@@ -3,7 +3,12 @@
 
 AmplifyRunner::AmplifyRunner(Engine * engine)
 {		
-	if (USE_CALCULATED_CAMERA_MATRIX)
+
+	currentController = new StartupController();
+	currentActionMode = Startup;
+	LOGI(LOGTAG_MAIN,"Starting in startup mode (durrr)");
+
+	/*if (USE_CALCULATED_CAMERA_MATRIX)
 	{
 		currentController = new CalibrationController();
 		currentActionMode = Calibrate;
@@ -14,7 +19,7 @@ AmplifyRunner::AmplifyRunner(Engine * engine)
 		currentController = new ARController();
 		currentActionMode = QRTrack;
 		LOGI(LOGTAG_MAIN,"Starting with predefined camera matrix");
-	}
+	}*/
 }
 
 void AmplifyRunner::Initialize(Engine * engine)
@@ -96,13 +101,21 @@ void AmplifyRunner::CheckControllerExpiry(Engine * engine)
 			}		
 			currentActionMode = QRTrack;
 		}
-		else
+		else if (currentActionMode == QRTrack)
 		{
 			LOGI(LOGTAG_MAIN,"ARController expired");
 			currentController->Teardown(engine);
 			delete currentController;
 			currentController = new CalibrationController();
 			currentActionMode = Calibrate;
+		}
+		else if (currentActionMode == Startup)
+		{
+			LOGI(LOGTAG_MAIN,"StartupController expired");
+			currentController->Teardown(engine);
+			delete currentController;
+			currentController = new ARController();
+			currentActionMode = QRTrack;
 		}
 	}
 }
@@ -115,22 +128,6 @@ void AmplifyRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs
 	{
 		LOGD(LOGTAG_MAIN,"Menu button pressed. Expiring current controller");
 		currentController->SetExpired();
-		/*ActionMode newMode;
-		switch (currentActionMode)
-		{
-		case (QRTrack):
-			delete currentController;
-			LOGD(LOGTAG_MAIN,"Deleted ARController from Main");
-			currentController = new CalibrationController();
-			currentActionMode = Calibrate;
-			break;
-		case (Calibrate):
-			currentActionMode = QRTrack;
-			delete currentController;	
-			LOGD(LOGTAG_MAIN,"Creating new ARController");
-			currentController = new ARController();	
-			break;
-		}*/
 	}
 }
 

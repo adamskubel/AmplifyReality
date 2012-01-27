@@ -33,19 +33,17 @@ public:
 	}
 	virtual bool IsExpired()
 	{
-		return isExpired;
+		return false;
 	}
-	virtual bool SetExpired()
+	virtual void SetExpired()
 	{
-		isExpired = true;
+		;
 	}
 	virtual void Render(OpenGL * openGL)
 	{
 		;
 	}
 
-protected:
-	bool isInitialized, isExpired;
 
 
 };

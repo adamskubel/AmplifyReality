@@ -2,10 +2,10 @@
 
 
 
-QuadBackground::QuadBackground(int _imageWidth, int _imageHeight)
+QuadBackground::QuadBackground(cv::Size2i size)
 {
 	//Create the texture object
-	calculateTextureSize(_imageWidth,_imageHeight,&textureWidth,&textureHeight);
+	calculateTextureSize(size.width,size.height,&textureWidth,&textureHeight);
 
 	LOGI(LOGTAG_OPENGL,"Creating texture, width=%d, height=%d", textureWidth, textureHeight);
 	glEnable(GL_TEXTURE_2D);
@@ -23,20 +23,14 @@ QuadBackground::QuadBackground(int _imageWidth, int _imageHeight)
 }
 
 void QuadBackground::SetImage(cv::Mat * image) 
-{	
-	struct timespec start,end;
-	SET_TIME(&start);
-		
+{			
 	//Store the size of the image for rendering step
 	imageWidth = image->cols;
 	imageHeight = image->rows;
 	//Store pointer to image data
 	if (DRAW_BACKGROUND_BORDER)
 		cv::rectangle(*image,Rect(0,0,imageWidth,imageHeight),cv::Scalar(0,255,0,255),3,CV_AA);
-	imagePixels = image->ptr<uint32_t>(0);
-	
-	SET_TIME(&end);
-	LOG_TIME("QuadBG Update", start, end);	
+	imagePixels = image->ptr<uint32_t>(0);	
 }
 
 void QuadBackground::Render(OpenGL * openGL)

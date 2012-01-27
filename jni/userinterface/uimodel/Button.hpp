@@ -24,11 +24,14 @@ public:
 	cv::Scalar FillColor;
 	std::string label;
 
+	void SetEnabled(bool enabled);
+	bool IsEnabled();
+
 private:
 	Scalar PressColor;
 	std::vector<ClickEventDelegate> clickDelegateVector;
 
-	bool isPressed;
+	bool isPressed, isEnabled;
 
 };
 

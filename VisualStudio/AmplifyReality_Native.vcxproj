@@ -61,6 +61,7 @@
     <ClCompile Include="..\jni\controllers\Controller.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.hpp" />
     <ClCompile Include="..\jni\controllers\ARController.cpp" />
+    <ClCompile Include="..\jni\controllers\StartupController.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp" />
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp" />
@@ -92,6 +93,7 @@
     <ClInclude Include="..\jni\AmplifyRunner.hpp" />
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
     <ClInclude Include="..\jni\controllers\ARController.hpp" />
+    <ClInclude Include="..\jni\controllers\StartupController.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageCollector.hpp" />
     <ClInclude Include="..\jni\datacollection\ImageProcessor.hpp" />
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp" />
@@ -106,6 +108,7 @@
     <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp" />
     <ClInclude Include="..\jni\ExceptionCodes.hpp" />
     <ClInclude Include="..\jni\LogDefinitions.h" />
+    <ClInclude Include="..\jni\model\DebugShape.hpp" />
     <ClInclude Include="..\jni\model\IDeletable.hpp" />
     <ClInclude Include="..\jni\model\Drawable.hpp" />
     <ClInclude Include="..\jni\model\Engine.hpp" />
@@ -129,6 +132,7 @@
     <ClInclude Include="..\jni\userinterface\events\EventDelegates.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\CertaintyIndicator.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\DataDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\InputScaler.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp" />

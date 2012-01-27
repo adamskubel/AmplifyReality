@@ -157,6 +157,9 @@
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\controllers\StartupController.cpp">
+      <Filter>Header Files\controllers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -299,6 +302,15 @@
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\DebugShape.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\DataDisplay.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\controllers\StartupController.hpp">
+      <Filter>Header Files\controllers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

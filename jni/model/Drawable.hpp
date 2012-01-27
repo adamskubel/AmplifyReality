@@ -1,6 +1,4 @@
 #include "model/Engine.hpp"
-#include "model/FrameItem.hpp"
-
 #include <opencv2/core/core.hpp>
 
 #ifndef DRAWABLE_HPP_

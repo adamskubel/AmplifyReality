@@ -94,3 +94,13 @@ void GridLayout::Draw(Mat * rgbaImage)
 			Children.at(i)->Draw(rgbaImage);
 	}
 }
+
+GridCompatible * GridLayout::GetElementAtCell(Point2i gridPoint)
+{
+	for (int i=0;i<Children.size();i++)
+	{
+		if (Children.at(i)->gridPoint == gridPoint)
+			return Children.at(i);
+	}
+	return NULL;
+}

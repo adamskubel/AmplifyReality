@@ -9,7 +9,6 @@ void FrameItem::clearOldData()
 		delete qrCode;		
 		qrCode = NULL;
 	}
-	ratioMatches.clear(); //Is this safe if vector isn't declard??
 	nanotime = 0;
 }
 

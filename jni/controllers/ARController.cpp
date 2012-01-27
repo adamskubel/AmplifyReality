@@ -111,7 +111,7 @@ void ARController::Initialize(Engine * engine)
 	initializeARView();
 
 	//Initialize textured quad to render camera image
-	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
+	quadBackground = new QuadBackground(engine->ImageSize());
 
 	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
@@ -183,7 +183,8 @@ void ARController::ProcessFrame(Engine * engine)
 	getImages(engine,item);
 	
 	QRFinder::minAlignmentScore = config->MinAlignmentScore;
-	item->qrCode = QRFinder::locateQRCode(*binaryImage, item->ratioMatches, config->MinFinderPatternScore);
+	vector<Drawable*> debugVector;
+	item->qrCode = QRFinder::locateQRCode(*binaryImage, debugVector, config->MinFinderPatternScore);
 	
 	if (item->qrCode != NULL && item->qrCode->validCodeFound)
 	{
@@ -201,8 +202,14 @@ void ARController::ProcessFrame(Engine * engine)
 			gyroDataLabel->SetText(string);		
 		}
 	}
-	//Draw debugging overlay
-	drawDebugOverlay(item);	
+	
+	item->qrCode->Draw(rgbImage);
+	for (int i=0;i<debugVector.size();i++)
+	{
+		debugVector.at(i)->Draw(rgbImage);
+	}
+	debugVector.clear();
+
 		
 	//Read data from gyroscope
 	//readGyroData(engine,item);
@@ -229,6 +236,7 @@ void ARController::ProcessFrame(Engine * engine)
 	//Update textured quad 
 	quadBackground->SetImage(rgbImage);
 }
+
 
 void ARController::Render(OpenGL * openGL)
 {
@@ -288,68 +296,6 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	SET_TIME(&end);
 }
 
-
-
-void ARController::drawDebugOverlay(FrameItem * item)
-{
-	LOGV(LOGTAG_ARCONTROLLER,"Starting debug draw");
-	struct timespec start, end;
-	SET_TIME(&start);
-	if (item->qrCode != NULL && item->qrCode->validCodeFound)
-	{
-		//For each of the 4 finder patterns, store the point in an array to form the debug rectangle
-		Point2i * points = new Point_<int> [4];
-		for (size_t i = 0; i < item->qrCode->finderPatterns->size(); i++)
-		{
-			FinderPattern  pattern = *(item->qrCode->finderPatterns->at(i));
-			points[i] = pattern.pt;
-		}
-
-		fillConvexPoly(*rgbImage,points, 4, Colors::Lime);	
-		delete points;
-	}
-	else if (item->qrCode != NULL)
-	{
-		for (size_t i = 0; i < item->qrCode->finderPatterns->size(); i++)
-		{
-			FinderPattern  pattern = *(item->qrCode->finderPatterns->at(i));
-
-			//Use the pattern size to estimate a rectangle to draw
-			int size = pattern.size / 2;
-			//Create an array to pass to the polyline function
-			Point2i * points = new Point_<int> [4];
-			points[0].x = (int) pattern.pt.x - size;
-			points[0].y = (int) pattern.pt.y - size;
-
-			points[1].x = (int) pattern.pt.x + size;
-			points[1].y = (int) pattern.pt.y - size;
-
-			points[2].x = (int) pattern.pt.x + size;
-			points[2].y = (int) pattern.pt.y + size;
-
-			points[3].x = (int) pattern.pt.x - size;
-			points[3].y = (int) pattern.pt.y + size;
-
-			int npts = 4;
-			const Point2i * pArray[] = {points};
-
-			if (!pattern.isAlignment)				
-				polylines(*rgbImage,pArray,&npts,1,true,Colors::Blue,4);
-			else
-				polylines(*rgbImage,pArray,&npts,1,true,Colors::Red,4);
-			
-			
-			delete points;
-		}
-	}
-	for (size_t i = 0; i < item->ratioMatches.size(); i++)
-	{
-		circle(*rgbImage, Point2i((item->ratioMatches)[i].x, (item->ratioMatches)[i].y), (item->ratioMatches)[i].z, Scalar(255, 0, 0, 255), 1);
-	}
-
-	SET_TIME(&end);
-	LOG_TIME("Debug Draw", start, end);
-}
 
 void ARController::HandleTouchInput(void* sender, TouchEventArgs args)
 {

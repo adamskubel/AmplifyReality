@@ -1,6 +1,18 @@
 #include "android_native_app_glue.h"
 #include "AmplifyRunner.hpp"
 #include "android/sensor.h"
+#include <jni.h>
+
+extern "C"
+{
+	JNIEXPORT void JNICALL 
+		Java_com_amplifyreality_AmplifyRealityActivity_SomeFunction(JNIEnv * env, jobject  obj)
+	{
+		LOGE("This is a JNI CALL");
+	}
+}
+
+
 
 
 static void engineHandleCommand(struct android_app* app, int32_t cmd);

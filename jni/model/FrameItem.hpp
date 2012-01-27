@@ -7,7 +7,6 @@
 #ifndef FRAME_ITEM_HPP_
 #define FRAME_ITEM_HPP_
 
-using namespace cv;
 
 namespace Configuration
 {
@@ -21,9 +20,6 @@ namespace Configuration
 	
 }
 
-
-
-
 //Stores the processing inputs and outputs for a given frame.
 //Is designed to be reused indefinitely. This saves the need to reallocate memory. 
 class FrameItem
@@ -32,7 +28,6 @@ class FrameItem
 public:
 	FrameItem();
 	cv::Mat *rotationMatrix, *translationMatrix;
-	std::vector<Point3i> ratioMatches;
 	Configuration::DrawMode drawMode;
 	QRCode * qrCode;
 

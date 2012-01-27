@@ -35,7 +35,7 @@ public:
 	void Teardown(Engine * engine);
 	void ProcessFrame(Engine * engine);
 	bool IsExpired();
-	bool SetExpired();
+	void SetExpired();
 	bool wasSuccessful();
 	void captureImage();
 	void getCameraMatrices(Mat& camera, Mat& distortion);
@@ -49,7 +49,7 @@ private:
 	vector<vector<Point2f> > * imagePoints;
 	int collectionCount;
 	bool calibrationComplete, exitRequested;
-	bool isFinding;
+	bool isFinding, isInitialized;
 	Size_<int> chessBoardSize;
 	Mat *distortionMatrix, * cameraMatrix;
 	Button * myCaptureButton;

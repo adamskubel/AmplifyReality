@@ -32,7 +32,8 @@ QRLocator::~QRLocator()
 //Transform a set of points from camera space to reality space 
 void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix)
 {
-	float qrSize = 37;
+	float qrSize = 41.25;
+	float apSize = 36;
 
 	struct timespec start,end;
 	SET_TIME(&start);
@@ -40,14 +41,18 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 	vector<Point3f> qrVector = vector<Point3f>();
 	qrVector.push_back(Point3f(0,0,0));
 	qrVector.push_back(Point3f(qrSize,0,0));
-	qrVector.push_back(Point3f(qrSize,qrSize,0));
+	qrVector.push_back(Point3f(apSize,apSize,0)); //alignment pattern
 	qrVector.push_back(Point3f(0,qrSize,0));
 		
-	vector<Point2f> imagePointVector = vector<Point2f>();
-	for (int i=0;i<qrCode->finderPatterns->size();i++)
-	{
-		imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(i)->pt.x,qrCode->finderPatterns->at(i)->pt.y));
-	}
+	vector<Point2f> imagePointVector;// = vector<Point2f>();
+	imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(0)->pt.x,qrCode->finderPatterns->at(0)->pt.y));
+	imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(1)->pt.x,qrCode->finderPatterns->at(1)->pt.y));
+	imagePointVector.push_back(Point2f(qrCode->alignmentPattern.x, qrCode->alignmentPattern.y));
+	imagePointVector.push_back(Point2f(qrCode->finderPatterns->at(2)->pt.x,qrCode->finderPatterns->at(2)->pt.y));
+
+	/*LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"ImagePoints",&imagePointVector);
+	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"QR-Points",&qrVector);*/
+
 	LOGV(LOGTAG_QR,"Calling solvePnP");
 	try
 	{

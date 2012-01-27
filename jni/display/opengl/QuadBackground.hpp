@@ -13,7 +13,7 @@
 class QuadBackground : public OpenGLRenderable, public IDeletable
 {
 public:
-	QuadBackground(int imageWidth, int imageHeight);
+	QuadBackground(Size2i size);
 	~QuadBackground();
 	void Render(OpenGL * openGL);
 	void SetImage(cv::Mat * image);

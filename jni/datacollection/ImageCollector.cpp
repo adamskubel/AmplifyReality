@@ -9,10 +9,20 @@ void ImageCollector::newFrame()
 	//rgbaUpdated = false;
 }
 
+bool ImageCollector::IsReady()
+{
+	if (myCapture != NULL && myCapture->isOpened())
+	{
+		return true;
+	}
+	return false;
+}
+
 ImageCollector::ImageCollector(int width, int height)
 {
 	this->width = width;
 	this->height = height;
+	myCapture = NULL;
 
 	this->grayOptMode = true;
 
@@ -33,13 +43,15 @@ ImageCollector::ImageCollector(int width, int height)
 
 	if (!myCapture->isOpened())
 	{
-		LOGE("Whoops! VideoCapture failed to open! Try opening the camera app, and if that also fails, try restarting your phone. ");		
+		LOGE("VideoCapture failed to open.");		
 	}
-	myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
-	myCapture->set(CV_CAP_PROP_FRAME_HEIGHT, height);
+	else
+	{
+		myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
+		myCapture->set(CV_CAP_PROP_FRAME_HEIGHT, height);
 
-	LOGI(LOGTAG_IMAGECAPTURE,"VideoCapture Initialized");
-	
+		LOGI(LOGTAG_IMAGECAPTURE,"VideoCapture Initialized");
+	}
 }
 
 void ImageCollector::undistortImage(Mat* inputImage, Mat* outputImage)

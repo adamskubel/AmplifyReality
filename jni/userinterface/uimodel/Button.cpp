@@ -8,6 +8,7 @@ Button::Button(std::string _label, cv::Scalar _fillColor)
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
+	isEnabled = true;
 }
 
 Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillColor)
@@ -18,6 +19,7 @@ Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillC
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
+	isEnabled = true;
 }
 
 Button::~Button()
@@ -33,6 +35,11 @@ void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 
 UIElement * Button::GetElementAt(cv::Point2i point)
 {
+	if (!isEnabled)
+	{
+		LOGD(LOGTAG_INPUT,"Button disabled, aborting hit test");
+		return NULL;
+	}
 	LOGD(LOGTAG_INPUT,"Button: Testing point (%d,%d)",point.x,point.y);
 	if (buttonBoundaries.contains(point))
 	{
@@ -95,3 +102,12 @@ void Button::Draw(Mat * rgbaImage)
 	putText(*rgbaImage, label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
 }
 
+void Button::SetEnabled(bool enabled)
+{
+	isEnabled = enabled;
+}
+
+bool Button::IsEnabled()
+{
+	return isEnabled;
+}

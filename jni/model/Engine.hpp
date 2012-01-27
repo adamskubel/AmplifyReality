@@ -2,6 +2,7 @@
 #include "datacollection/ImageCollector.hpp"
 #include "userinterface/AndroidInputHandler.hpp"
 #include "datacollection/SensorCollector.hpp"
+#include <opencv2/core/core.hpp>
 
 #ifndef ENGINE_HPP_
 #define ENGINE_HPP_
@@ -35,6 +36,16 @@ public:
 	void getTime(struct timespec * time)
 	{
 		clock_gettime(CLOCK_REALTIME,time);
+	}
+
+	cv::Size2i ImageSize()
+	{
+		return Size2i(imageWidth,imageHeight);
+	}
+
+	cv::Size2i ScreenSize()
+	{
+		return Size2i(glRender->screenWidth,glRender->screenHeight);
 	}
 };
 

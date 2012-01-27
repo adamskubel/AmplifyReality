@@ -41,6 +41,8 @@ public:
 	UIElement * GetElementByName(std::string name);
 	UIElement * GetElementAt(cv::Point2i point);
 
+	GridCompatible * GetElementAtCell(cv::Point2i gridPoint);
+
 protected:
 	Point2i Position;
 	vector<GridCompatible*> Children;

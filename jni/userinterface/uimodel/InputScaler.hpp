@@ -23,6 +23,21 @@ public:
 		LOGI(LOGTAG_INPUT,"Created InputScaler, xScale=%f,yScale=%f",xScale,yScale);
 	}
 
+	InputScaler(cv::Size2i target, cv::Size2i screen, UIElement * _childElement, bool maintainRatio = true)
+	{
+		xScale = (float)target.width/(float)screen.width;
+		yScale = (float)target.height/(float)screen.height;
+		
+		if (maintainRatio)
+		{
+			float scale = max(xScale,yScale);
+			xScale = yScale = scale;
+		}
+
+		childElement = _childElement;
+		LOGI(LOGTAG_INPUT,"Created InputScaler, xScale=%f,yScale=%f",xScale,yScale);
+	}
+
 	UIElement * GetElementAt(cv::Point2i p)
 	{
 		float newX = (float)p.x * xScale;

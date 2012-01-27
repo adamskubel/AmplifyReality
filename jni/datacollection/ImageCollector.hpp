@@ -27,6 +27,8 @@ public:
 	void newFrame();
 	void teardown();
 
+	bool IsReady();
+
 
 private:
 	Mat *mrgba, *mgray, *mbin;

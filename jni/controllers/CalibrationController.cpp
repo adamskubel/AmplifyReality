@@ -63,13 +63,13 @@ void CalibrationController::Initialize(Engine * engine)
 	layout->AddChild(exitButton,Point2i(4,0),Size_<int>(1,1));
 
 	//Set grid layout as the root UI element
-	inputScaler = new InputScaler(max((float)engine->imageWidth/engine->glRender->screenWidth,(float)engine->imageHeight/engine->glRender->screenHeight),layout);
+	inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),layout);
 
 	engine->inputHandler->SetRootUIElement(inputScaler);
 	drawObjects.push_back(layout);
 
 	//Create background quad
-	quadBackground = new QuadBackground(engine->imageWidth,engine->imageHeight);
+	quadBackground = new QuadBackground(Size2i(engine->ImageSize()));
 
 	isInitialized = true;
 	LOGI(LOGTAG_CALIBRATION,"Initialization complete");
@@ -111,7 +111,7 @@ bool CalibrationController::IsExpired()
 	return calibrationComplete || exitRequested;
 }
 
-bool CalibrationController::SetExpired()
+void CalibrationController::SetExpired()
 {
 	exitRequested = true;
 }

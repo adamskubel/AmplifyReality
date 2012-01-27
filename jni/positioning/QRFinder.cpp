@@ -1,13 +1,13 @@
 #include "QRFinder.hpp"
 #include "LogDefinitions.h"
 #include "QRCode.hpp"
-//#include <PerspectiveTransform.h>
+//#include <PerspectiveTransform.h
 
 
 int QRFinder::minScore = 141;
 int QRFinder::minAlignmentScore = 141;
 
-QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector, int _minScore) 
+QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Drawable*>& debugVector, int _minScore) 
 {	
 	minScore = _minScore;
 	struct timespec start,end;
@@ -31,9 +31,12 @@ QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector, int _m
 
 		//Approximate bottom right point for now
 		bottom_right.pt.x = (top_right.pt.x - top_left.pt.x) + bottom_left.pt.x;
-		bottom_right.pt.y = (top_right.pt.y - top_left.pt.y) + bottom_left.pt.y;
+		bottom_right.pt.y = (top_right.pt.y - top_left.pt.y) + bottom_left.pt.y;				
 		bottom_right.hitCount = -1;
 		bottom_right.size = 0;
+
+		float finderPatternSize = top_left.size;
+		bottom_right.pt -= Point2i((int)round((float)finderPatternSize/2.0f), (int)round((float)finderPatternSize/2.0f));
 				
 		SET_TIME(&end);
 		LOG_TIME("QR Search(Found)", start, end);
@@ -41,13 +44,14 @@ QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector, int _m
 
 		patternVector->push_back(new FinderPattern(top_left));
 		patternVector->push_back(new FinderPattern(top_right));
-		patternVector->push_back(new FinderPattern(bottom_right));
 		patternVector->push_back(new FinderPattern(bottom_left));
-
+		
 		QRCode * newCode = new QRCode(patternVector,true);
+		newCode->alignmentPattern = bottom_right.pt;
 
 		FindAlignmentPattern(M, newCode,debugVector);
 
+		return newCode;
 	} 
 	
 	//Less or more than three patterns were found, so just return a vector of all the finder patterns 
@@ -64,14 +68,11 @@ QRCode * QRFinder::locateQRCode(cv::Mat& M, vector<Point3i>& debugVector, int _m
 	return new QRCode(patternVector,false);
 }
 
-void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& debugVector)
+void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Drawable*>& debugVector)
 {
-	Point2i searchCenter = newCode->finderPatterns->at(2)->pt;
-
+	Point2i searchCenter = newCode->alignmentPattern;
 	float finderPatternSize = newCode->finderPatterns->at(0)->size;
-
-	searchCenter -= Point2i((int)round((float)finderPatternSize/2.0f), (int)round((float)finderPatternSize/2.0f));
-
+	
 	int startX = searchCenter.x - finderPatternSize, endX = searchCenter.x + finderPatternSize;
 	if (startX < 0)
 		startX = 0;
@@ -84,14 +85,15 @@ void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& 
 	if (endY >= M.rows)
 		endY = M.rows -1;
 
-	LOGD(LOGTAG_QR,"Starting alignment pattern search. Range(Xmin=%d,Xmax=%d,Ymin=%d,Ymax=%d)",startX,endX,startY,endY);
+	debugVector.push_back(new DebugRectangle(Rect(Point2i(startX,startY),Point2i(endX,endY)),Colors::CornflowerBlue));
+
+	//LOGD(LOGTAG_QR,"Starting alignment pattern search. Range(Xmin=%d,Xmax=%d,Ymin=%d,Ymax=%d)",startX,endX,startY,endY);
 	for (int y = startY;y<endY;y+=2)
 	{
 		int bw[3] = { 0 };
 		int k = 0;
-		k = 0;
 		bw[0] = bw[1] = bw[2] = 0;
-		const unsigned char * rowPointer = M.ptr<unsigned char>(searchCenter.y);
+		const unsigned char * rowPointer = M.ptr<unsigned char>(y);
 		for (int x = startX;x<endX;x++)
 		{
 			unsigned char px = rowPointer[x];
@@ -99,7 +101,7 @@ void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& 
 			if (px != 0) /* White Pixel found*/
 			{
 				++bw[k];
-				if ((k & 1) == 0) /* Were counting black pixels, change state to count white pixels. */
+				if (k == 1) /* Were counting black pixels, change state to count white pixels. */
 				{
 					++k;
 				}
@@ -107,7 +109,7 @@ void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& 
 			else if (bw[0] != 0) /* Black Pixel found. Ensure white pixel was first */
 			{
 				++bw[k];
-				if ((k & 1) == 1) /* Were counting white pixels, change state to count black pixels. */
+				if (k != 1) /* Were counting white pixels, change state to count black pixels. */
 				{
 					++k;
 				}
@@ -117,36 +119,50 @@ void QRFinder::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Point3i>& 
 			{
 				if (CheckAlignmentRatios(bw,finderPatternSize))
 				{
-					int tx = (x - bw[2] - bw[1]) - (bw[1] / 2); /* Calculate temporary horizontal center from end of pattern. */
-
-					int ty = FindAlignmentCenterVertical(M, tx, y,finderPatternSize);
+					int tx = (x - bw[2]) - (bw[1] / 2); /* Calculate temporary horizontal center from end of pattern. */
+					int verticalBw[3] = {0,0,0};
+					int ty = FindAlignmentCenterVertical(M, tx, y,finderPatternSize,verticalBw,bw);
 
 					if (ty != 0)
 					{
-						int t = FindAlignmentCenterHorizontal(M, tx, ty, finderPatternSize); /* Calculate it again. */
+						int horizontalBw[3] = {0,0,0};
+						int t = FindAlignmentCenterHorizontal(M, tx, ty, finderPatternSize, verticalBw, horizontalBw); /* Calculate it again. */
 
 						if (t!= 0)
-						{
-							tx = t;
+						{								
+							tx = t;					
+							if (CheckAlignmentDiagonals(M,Point2i(tx,ty),verticalBw,horizontalBw,debugVector))
+							{									
+								int aPSize =  horizontalBw[2] + horizontalBw[1] + horizontalBw[0];
+								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::Lime));
+							/*	newCode->finderPatterns->at(2)->size = aPSize;
+								newCode->finderPatterns->at(2)->pt = Point2i(tx,ty);
+								newCode->finderPatterns->at(2)->isAlignment = true;*/
+								newCode->alignmentPattern = Point2i(tx,ty);
+							//	LOGD(LOGTAG_QR,"Found alignment pattern at (%d,%d) -> (%d,%d), Size=%d",x,y,tx,ty,aPSize);
+								return;
+							}	
+							else
+							{								
+								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::PeachPuff));
+							}
 						}
-
-						newCode->finderPatterns->at(2)->size = bw[2] + bw[1] + bw[0];
-						newCode->finderPatterns->at(2)->pt = Point2i(tx,ty);
-						newCode->finderPatterns->at(2)->isAlignment = true;
-
-						
-						debugVector.push_back(Point3i(tx,ty,20));
-
-						LOGD(LOGTAG_QR,"Found alignment pattern at (%d,%d)",tx,ty);
-
-						return;
+						else
+						{
+							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10, Colors::Gold));
+						}
 					}
 					else
 					{
-						debugVector.push_back(Point3i(x,y,7));
+						debugVector.push_back(new DebugCircle(Point2i(tx,y),3,Colors::Red,-1));
 					}
 
 				}
+				//debugVector.push_back(new DebugCircle(Point2i(x,y),2,Colors::Red,-1));
+				k = 1;
+				bw[0] = bw[2];
+				bw[1] = 0;
+				bw[2] = 0;
 			}
 		}
 	}
@@ -180,24 +196,93 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int finderPatternSize)
 	int symmetryScore = (abs(a - c) < variance2) * 100;
 
 	int sizeScore = 		
+			(abs(alignmentPatternSize - a) < variance2)*22 + 
+			(abs(alignmentPatternSize - b) < variance2)*22 + 
+			(abs(alignmentPatternSize - c) < variance2)*22; 
+
+	int oldNewCompareScore = 50 * (abs(alignmentPatternSum - 3*moduleUnitSize) < (finderPatternSize >> 2));
+
+
+	int score = (sizeScore + symmetryScore + oldNewCompareScore);	
+	
+	if (score > minAlignmentScore)
+	{				
+		//LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
+		//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minAlignmentScore);
+		return true;
+	}
+	else
+	{
+		//LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
+		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minAlignmentScore);
+		return false;
+	}
+
+}
+
+bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
+{
+	int alignmentPatternSum = 0, horizontalSum = 0;
+	
+	for (int i = 0; i < 3; ++i)
+	{
+		if (newBw[i] == 0)
+		{
+			if (log)
+			{
+				LOGD(LOGTAG_QR,"Zero for width #%d",i);
+			}
+			return false; 
+		}
+		alignmentPatternSum += newBw[i];	
+
+		horizontalSum += previousBw[i];	
+	}
+		
+	if (alignmentPatternSum < 3)
+	{
+		if (log)
+		{
+			LOGD(LOGTAG_QR,"Alignment Pattern too small: %d < 3",alignmentPatternSum);
+		}
+		return false; 
+	}
+	int alignmentPatternSize = (int)round((float)alignmentPatternSum / 3.0f);
+	
+
+	int variance	= alignmentPatternSize >> 2;
+	int variance2	= alignmentPatternSize >> 1;
+
+	int a = newBw[0];	int b = newBw[1];	int c = newBw[2];
+
+	int symmetryScore = (abs(a - c) < variance2) * 100;
+
+	int sizeScore = 		
 			(abs(alignmentPatternSize - a) < variance2)*33 + 
-			(abs(alignmentPatternSize - b) < variance2)*33 + 
+			(abs(alignmentPatternSize - b) < variance2)*22 + 
 			(abs(alignmentPatternSize - c) < variance2)*33; 
 
-	int oldNewCompareScore = alignmentPatternSum - 3*moduleUnitSize ;
+	int oldNewCompareScore = 60 * (abs(alignmentPatternSum - horizontalSum) < (horizontalSum >> 2)) + 40*(abs(newBw[1] - previousBw[1]) < variance2);
 
 
 	int score = (sizeScore + symmetryScore + oldNewCompareScore);	
 	
 	if (score > minAlignmentScore)
 	{		
-		//LOGV(LOGTAG_QR,"Found pattern! Scores were: Sym=%d,Size=%d,Compare=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,comparisonScore,oldNewCompareScore,minScore);
+		if (log)
+		{
+			LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
+			LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minAlignmentScore);
+		}
 		return true;
 	}
 	else
 	{
-		//LOGV(LOGTAG_QR,"CheckRatios F: New= %d,%d,%d,%d,%d",newBw[0],newBw[1],newBw[2],newBw[3],newBw[4]);
-		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,Compare=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,comparisonScore,oldNewCompareScore,minScore);
+		if (log)
+		{
+			LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
+			LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minAlignmentScore);
+		}
 		return false;
 	}
 
@@ -279,7 +364,7 @@ bool QRFinder::CheckRatios(int * newBw, int * oldBw)
 		return false;
 	}
 }
-void QRFinder::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Point3i>& debugVector)
+void QRFinder::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Drawable*> & debugVector)
 {
 	bool skip = true;
 	int bw[5] = { 0 };
@@ -375,7 +460,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<
 
 					} else
 					{
-						debugVector.push_back(Point3i(x, y, 5));
+						//debugVector.push_back(Point3i(x, y, 5));
 					}
 				}
 
@@ -586,10 +671,10 @@ bool QRFinder::CheckRatios2(int newBw[], int oldBw[])
 	}
 }
 
-int QRFinder::FindAlignmentCenterVertical(const Mat& image, int x, int y, int finderPatternSize)
+int QRFinder::FindAlignmentCenterVertical(const Mat& image, int x, int y, int finderPatternSize, int * bw, int * horizontalBw)
 {
 	//LOGD("FindCenterVertical_Start");
-	int bw[3] = { 0 };
+	//int bw[3] = { 0 };
 
 	int i = y;
 
@@ -628,26 +713,56 @@ int QRFinder::FindAlignmentCenterVertical(const Mat& image, int x, int y, int fi
 	}
 
 
-	if (CheckAlignmentRatios(bw, finderPatternSize) == false)
+	if (CheckAlignmentRatios(bw, horizontalBw) == false)
 	{
+		//LOGV(LOGTAG_QR,"FindAlignmentCenterVertical F: BW= %d,%d,%d",bw[0],bw[1],bw[2]);
+		//LOGV(LOGTAG_QR,"Failed ratio check for finding vertical center, FPSize=%d",finderPatternSize);
 		return 0;
 	}
 
-	return (i - bw[2] - bw[0]) - (bw[1] / 2);
+	return (i - bw[2]) - (bw[1] / 2);
 }
-int QRFinder::FindAlignmentCenterHorizontal(const Mat& image, int x, int y, int finderPatternSize)
+
+bool QRFinder::CheckAlignmentDiagonals(const Mat& image, Point2i center, int * verticalBw, int * horizontalBw, vector<Drawable*> & debugVector)
 {
-	//LOGD("FindCenterVertical_Start");
-	int bw[3] = { 0 };
+	int xMin = center.x - (horizontalBw[0] + horizontalBw[1])/2;
 
+	int xMax = center.x + (horizontalBw[2] + horizontalBw[1])/2;
+	
+
+	int  yMin = center.y - (verticalBw[0] + verticalBw[1])/2;
+	int  yMax = center.y + (verticalBw[2] + verticalBw[1])/2;
+
+	debugVector.push_back(new DebugRectangle(Rect(Point2i(xMin,yMin), Point2i(xMax,yMax)),Colors::Red));
+
+	int j = xMin;
+	for (; j < xMax && image.at<unsigned char>(yMin,j) != 0; j++)
+		;
+
+	if (j < xMax)
+		return false;
+
+	j = xMin;
+	for (; j < xMax && image.at<unsigned char>(yMax,j) != 0; j++)
+		;
+
+	if (j < xMax)
+		return false;
+
+	return true;
+}
+
+int QRFinder::FindAlignmentCenterHorizontal(const Mat& image, int x, int y, int finderPatternSize, int * verticalBw, int * bw)
+{
 	int j = x;
-
-	/* Calculate vertical finder pattern up from the center. */
+	
+	/* Calculate horizontal finder pattern left from the center. */
 	for (; j > 0 && image.at<unsigned char>(y, j) == 0 && bw[1] < finderPatternSize; ++bw[1], --j)
 		;
 
 	if (j == 0 || bw[1] >= finderPatternSize)
 	{
+		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :0 - j=%d",j);
 		return 0;
 	}
 
@@ -656,33 +771,37 @@ int QRFinder::FindAlignmentCenterHorizontal(const Mat& image, int x, int y, int 
 
 	if (j == 0 || bw[0] >= finderPatternSize)
 	{
+		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :1 - j=%d",j);
 		return 0;
 	}
 
-	/* Calculate vertical finder pattern down from the center. */
-	j = y + 1;
-	for (; j < image.rows && image.at<unsigned char>(y, j) == 0 && bw[1] < finderPatternSize; ++bw[1], ++j)
+	/* Calculate horizontal finder pattern right from the center. */
+	j = x + 1;
+	for (; j < image.cols && image.at<unsigned char>(y, j) == 0 && bw[1] < finderPatternSize; ++bw[1], ++j)
 		;
 
 	if (j == image.cols || bw[1] >= finderPatternSize)
 	{
+		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :2 - j=%d",j);
 		return 0;
 	}
 
-	for (; j < image.rows && image.at<unsigned char>(y, j) != 0 && bw[2] < finderPatternSize; ++bw[2], ++j)
+	for (; j < image.cols && image.at<unsigned char>(y, j) != 0 && bw[2] < finderPatternSize; ++bw[2], ++j)
 		;
 	if (j == image.cols || bw[2] >= finderPatternSize)
 	{
+		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :3 - j=%d",j);
 		return 0;
 	}
 
 
-	if (CheckAlignmentRatios(bw,finderPatternSize) == false)
+	if (CheckAlignmentRatios(bw,verticalBw,false) == false)
 	{
+		//LOGD(LOGTAG_QR,"AlignmentPattern Ratio Check Failed. Fpsize=%d, Bw=%d,%d,%d", finderPatternSize, bw[0],bw[1],bw[2]);
 		return 0;
 	}
-
-	return (j - bw[2] - bw[0]) - (bw[1] / 2);
+		
+	return (j - bw[2]) - (bw[1] / 2);
 }
 
 void QRFinder::TriangleOrder(const FinderPattern_vector& fpv, FinderPattern& bottom_left, FinderPattern& top_left, FinderPattern& top_right)

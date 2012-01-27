@@ -3,6 +3,7 @@
 #include "controllers/Controller.hpp"
 #include "controllers/CalibrationController.hpp"
 #include "controllers/ARController.hpp"
+#include "controllers/StartupController.hpp"
 
 #include "datacollection/ImageCollector.hpp"
 #include "datacollection/ImageProcessor.hpp"
@@ -18,6 +19,7 @@
 #include "userinterface/uimodel/Button.hpp"
 
 #include "srutil/delegate/delegate.hpp"
+
 
 
 #ifndef ARRUNNER_HPP_
@@ -38,7 +40,7 @@ private:
 	//Enumerations
 	enum ActionMode
 	{
-		QRTrack = 0, Calibrate = 1
+		Startup = 0, QRTrack = 1, Calibrate = 2
 	};
 
 	//Members
@@ -56,11 +58,7 @@ private:
 	struct timespec lastFrameTimeStamp;	
 	ActionMode currentActionMode;
 	Controller * currentController;
-
-	/*std::vector<Updateable*> updateObjects;
-	std::vector<OpenGLRenderable*> renderObjects;*/
-
-	
+		
 };
 
 #endif
