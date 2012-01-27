@@ -110,6 +110,10 @@
     <ClCompile Include="..\jni\zxing\common\HybridBinarizer.cpp" />
     <ClCompile Include="..\jni\zxing\common\IllegalArgumentException.cpp" />
     <ClCompile Include="..\jni\zxing\common\PerspectiveTransform.cpp" />
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\GF256.cpp" />
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\GF256Poly.cpp" />
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\ReedSolomonDecoder.cpp" />
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.cpp" />
     <ClCompile Include="..\jni\zxing\common\Str.cpp" />
     <ClCompile Include="..\jni\zxing\DecodeHints.cpp" />
     <ClCompile Include="..\jni\zxing\Exception.cpp" />
@@ -212,6 +216,10 @@
     <ClInclude Include="..\jni\zxing\common\IllegalArgumentException.h" />
     <ClInclude Include="..\jni\zxing\common\PerspectiveTransform.h" />
     <ClInclude Include="..\jni\zxing\common\Point.h" />
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\GF256.h" />
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\GF256Poly.h" />
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\ReedSolomonDecoder.h" />
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.h" />
     <ClInclude Include="..\jni\zxing\common\Str.h" />
     <ClInclude Include="..\jni\zxing\DecodeHints.h" />
     <ClInclude Include="..\jni\zxing\Exception.h" />

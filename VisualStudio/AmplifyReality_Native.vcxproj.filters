@@ -83,6 +83,9 @@
     <Filter Include="Header Files\zxing\qrcode\detector">
       <UniqueIdentifier>{66e40f3d-eee0-46bb-bc6d-16e5a5dfff41}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\zxing\common\reedsolomon">
+      <UniqueIdentifier>{e6536336-eaa4-49c9-b577-bc9400d11eda}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -327,6 +330,18 @@
     </ClCompile>
     <ClCompile Include="..\jni\zxing\qrcode\detector\QREdgeDetector.cpp">
       <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\GF256.cpp">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\GF256Poly.cpp">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\ReedSolomonDecoder.cpp">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.cpp">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -629,6 +644,18 @@
     </ClInclude>
     <ClInclude Include="..\jni\zxing\qrcode\detector\QREdgeDetector.h">
       <Filter>Header Files\zxing\qrcode\detector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\GF256.h">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\GF256Poly.h">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\ReedSolomonDecoder.h">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.h">
+      <Filter>Header Files\zxing\common\reedsolomon</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

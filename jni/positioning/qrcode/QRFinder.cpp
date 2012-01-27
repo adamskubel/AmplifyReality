@@ -22,9 +22,6 @@ QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector)
 	{
 		FinderPattern  top_left, top_right, bottom_left;
 		TriangleOrder(pattern_store, bottom_left, top_left, top_right);
-
-		SET_TIME(&end);
-		LOG_TIME("QR Search(Found)", start, end);
 		
 		vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();
 		patternVector->push_back(new FinderPattern(top_left));
@@ -32,8 +29,10 @@ QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector)
 		patternVector->push_back(new FinderPattern(bottom_left));
 		
 		QRCode * newCode = new QRCode(patternVector,true);
+		SET_TIME(&end);
+		LOG_TIME("QR Search(Found)", start, end);
 
-		//Approximate alignment pattern position
+		//Determine alignment pattern position
 		SET_TIME(&start);
 
 		int fpSize = (int)round(top_left.size/2.0f);
@@ -47,11 +46,17 @@ QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector)
 		AlignmentPatternHelper::FindAlignmentPattern(M, newCode,debugVector);
 				
 		debugVector.clear();
+		SET_TIME(&end);
 		LOG_TIME("Alignment Search", start, end);
 
+		//Decode the QRCode
+		SET_TIME(&start);
 		QRDecoder * qrDecoder = new QRDecoder();
 		qrDecoder->DecodeQRCode(M,newCode,debugVector);
 		delete qrDecoder;
+
+		SET_TIME(&end);
+		LOG_TIME("QR decode", start, end);
 
 		return newCode;
 	} 
