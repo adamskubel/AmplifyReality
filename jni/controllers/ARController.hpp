@@ -89,4 +89,23 @@ private:
 
 };
 
+#include "userinterface/uimodel/DataDisplay.hpp"
+#include "userinterface/uimodel/PageDisplay.hpp"
+
+class ARControllerDebugUI : public PageDisplay
+{
+public:
+	ARControllerDebugUI(Engine * engine, Point2i position);
+	void SetTranslation(Mat * data);
+	void SetRotation(Mat * data);
+
+private:
+	DataDisplay * translationLabel;
+	DataDisplay * rotationLabel;
+	GridLayout * myGrid;
+
+
+};
+
+
 #endif

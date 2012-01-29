@@ -1,5 +1,6 @@
 #include "LogDefinitions.h"
 #include "display/opengl/GLObject.hpp"
+#include "display/objloader/objLoader.h"
 
 
 #ifndef AROBJECT_HPP_
@@ -18,6 +19,8 @@ public:
 	cv::Point3f position;
 	cv::Point3f rotation;
 	cv::Point3f scale;
+
+	static ARObject FromObjFile(objLoader & objData);
 	
 };
 #endif

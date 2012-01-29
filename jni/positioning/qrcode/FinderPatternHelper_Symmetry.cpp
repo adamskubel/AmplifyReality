@@ -55,14 +55,14 @@ void FinderPatternHelper::FindFinderPatterns_Symmetry(cv::Mat& M, FinderPattern_
 
 					int tx = (x - bw[4] - bw[3]) - (bw[2] / 2); /* Calculate temporary horizontal center from end of pattern. */
 
-					FinderPattern result;
-					bool foundPattern = CheckArea(M,Point2i(tx,y),bw, result);
+					FinderPattern * result = new FinderPattern();
+					bool foundPattern = CheckArea(M,Point2i(tx,y),bw, *result);
 
 
 					if (foundPattern)
 					{
 						LOGD(LOGTAG_QR,"Found");
-						LOGD(LOGTAG_QR,"Found pattern at (%d,%d), size=%ld",result.pt.x,result.pt.y,result.size);
+						LOGD(LOGTAG_QR,"Found pattern at (%d,%d), size=%ld",result->pt.x,result->pt.y,result->size);
 						fpv.push_back_pattern(result);
 
 						//if (skip)

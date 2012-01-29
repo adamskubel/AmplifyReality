@@ -4,6 +4,7 @@
 #include "model/Drawable.hpp"
 #include "model/IDeletable.hpp"
 #include "userinterface/uimodel/NumberSpinner.hpp"
+#include "userinterface/uimodel/PageDisplay.hpp"
 
 
 
@@ -11,16 +12,12 @@
 #define POSITION_CONTROL_CONFIGURATOR_HPP_
 
 using namespace cv;
-class ARConfigurator : public IDeletable, public Drawable
+class ARConfigurator : public PageDisplay
 {
 public:
-	ARConfigurator(Engine * engine, UIElementCollection * parent, Point2i position);
-	~ARConfigurator();
+	ARConfigurator(Engine * engine);
 
-	void SetDefaults();
-		
-	void Draw(Mat * rgbaImage);
-	bool IsVisible();
+	void SetDefaults();		
 
 	void PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
 	void RotationFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
@@ -35,10 +32,6 @@ public:
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
-private:
-	
-	bool isVisible;
-	vector<GridLayout*> pages;
 };
 
 #endif

@@ -82,6 +82,14 @@ void Button::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Si
 		buttonBoundaries.width,buttonBoundaries.height);
 }
 
+void Button::DoLayout(Rect boundaries)
+{
+	buttonBoundaries = boundaries;
+	
+	LOGD(LOGTAG_INPUT,"Adding myself(Button) to grid. X=%d,Y=%d,W=%d,H=%d",buttonBoundaries.x,buttonBoundaries.y,
+		buttonBoundaries.width,buttonBoundaries.height);
+}
+
 void Button::Draw(Mat * rgbaImage)
 {
 	//Draw button background

@@ -36,3 +36,8 @@ ARObject::~ARObject()
 {
 	delete glObject;
 }
+
+ARObject ARObject::FromObjFile(objLoader & objData)
+{
+	objData.
+}

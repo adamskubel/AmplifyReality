@@ -86,6 +86,9 @@
     <Filter Include="Header Files\zxing\common\reedsolomon">
       <UniqueIdentifier>{e6536336-eaa4-49c9-b577-bc9400d11eda}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\display\objloader">
+      <UniqueIdentifier>{17a33725-21fa-4b38-84fe-99997199d41c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -259,9 +262,6 @@
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\zxing\common\Array.cpp">
       <Filter>Header Files\zxing\common</Filter>
     </ClCompile>
@@ -342,6 +342,30 @@
     </ClCompile>
     <ClCompile Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.cpp">
       <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\controllers\ARControllerDebugUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\DataDisplay.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\objloader\list.cpp">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\objloader\obj_parser.cpp">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\objloader\objLoader.cpp">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\objloader\string_extra.cpp">
+      <Filter>Header Files\display\objloader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -656,6 +680,27 @@
     </ClInclude>
     <ClInclude Include="..\jni\zxing\common\reedsolomon\ReedSolomonException.h">
       <Filter>Header Files\zxing\common\reedsolomon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\PageDisplay.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\objloader\list.h">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\objloader\obj_parser.h">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\objloader\objLoader.h">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\objloader\string_extra.h">
+      <Filter>Header Files\display\objloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\GraphicalUIElement.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\objloader\ObjData.hpp">
+      <Filter>Header Files\display\objloader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

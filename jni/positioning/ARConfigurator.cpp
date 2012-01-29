@@ -1,12 +1,12 @@
 #include "ARConfigurator.hpp"
 
 
-ARConfigurator::ARConfigurator(Engine * engine, UIElementCollection * parent, Point2i position)
+ARConfigurator::ARConfigurator(Engine * engine) 
 {
 	SetDefaults();
 
 	int padding = 20;
-	GridLayout * myGrid = new GridLayout(Size2i(engine->imageWidth-padding*2, engine->imageHeight - padding*2),Size2i(3,2), Point2i(padding,padding));
+	GridLayout * myGrid = new GridLayout();
 	
 
 	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");
@@ -32,17 +32,12 @@ ARConfigurator::ARConfigurator(Engine * engine, UIElementCollection * parent, Po
 	myGrid->AddChild(minAlignmentSpinner,Point2i(2,1));
 	minAlignmentSpinner->SetMinimum(100.0f);
 	minAlignmentSpinner->SetMaximum(300.0f);
+	
+	AddChild(myGrid);
 
+	DoLayout(Rect(padding,padding,engine->imageWidth-padding*2, engine->imageHeight - padding*2));
 
-	parent->AddChild(myGrid);
-	pages.push_back(myGrid);
-
-	isVisible = false;
-}
-
-ARConfigurator::~ARConfigurator()
-{
-	pages.clear();
+	SetVisible(false);
 }
 
 void ARConfigurator::SetDefaults()
@@ -51,19 +46,6 @@ void ARConfigurator::SetDefaults()
 	RotationFilterAlpha = 0.9f;	
 	MinFinderPatternScore = 190;
 	MinAlignmentScore = 180;
-}
-
-bool ARConfigurator::IsVisible()
-{
-	return isVisible;
-}
-
-void ARConfigurator::Draw(Mat * rgbaImage)
-{
-	for (int i=0;i<pages.size();i++)
-	{
-		pages.at(i)->Draw(rgbaImage);
-	}
 }
 
 void ARConfigurator::PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args)

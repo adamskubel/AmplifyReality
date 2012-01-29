@@ -3,12 +3,14 @@
 #include "userinterface/events/EventArgs.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include <opencv2/core/core.hpp>
+#include "GraphicalUIElement.hpp"
+
 
 
 #ifndef LABEL_HPP_
 #define LABEL_HPP_
 
-class Label : public GridCompatible
+class Label : public GraphicalUIElement
 {
 
 public:
@@ -20,9 +22,9 @@ public:
 	void SetCenter(Point2i centerPoint);
 	Size2i GetTextSize();
 	
-	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
+	void DoLayout(Rect boundaryRectangle);
 
-	void FitTextToBoundary(Rect boundary);
+	void FitTextToBoundary(Size2f limits);
 
 	cv::Scalar FillColor, TextColor;
 	//Bottom left corner

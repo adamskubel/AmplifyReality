@@ -74,9 +74,16 @@ void ARController::Initialize(Engine * engine)
 	//Initialize UI
 
 	UIElementCollection * collection = new UIElementCollection();
+
+	ARControllerDebugUI * debugUI = new ARControllerDebugUI(engine,Point2i(10,10));
+	collection->AddChild(debugUI);
+	drawObjects.push_back(debugUI);
+
+	config = new ARConfigurator(engine);
+	collection->AddChild(config);
+	drawObjects.push_back(config);
 		
-	float scaleFactor = max((float)(engine->imageWidth)/(float)(engine->glRender->screenWidth),(float)(engine->imageHeight)/(float)(engine->glRender->screenHeight));
-	InputScaler * inputScaler = new InputScaler(scaleFactor,collection);
+	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
 	
@@ -96,8 +103,7 @@ void ARController::Initialize(Engine * engine)
 	grid->AddChild(positionCertainty,Point2i(3,3));
 	positionCertainty->SetMaxRadius(20); //Override radius set by grid <<<<---- Bad practice! ...but saves time
 
-	config = new ARConfigurator(engine, collection,Point2i(0,0));
-	drawObjects.push_back(config);
+
 	
 	Button * toggleConfigButton = new Button("Config", Colors::MidnightBlue);
 	toggleConfigButton->AddClickDelegate(ClickEventDelegate::from_method<ARConfigurator,&ARConfigurator::ToggleVisibility>(config));
@@ -119,6 +125,7 @@ void ARController::Initialize(Engine * engine)
 	deletableObjects.push_back(gyroDataLabel);
 	deletableObjects.push_back(quadBackground);
 	deletableObjects.push_back(config);
+	deletableObjects.push_back(debugUI);
 	//Finished initialization
 	isInitialized = true;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");

@@ -9,7 +9,7 @@
 #define CERTAINTY_INDICATOR_HPP_
 
 //A UI object that changes size and color based on its value
-class CertaintyIndicator : public GridCompatible
+class CertaintyIndicator : public GraphicalUIElement
 {
 public:
 	CertaintyIndicator(float initialCertainty);

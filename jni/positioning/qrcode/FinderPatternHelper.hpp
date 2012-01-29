@@ -11,7 +11,7 @@
 class FinderPatternHelper
 {
 public:	
-	static void FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Drawable*>& debugVector);	
+	static void FindFinderPatterns(cv::Mat& M, FinderPattern_vector & fpv, vector<Drawable*>& debugVector);	
 	static void FindFinderPatterns_Symmetry(cv::Mat& M, FinderPattern_vector& fpv, vector<Point3i>& debugVector);
 	
 	static int MinimumFinderPatternScore;

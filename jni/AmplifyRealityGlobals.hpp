@@ -1,6 +1,8 @@
 #ifndef AMPLIFY_REALITY_GLOBALS_HPP_
 #define AMPLIFY_REALITY_GLOBALS_HPP_
 
+	#define AMPLIFY_REALITY_DEBUG 
+
 	#define ENABLE_TEXTURE_COLOR false
 	#define DRAW_BACKGROUND_BORDER false
 	#define ENABLE_UNDISTORT false
@@ -15,11 +17,12 @@
 
 	#define VERSION_STRING "0.01";
 
-	#define NO_ICONV true //Required for compiling zxing
+	#define NO_ICONV true //Required for compiling zxing..doesn't work here though
 
 	//#define IS_NEXUS_S  //<--- UNCOMMENT THIS LINE FOR NEXUS S AND COMMENT FOR HTC SENSATION
 
 
+	
 	//HTC Sensation Camera Properties
 	#define HTC_SENSATION_CAMERA_IMAGE_WIDTH 800
 	#define HTC_SENSATION_CAMERA_IMAGE_HEIGHT 480

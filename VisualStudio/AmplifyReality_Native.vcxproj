@@ -57,6 +57,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\AmplifyRunner.cpp" />
+    <ClCompile Include="..\jni\controllers\ARControllerDebugUI.cpp" />
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.cpp" />
     <ClCompile Include="..\jni\controllers\Controller.hpp" />
@@ -68,6 +69,10 @@
     <ClCompile Include="..\jni\datastructures\CircularList.cpp" />
     <ClCompile Include="..\jni\display\model\ARObject.cpp" />
     <ClCompile Include="..\jni\display\model\AugmentedView.cpp" />
+    <ClCompile Include="..\jni\display\objloader\list.cpp" />
+    <ClCompile Include="..\jni\display\objloader\objLoader.cpp" />
+    <ClCompile Include="..\jni\display\objloader\obj_parser.cpp" />
+    <ClCompile Include="..\jni\display\objloader\string_extra.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp" />
@@ -88,9 +93,11 @@
     <ClCompile Include="..\jni\userinterface\events\EventArgs.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\Button.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\CertaintyIndicator.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\DataDisplay.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\GridLayout.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
     <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp" />
     <ClCompile Include="..\jni\zxing\Binarizer.cpp" />
@@ -154,6 +161,11 @@
     <ClInclude Include="..\jni\AmplifyRealityGlobals.hpp" />
     <ClInclude Include="..\jni\display\model\ARObject.hpp" />
     <ClInclude Include="..\jni\display\model\AugmentedView.hpp" />
+    <ClInclude Include="..\jni\display\objloader\list.h" />
+    <ClInclude Include="..\jni\display\objloader\ObjData.hpp" />
+    <ClInclude Include="..\jni\display\objloader\objLoader.h" />
+    <ClInclude Include="..\jni\display\objloader\obj_parser.h" />
+    <ClInclude Include="..\jni\display\objloader\string_extra.h" />
     <ClInclude Include="..\jni\display\opengl\GLObject.hpp" />
     <ClInclude Include="..\jni\display\opengl\OpenGLHelper.hpp" />
     <ClInclude Include="..\jni\display\opengl\OpenGLRenderable.hpp" />
@@ -190,9 +202,11 @@
     <ClInclude Include="..\jni\userinterface\uimodel\Button.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\CertaintyIndicator.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\DataDisplay.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\GraphicalUIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\InputScaler.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\PageDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />

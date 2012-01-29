@@ -43,7 +43,7 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 				bool result = false;
 				if (fpv.size() > 0)
 				{
-					result = CheckRatios(bw,fpv.back().patternWidths);
+					result = CheckRatios(bw,fpv.back()->patternWidths);
 				}
 				else
 				{
@@ -70,14 +70,14 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 						pt.x = tx;
 						pt.y = ty;
 
-						FinderPattern fp;
+						FinderPattern * fp = new FinderPattern();
 						for (int arrayCopy=0;arrayCopy<5;arrayCopy++)
 						{
-							fp.patternWidths[arrayCopy] = bw[arrayCopy];
+							fp->patternWidths[arrayCopy] = bw[arrayCopy];
 						}
-						fp.hitCount = 1;
-						fp.pt = pt;
-						fp.size = bw[0] + bw[1] + bw[2] + bw[3] + bw[4];
+						fp->hitCount = 1;
+						fp->pt = pt;
+						fp->size = bw[0] + bw[1] + bw[2] + bw[3] + bw[4];
 						fpv.push_back_pattern(fp);
 
 						if (skip)
@@ -190,7 +190,7 @@ int FinderPatternHelper::SkipHeuristic(const FinderPattern_vector& fpv)
 
 	if (fpv.HitConfidence() >= 2)
 	{
-		skip = abs(fpv[0].pt.x - fpv[1].pt.x) - abs(fpv[0].pt.y - fpv[1].pt.y);
+		skip = abs(fpv[0]->pt.x - fpv[1]->pt.x) - abs(fpv[0]->pt.y - fpv[1]->pt.y);
 		/* Get space between the
 		 two "top" finder patterns. */
 	}

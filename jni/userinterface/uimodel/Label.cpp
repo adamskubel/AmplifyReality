@@ -37,17 +37,19 @@ void Label::SetCenter(Point2i centerPoint)
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
 }
 
-void Label::FitTextToBoundary(Rect boundary)
+void Label::FitTextToBoundary(Size2f limits)
 {
 	Size2i size = GetTextSize();
 
-	float ySpace = boundary.height/(float)size.height;
-	float xSpace = boundary.width/(float)size.width;
+	if (size.width <= limits.width && size.height <= limits.height)
+		return;
 
-	float max = std::max(xSpace,ySpace);
+	float ySpace = limits.height/(float)size.height;
+	float xSpace = limits.width/(float)size.width;
+		
+	FontScale *= std::max(xSpace,ySpace);
 	
-
-
+	LOGD(LOGTAG_INPUT,"New FontScale is %f",FontScale);
 }
 
 void Label::SetText(std::string newText)
@@ -78,15 +80,13 @@ void Label::Draw(Mat * rgbaImage)
 	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	
 }
 
-
-void Label::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size_<int> gridSpan)
+void Label::DoLayout(Rect boundaryRectangle)
 {	
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width + (gridSpan.width*cellSize.width/2),
-		gridPoint.y * cellSize.height  + (gridSpan.height*cellSize.height/2));
-	
-	newPoint += offset;
+	Point2i newPoint = Point2i(boundaryRectangle.x + boundaryRectangle.width/2, boundaryRectangle.y + boundaryRectangle.height/2);
 	SetCenter(newPoint);	
 
-	LOGI(LOGTAG_INPUT,"Adding myself(Label) to grid. Position = (%d,%d)",newPoint.x,newPoint.y);
+	LOGI(LOGTAG_INPUT,"Adding myself(Label) to layout. Position = (%d,%d)",newPoint.x,newPoint.y);
+	FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
 }
+
 

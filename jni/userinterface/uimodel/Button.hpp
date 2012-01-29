@@ -4,11 +4,13 @@
 #include "userinterface/events/EventDelegates.hpp"
 #include <opencv2/core/core.hpp>
 #include "GridLayout.hpp"
+#include "GraphicalUIElement.hpp"
+
 
 #ifndef BUTTON_HPP_
 #define BUTTON_HPP_
 
-class Button : public GridCompatible
+class Button : public GraphicalUIElement
 {
 
 public:
@@ -20,6 +22,7 @@ public:
 	void Draw(Mat * rgbaImage);
 	void HandleInput(TouchEventArgs args);
 	void DoGridLayout(Point2i offset, Size2i windowSize, Point2i position, Size_<int> gridSpan);
+	void DoLayout(Rect boundaries);
 	cv::Rect buttonBoundaries;
 	cv::Scalar FillColor;
 	std::string label;
