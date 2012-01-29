@@ -55,9 +55,11 @@ public:
 		
 		if (bufferID == NULL)
 		{
-
 			glGenBuffers(1,&bufferID);
+			glBindBuffer(GL_ARRAY_BUFFER,bufferID);
+			GLuint bufferSize = count *  GLObject::vertexComponents;		
 		}
+		glBufferData(
 
 		glVertexAttribPointer( renderData.vertexArrayLocation,GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );		
 		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
