@@ -40,7 +40,7 @@ public:
 		{
 			colorArray[i] = 1.0f;
 		}
-		bufferID = 0;
+		//bufferID = 0;
 
 	}
 	~TexturedGLObject()
@@ -52,21 +52,24 @@ public:
 
 	void Draw(OpenGLRenderData renderData)
 	{
-		
-		if (bufferID == NULL)
+
+		/*	if (bufferID == NULL)
 		{
 
-			glGenBuffers(1,&bufferID);
-		}
+		glGenBuffers(1,&bufferID);
+		}*/
 
+		glEnableVertexAttribArray( renderData.vertexArrayLocation );
+		glEnableVertexAttribArray(renderData.textureArrayLocation);
 		glVertexAttribPointer( renderData.vertexArrayLocation,GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );		
-		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
+		//	glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
 		glVertexAttribPointer( renderData.textureArrayLocation, textureComponents , GL_FLOAT, 0, 0, textureArray);
+			
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);				
 	}
 	
-	GLuint bufferID;
+//	GLuint bufferID;
 	GLfloat *colorArray;
 	GLfloat *textureArray;
 	GLint textureComponents;

@@ -58,7 +58,7 @@ void QuadBackground::Render(OpenGL * openGL)
 	
 	//Update the texture 
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,imageWidth,imageHeight, GL_RGBA, GL_UNSIGNED_BYTE, imagePixels);
-		
+	glUniform1i(openGL->renderData.textureLocation,0);
 	//Draw object
 	openGL->DrawGLObject(texturedQuad);
 	
@@ -105,6 +105,9 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 
 
 	
+
+	glViewport(0,0,openGL->screenWidth,openGL->screenHeight);
+
 	OpenGLRenderData renderData = openGL->renderData;
 
 	float aspectRatio = ((float)openGL->screenWidth)/openGL->screenHeight;
@@ -124,10 +127,10 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 
 	//Define projection matrix
 	Mat camera = Mat::eye(4,4,CV_32F);
-	OpenGLHelper::createOrtho(camera,0.0f,orthoWidth,0.0f,orthoHeight,-10.0f,10.0f);
+	//OpenGLHelper::createOrtho(camera,0.0f,orthoWidth,0.0f,orthoHeight,-10.0f,10.0f);
 
-	LogMat_Tmp(camera.ptr<float>(0));
-	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_FALSE,camera.ptr<float>(0));
+	//LogMat_Tmp(camera.ptr<float>(0));
+	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_TRUE,camera.ptr<float>(0));
 
 	
 	//Assume input image is mirrored on Y axis
@@ -150,9 +153,9 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 	Mat modelMatrix = Mat::eye(4,4,CV_32F);
 	OpenGLHelper::scale(modelMatrix,Point3f(-scale,scale,1));
 	
-	OpenGLHelper::translate(modelMatrix,Point3f(0,-yImg,0));
+	//OpenGLHelper::translate(modelMatrix,Point3f(0,-yImg,0));
 	//LogMat_Tmp(modelMatrix.ptr<float>(0));
-	glUniformMatrix4fv(renderData.modelMatrixLocation,1,GL_FALSE,modelMatrix.ptr<float>(0));
+	glUniformMatrix4fv(renderData.modelMatrixLocation,1,GL_TRUE,modelMatrix.ptr<float>(0));
 }
 
 QuadBackground::~QuadBackground()

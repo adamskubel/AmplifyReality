@@ -224,15 +224,21 @@ void OpenGLHelper::gluPerspective(Mat & matrix, GLfloat fovy,GLfloat aspectRatio
 
 void OpenGLHelper::createFrustum(Mat & matrix, float left, float right, float bottom, float top, float nearVal, float farVal)
 {
-	Mat frustumMmatrix = Mat::zeros(4,4,CV_32F);
-	frustumMmatrix.at<float>(0,0) = (2.0f * nearVal) / (right - left);
-	frustumMmatrix.at<float>(1,1) = (2.0f * nearVal) / (top - bottom);
-	frustumMmatrix.at<float>(2,0) = (right + left) / (right - left);
-	frustumMmatrix.at<float>(2,1) = (top + bottom) / (top - bottom);
-	frustumMmatrix.at<float>(2,2) = -(farVal + nearVal) / (farVal - nearVal);
-	frustumMmatrix.at<float>(2,3) = -1.0f;
-	frustumMmatrix.at<float>(3,2) = -(2.0f * farVal * nearVal) / (farVal - nearVal);
+	float A = (right+left)/(right-left);
+	float B = (top + bottom)/(top - bottom);
+	float C = -(farVal+nearVal)/(farVal-nearVal);
+	float D =  -(2.0f * farVal * nearVal) / (farVal - nearVal);
 
+	float data[] = 
+	{
+		(2.0f*nearVal)/(right-left), 0,  A, 0 ,
+		0, (2.0f*nearVal)/(top-bottom), B, 0, 
+		0, 0, C, D,
+		0, 0, -1, 0
+	};
+
+	
+	Mat frustumMmatrix = Mat(4,4,CV_32F,data);
 	matrix *= frustumMmatrix;
 }
 
@@ -283,10 +289,10 @@ void OpenGLHelper::createOrtho(Mat & matrix, float left, float right, float bott
 
 	float data[] = 
 	{
-		2.0f / (right-left), 0, 0, tx,
-		0, (2.0f/(top-bottom)),0,0,ty,
-		0,0,(-2.0f/(farVal-nearVal)),tz,
-		0,0,0,1
+		2.0f / (right-left),	0,							0,	tx,
+		0,						(2.0f/(top-bottom)),		0,  ty,
+		0,						0,	 (-2.0f/(farVal-nearVal)),	tz,
+		0,						0,							0,	1
 	};
 
 	Mat orthoMatrix = Mat(4,4,CV_32F,data);

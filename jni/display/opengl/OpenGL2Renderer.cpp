@@ -154,7 +154,7 @@ void OpenGL::EndFrame()
 
 void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 {
-	GLuint  ui32Vbo = 0; // Vertex buffer object handle 
+	//GLuint  ui32Vbo = 0; // Vertex buffer object handle 
 
 	LOGI(LOGTAG_OPENGL,"Initializing shaders");	
 	const char * g_strVSProgram =
@@ -171,7 +171,7 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 		\
 		void main()\
 		{\
-			gl_Position  = Projection * ModelView * Position;\
+			gl_Position  = Position;\
 			DestinationColor = SourceColor;\
 			TexCoordOut=TexCoordIn;\
 		}\
@@ -186,11 +186,12 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 		\
 		void main()\
 		{\
-			gl_FragColor =  texture2D(Texture, TexCoordOut);\
+			gl_FragColor =  DestinationColor;\
 		}\
 		";
 
-
+	
+			//#texture2D(Texture, TexCoordOut);\
 
 	// Create the fragment shader object 
 	LOGD(LOGTAG_OPENGL,"Creating fragment shader");
@@ -237,7 +238,11 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 	renderData.colorArrayLocation =	glGetAttribLocation(uiProgramObject,"SourceColor");
 	renderData.modelMatrixLocation=  glGetUniformLocation(uiProgramObject,"ModelView");
 	renderData.projectionMatrixLocation = glGetUniformLocation(uiProgramObject,"Projection");
+	renderData.textureLocation = glGetUniformLocation(uiProgramObject, "Texture");
 
+	LOGI(LOGTAG_OPENGL,"ProjectLocation=%d,ModelMatLocation=%d,VertexLocation=%d,ColorLocation=%d",
+		renderData.projectionMatrixLocation,renderData.modelMatrixLocation,renderData.vertexArrayLocation,
+		renderData.colorArrayLocation);
 	LOGI(LOGTAG_OPENGL,"Complete. That's it, so...shader initialization complete!");
 }
 
@@ -277,7 +282,7 @@ void OpenGL::CompileShader(GLuint shader, const char * shaderSource)
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &i32InfoLogLength); 
 		char * infoLog = new char[i32InfoLogLength];
 		glGetShaderInfoLog(shader, i32InfoLogLength, &i32CharsWritten, infoLog); 
-		LOGE("Failed to compile vertex shader(log length = %d): %s",i32InfoLogLength, infoLog); 
+		LOGE("Failed to compile shader(log length = %d): %s",i32InfoLogLength, infoLog); 
 		delete [] infoLog; 
 		throw OpenGLInitializationException();
 	} 

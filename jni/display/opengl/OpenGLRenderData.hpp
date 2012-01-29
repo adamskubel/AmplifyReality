@@ -15,6 +15,8 @@ public:
 
 	GLuint fragmentShader;
 	GLuint vertexShader;
+
+	GLuint textureLocation;
 };
 
 #endif
