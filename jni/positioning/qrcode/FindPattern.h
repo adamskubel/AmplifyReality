@@ -1,10 +1,11 @@
 /* File: FindPattern.h; Mode: C++; Tab-width: 3; Author: Simon Flannery;      */
 
-#include <opencv2/core/core.hpp>
 
 #ifndef FinderPattern_H
 #define FinderPattern_H
 
+
+#include <opencv2/core/core.hpp>
 #include <vector>
 using std::vector;
 

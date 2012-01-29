@@ -1,3 +1,6 @@
+#ifndef OPENGL_RENDERER_HPP
+#define OPENGL_RENDERER_HPP
+
 #include "LogDefinitions.h"
 #include "ExceptionCodes.hpp"
 #include "AmplifyRealityGlobals.hpp"
@@ -6,14 +9,10 @@
 #include "android_native_app_glue.h"
 
 #include <EGL/egl.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES2/gl2.h>
 
 #include "display/opengl/GLObject.hpp"
 
-
-#ifndef OPENGL_RENDERER_HPP
-#define OPENGL_RENDERER_HPP
 
 #define USE_POWER2_TEXTURES true
 
@@ -22,17 +21,22 @@
 
 using namespace std;
 
-
-
 class OpenGL
 {
 	
 private:
 	struct timespec start, end;
-	EGLDisplay display;
-	EGLSurface surface;
-	EGLSurface pBuffer;
-	EGLContext context;
+	EGLDisplay eglDisplay;
+	EGLSurface eglSurface;
+	EGLContext eglContext;
+
+	void InitializeEGL(ANativeWindow * window);
+	void InitializeShaders(OpenGLRenderData & renderData);
+	void LinkProgram(GLuint program);
+	void CompileShader(GLuint shaderId, const char * shaderCode);
+	GLuint uiProgramObject;      // shader program handle
+
+	void Teardown();
 
 public:
 	int32_t screenWidth;
@@ -41,7 +45,12 @@ public:
 	void DrawGLObject(GLObject * object);
 	void StartFrame();
 	void EndFrame();
+
+	
+	OpenGLRenderData renderData;
+
 	~OpenGL();
+
 
 };
 

@@ -1,20 +1,10 @@
 #include <EGL/egl.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES2/gl2.h>
+#include "OpenGLRenderData.hpp"
 
 #ifndef GLOBJECT_HPP_
 #define GLOBJECT_HPP_
 
-/* Vertex array and color array are enabled for all objects, so their
-	* pointers must always be valid and non-NULL. Normal array is not
-		* used by the ground plane, so when its pointer is NULL then normal
-	* array usage is disabled.
-	*
-	* Vertex array is supposed to use GL_FIXED datatype and stride 0
-	* (i.e. tightly packed array). Color array is supposed to have 4
-	* components per color with GL_UNSIGNED_BYTE datatype and stride 0.
-	* Normal array is supposed to use GL_FIXED datatype and stride 0.
-	*/
 
 class GLObject
 {
@@ -25,9 +15,9 @@ public:
 	{
 		;//Base destructor
 	}
-	virtual void Draw();
+	virtual void Draw(OpenGLRenderData renderData);
 
-	GLfixed *vertexArray;
+	GLfloat *vertexArray;
 	GLsizei count;
 	GLfloat width,height;
 };
@@ -42,23 +32,43 @@ public:
 		count = _vertices;
 		textureComponents = _textureComponents;
 
-		vertexArray = new GLfixed[count *  GLObject::vertexComponents];
-		textureArray = new GLfixed[count * textureComponents];
+		vertexArray = new GLfloat[count *  GLObject::vertexComponents];
+		textureArray = new GLfloat[count * textureComponents];
+		colorArray = new GLfloat[count * 4];
+
+		for (int i=0;i<count*4;i++)
+		{
+			colorArray[i] = 1.0f;
+		}
+		bufferID = 0;
+
 	}
 	~TexturedGLObject()
 	{
 		delete[] textureArray;
 		delete[] vertexArray;
+		delete[] colorArray;
 	}
 
-	void Draw()
+	void Draw(OpenGLRenderData renderData)
 	{
-		glVertexPointer( GLObject::vertexComponents, GL_FIXED, 0, vertexArray);
-		glTexCoordPointer(textureComponents, GL_FIXED, 0,textureArray);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
-	}
+		
+		if (bufferID == NULL)
+		{
 
-	GLfixed *textureArray;
+			glGenBuffers(1,&bufferID);
+		}
+
+		glVertexAttribPointer( renderData.vertexArrayLocation,GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );		
+		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
+		glVertexAttribPointer( renderData.textureArrayLocation, textureComponents , GL_FLOAT, 0, 0, textureArray);
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);				
+	}
+	
+	GLuint bufferID;
+	GLfloat *colorArray;
+	GLfloat *textureArray;
 	GLint textureComponents;
 };
 
@@ -76,8 +86,8 @@ public:
 		count = _vertices;
 
 
-		vertexArray = new GLfixed[count * GLObject::vertexComponents];
-		colorArray = new GLubyte[count * ColorGLObject::colorComponents];
+		vertexArray = new GLfloat[count * GLObject::vertexComponents];
+		colorArray = new GLfloat[count * ColorGLObject::colorComponents];
 	}	
 	~ColorGLObject()
 	{
@@ -85,10 +95,14 @@ public:
 		delete[] vertexArray;
 	}
 
-	void Draw()
+	void Draw(OpenGLRenderData renderData)
 	{
-		glVertexPointer( GLObject::vertexComponents, GL_FIXED, 0, vertexArray);
-		glColorPointer(ColorGLObject::colorComponents, GL_UNSIGNED_BYTE, 0, colorArray);
+		glVertexAttribPointer( renderData.vertexArrayLocation, GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );
+		glEnableVertexAttribArray( renderData.vertexArrayLocation );
+
+		glVertexAttribPointer( renderData.colorArrayLocation, ColorGLObject::colorComponents, GL_FLOAT, 0, 0, colorArray);
+		glEnableVertexAttribArray( renderData.colorArrayLocation );
+
 		if (renderGroupSize > 1)
 		{
 			for (int i=0;i<count;i+=renderGroupSize)
@@ -98,9 +112,12 @@ public:
 		}
 		else
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+
+		glDisableVertexAttribArray( renderData.vertexArrayLocation );
+		glDisableVertexAttribArray( renderData.colorArrayLocation );
 	}
 
 	
-	GLubyte *colorArray;
+	GLfloat *colorArray;
 };
 #endif

@@ -10,10 +10,6 @@
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
       <ParseFiles>false</ParseFiles>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
     <Filter Include="Header Files\controllers">
       <UniqueIdentifier>{beac5c31-3639-43d2-9ae7-dafa2fa39142}</UniqueIdentifier>
     </Filter>
@@ -89,15 +85,16 @@
     <Filter Include="Header Files\display\objloader">
       <UniqueIdentifier>{17a33725-21fa-4b38-84fe-99997199d41c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\datacollection\ImageCollector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\display\opengl\OpenGLRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\Main.cpp">
@@ -366,6 +363,9 @@
     </ClCompile>
     <ClCompile Include="..\jni\display\objloader\string_extra.cpp">
       <Filter>Header Files\display\objloader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\OpenGL2Renderer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -701,6 +701,9 @@
     </ClInclude>
     <ClInclude Include="..\jni\display\objloader\ObjData.hpp">
       <Filter>Header Files\display\objloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\OpenGLRenderData.hpp">
+      <Filter>Header Files\display\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 #include "model/Updateable.hpp"
 #include "display/opengl/OpenGLRenderable.hpp"
+#include "display/opengl/OpenGLRenderData.hpp"
 #include "display/opengl/GLObject.hpp"
 //#include "userinterface/uimodel/UIElement.hpp"
 
@@ -26,7 +27,7 @@ void OpenGLRenderable::Render(OpenGL * openGL)
 //	throw new exception();
 //}
 
-void GLObject::Draw()
+void GLObject::Draw(OpenGLRenderData renderData)
 {
 	LOGE("'Draw' called on virtual object");
 	throw new exception();

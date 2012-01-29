@@ -6,7 +6,7 @@ ARConfigurator::ARConfigurator(Engine * engine)
 	SetDefaults();
 
 	int padding = 20;
-	GridLayout * myGrid = new GridLayout();
+	GridLayout * myGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
 	
 
 	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");

@@ -1,93 +1,5 @@
 #include "display/opengl/OpenGLHelper.hpp"
 
-/* Following gluLookAt implementation is adapted from the
-* Mesa 3D Graphics library. http://www.mesa3d.org
-*/
-void OpenGLHelper::gluLookAt(GLfloat eyex, GLfloat eyey, GLfloat eyez,
-	GLfloat centerx, GLfloat centery, GLfloat centerz, GLfloat upx,
-	GLfloat upy, GLfloat upz) {
-		GLfloat m[16];
-		GLfloat x[3], y[3], z[3];
-		GLfloat mag;
-
-		/* Make rotation matrix */
-
-		/* Z vector */
-		z[0] = eyex - centerx;
-		z[1] = eyey - centery;
-		z[2] = eyez - centerz;
-		mag = (float) sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
-		if (mag) { /* mpichler, 19950515 */
-			z[0] /= mag;
-			z[1] /= mag;
-			z[2] /= mag;
-		}
-
-		/* Y vector */
-		y[0] = upx;
-		y[1] = upy;
-		y[2] = upz;
-
-		/* X vector = Y cross Z */
-		x[0] = y[1] * z[2] - y[2] * z[1];
-		x[1] = -y[0] * z[2] + y[2] * z[0];
-		x[2] = y[0] * z[1] - y[1] * z[0];
-
-		/* Recompute Y = Z cross X */
-		y[0] = z[1] * x[2] - z[2] * x[1];
-		y[1] = -z[0] * x[2] + z[2] * x[0];
-		y[2] = z[0] * x[1] - z[1] * x[0];
-
-		/* mpichler, 19950515 */
-		/* cross product gives area of parallelogram, which is < 1.0 for
-		* non-perpendicular unit-length vectors; so normalize x, y here
-		*/
-
-		mag = (float) sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
-		if (mag) {
-			x[0] /= mag;
-			x[1] /= mag;
-			x[2] /= mag;
-		}
-
-		mag = (float) sqrt(y[0] * y[0] + y[1] * y[1] + y[2] * y[2]);
-		if (mag) {
-			y[0] /= mag;
-			y[1] /= mag;
-			y[2] /= mag;
-		}
-
-#define M(row,col)  m[col*4+row]
-		M(0, 0) = x[0];
-		M(0, 1) = x[1];
-		M(0, 2) = x[2];
-		M(0, 3) = 0.0;
-		M(1, 0) = y[0];
-		M(1, 1) = y[1];
-		M(1, 2) = y[2];
-		M(1, 3) = 0.0;
-		M(2, 0) = z[0];
-		M(2, 1) = z[1];
-		M(2, 2) = z[2];
-		M(2, 3) = 0.0;
-		M(3, 0) = 0.0;
-		M(3, 1) = 0.0;
-		M(3, 2) = 0.0;
-		M(3, 3) = 1.0;
-#undef M
-		{
-			int a;
-			GLfixed fixedM[16];
-			for (a = 0; a < 16; ++a)
-				fixedM[a] = (GLfixed)(m[a] * 65536);
-			glMultMatrixx(fixedM);
-		}
-
-		/* Translate Eye to Origin */
-		glTranslatex((GLfixed)(-eyex * 65536), (GLfixed)(-eyey * 65536),
-			(GLfixed)(-eyez * 65536));
-}
-
 
 TexturedGLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textureHeight, int size) 
 {
@@ -110,17 +22,17 @@ TexturedGLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textur
 	LOGD("OpenGL","Creating textured quad");
 	TexturedGLObject * result = new TexturedGLObject(4, 2);
 
-	result->textureArray[0] = floatToFixed(0);
-	result->textureArray[1] = floatToFixed(0);
+	result->textureArray[0] = 0;
+	result->textureArray[1] = 0;
 
-	result->textureArray[2] = floatToFixed(0);
-	result->textureArray[3] = floatToFixed(1);
+	result->textureArray[2] = 0;
+	result->textureArray[3] = 0;
 
-	result->textureArray[4] = floatToFixed(1);
-	result->textureArray[5] = floatToFixed(0);
+	result->textureArray[4] = 0;
+	result->textureArray[5] = 0;
 
-	result->textureArray[6] = floatToFixed(1);
-	result->textureArray[7] = floatToFixed(1);
+	result->textureArray[6] = 0;
+	result->textureArray[7] = 0;
 
 
 	result->vertexArray[0] = 0; //x
@@ -128,15 +40,15 @@ TexturedGLObject * OpenGLHelper::CreateTexturedQuad(int textureWidth, int textur
 	result->vertexArray[2] = 0; //z
 
 	result->vertexArray[3] = 0;
-	result->vertexArray[4] = floatToFixed(yLimit);
+	result->vertexArray[4] = yLimit;
 	result->vertexArray[5] = 0;
 
-	result->vertexArray[6] = floatToFixed(xLimit);
+	result->vertexArray[6] = xLimit;
 	result->vertexArray[7] = 0;
 	result->vertexArray[8] = 0;
 
-	result->vertexArray[9] = floatToFixed(xLimit);
-	result->vertexArray[10] = floatToFixed(yLimit);
+	result->vertexArray[9] = xLimit;
+	result->vertexArray[10] = yLimit;
 	result->vertexArray[11] = 0;
 
 	result->width = xLimit;
@@ -150,9 +62,9 @@ void OpenGLHelper::PopulateVertices(GLObject * glObject, vector<cv::Point3f> * v
 {
 	for (int i=0;i<vertices->size(); i++)
 	{
-		glObject->vertexArray[(i*3)+0] = floatToFixed(vertices->at(i).x); //x
-		glObject->vertexArray[(i*3)+1] = floatToFixed(vertices->at(i).y); //y
-		glObject->vertexArray[(i*3)+2] = floatToFixed(vertices->at(i).z); //z
+		glObject->vertexArray[(i*3)+0] = vertices->at(i).x; //x
+		glObject->vertexArray[(i*3)+1] = vertices->at(i).y; //y
+		glObject->vertexArray[(i*3)+2] = vertices->at(i).z; //z
 	}
 }
 
@@ -173,10 +85,10 @@ void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar
 		{
 			colorVectorIndex = (i < colors->size()) ? i : colors->size() -1;
 			
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLubyte) colors->at(colorVectorIndex)[0];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLubyte) colors->at(colorVectorIndex)[1];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLubyte) colors->at(colorVectorIndex)[2];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLubyte) colors->at(colorVectorIndex)[3];			
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLfloat) colors->at(colorVectorIndex)[0]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLfloat) colors->at(colorVectorIndex)[1]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLfloat) colors->at(colorVectorIndex)[2]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLfloat) colors->at(colorVectorIndex)[3]/ 255.0f;			
 		}
 	}
 	//There are enough colors for each face
@@ -185,10 +97,10 @@ void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar
 		LOGW(LOGTAG_OPENGL,"Enough colors for each vertex");
 		for (int i=0;i<colorObject->count;i++)
 		{
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLubyte) colors->at(i)[0];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLubyte) colors->at(i)[1];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLubyte) colors->at(i)[2];
-			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLubyte) colors->at(i)[3];
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLfloat) colors->at(i)[0]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLfloat) colors->at(i)[1]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+2] = (GLfloat) colors->at(i)[2]/ 255.0f;
+			colorObject->colorArray[(ColorGLObject::colorComponents*i)+3] = (GLfloat) colors->at(i)[3]/ 255.0f;
 		}
 	}
 }
@@ -293,28 +205,104 @@ ColorGLObject * OpenGLHelper::CreateCube(int _size)
 	return glObject;
 }
 
-// Capped conversion from float to fixed.
-long OpenGLHelper::floatToFixed(float value) 
-{
-	if (value < -32768)
-		value = -32768;
-	if (value > 32767)
-		value = 32767;
-	return (long) (value * 65536);
-}
 
 //Creates a perspective camera matrix centered at the origin facing (0,0,1)
 //FOV is in degrees
-void OpenGLHelper::gluPerspective(GLfloat fovy,GLfloat aspectRatio,  GLfloat zNear, GLfloat zFar)
+void OpenGLHelper::gluPerspective(Mat & matrix, GLfloat fovy,GLfloat aspectRatio,  GLfloat zNear, GLfloat zFar)
 {
-	GLfloat fovy_RAD = (PI/180.0f) * fovy;
+	float fovy_RAD = (PI/180.0f) * fovy;
 
-	GLfloat top = -zNear * tanf(fovy_RAD/2.0f);  
-	GLfloat left = top * aspectRatio;
+	float top = -zNear * tanf(fovy_RAD/2.0f);  
+	float left = top * aspectRatio;
 	//(left,top) is the upper left corner
-	GLfloat right = -left;
-	GLfloat bottom = -top;
+	float right = -left;
+	float bottom = -top;
 
-	glFrustumf(left,right,bottom,top,zNear,zFar);
+	createFrustum(matrix, left,right,bottom,top,zNear,zFar);
 	LOGV(LOGTAG_OPENGL,"Created frustum: fovy=%f,fovy(RADIANS)=%f,left=%f,top=%f",fovy,fovy_RAD,left,top);
+}
+
+void OpenGLHelper::createFrustum(Mat & matrix, float left, float right, float bottom, float top, float nearVal, float farVal)
+{
+	Mat frustumMmatrix = Mat::zeros(4,4,CV_32F);
+	frustumMmatrix.at<float>(0,0) = (2.0f * nearVal) / (right - left);
+	frustumMmatrix.at<float>(1,1) = (2.0f * nearVal) / (top - bottom);
+	frustumMmatrix.at<float>(2,0) = (right + left) / (right - left);
+	frustumMmatrix.at<float>(2,1) = (top + bottom) / (top - bottom);
+	frustumMmatrix.at<float>(2,2) = -(farVal + nearVal) / (farVal - nearVal);
+	frustumMmatrix.at<float>(2,3) = -1.0f;
+	frustumMmatrix.at<float>(3,2) = -(2.0f * farVal * nearVal) / (farVal - nearVal);
+
+	matrix *= frustumMmatrix;
+}
+
+void OpenGLHelper::translate(Mat & matrix, Point3f point)
+{
+	float data[] = 
+	{
+		1,0,0,point.x,
+		0,1,0,point.y,
+		0,0,1,point.z,
+		0,0,0,1
+	};
+
+	Mat translation(4,4,CV_32F,data);
+		
+
+	matrix *= translation;
+}
+
+void OpenGLHelper::rotate(Mat & matrix, float rotation, Point3f rotationVector)
+{
+	float x = rotationVector.x;
+	float y = rotationVector.y;
+	float z = rotationVector.z;
+
+	float c= cos(rotation);
+	float c1 = 1.0f - c;
+	float s= sin(rotation);
+
+	float data[] = 
+	{
+		pow(x,2)*c1+c, x*y*c1 - (z*s), x*z*c1 + (y*s), 0,
+		y*x*c1 + (z*s), pow(y,2)*c1+c, y*z*c1-(x*s), 0,
+		x*z*c1 - (y*s), y*z*c1 + (x*s), pow(z,2)*c1 + c, 0,
+		0,0,0,1
+	};
+		
+	Mat rotationMatrix(4,4,CV_32F,data);
+
+	matrix *= rotationMatrix;
+}
+
+void OpenGLHelper::createOrtho(Mat & matrix, float left, float right, float bottom, float top, float nearVal, float farVal)
+{
+	float tx = - ((right+left)/(right-left));
+	float ty = - ((top+bottom)/(top-bottom));
+	float tz = - ((farVal+nearVal)/(farVal-nearVal));
+
+	float data[] = 
+	{
+		2.0f / (right-left), 0, 0, tx,
+		0, (2.0f/(top-bottom)),0,0,ty,
+		0,0,(-2.0f/(farVal-nearVal)),tz,
+		0,0,0,1
+	};
+
+	Mat orthoMatrix = Mat(4,4,CV_32F,data);
+	matrix *= orthoMatrix;
+}
+
+void OpenGLHelper::scale(Mat & matrix, Point3f scale)
+{
+	float data[] = 
+	{
+		scale.x, 0, 0, 0,
+		0, scale.y, 0, 0,
+		0,0,scale.z, 0,
+		0,0,0,1
+	};
+	Mat scaleMatrix(4,4,CV_32F,data);
+
+	matrix *= scaleMatrix;
 }

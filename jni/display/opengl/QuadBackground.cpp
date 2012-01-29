@@ -39,11 +39,9 @@ void QuadBackground::Render(OpenGL * openGL)
 	SET_TIME(&start);
 
 	glEnable(GL_TEXTURE_2D);	
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);	
-	glDisableClientState(GL_COLOR_ARRAY);
 
 	SetMatrices(openGL);
-		
+	
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	
 	//Debugging - Draw a solid color to texture
@@ -63,13 +61,8 @@ void QuadBackground::Render(OpenGL * openGL)
 		
 	//Draw object
 	openGL->DrawGLObject(texturedQuad);
-
-	//Restore Matrix stacks
-	glMatrixMode(GL_PROJECTION); glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
-
+	
 	//Restore settings
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisable(GL_TEXTURE_2D);
 	
 	SET_TIME(&end);
@@ -94,16 +87,25 @@ void QuadBackground::calculateTextureSize(int imageWidth, int imageHeight, int *
 	}
 }
 
+static void LogMat_Tmp(float * matArray)
+{
+	for (int i=0;i<16;i++)
+	{
+		LOGD(LOGTAG_OPENGL,"Mat[%d]=%f",i,matArray[i]);
+	}
+}
 
 
 void QuadBackground::SetMatrices(OpenGL * openGL)
 {	
 	LOGV(LOGTAG_OPENGL,"Prepare BG, width=%d, height=%d",imageWidth,imageHeight);
 
-	glClearColorx(0, 0, 0, 0); 
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	//glClearColor(0, 0.2f, 0, 1.0f); 
+	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
 
 	
+	OpenGLRenderData renderData = openGL->renderData;
 
 	float aspectRatio = ((float)openGL->screenWidth)/openGL->screenHeight;
 
@@ -121,19 +123,19 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 	}
 
 	//Define projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glOrthof(0,orthoWidth,0,orthoHeight,-10,10);
-	
-	//Define model matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	Mat camera = Mat::eye(4,4,CV_32F);
+	OpenGLHelper::createOrtho(camera,0.0f,orthoWidth,0.0f,orthoHeight,-10.0f,10.0f);
 
+	LogMat_Tmp(camera.ptr<float>(0));
+	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_FALSE,camera.ptr<float>(0));
+
+	
 	//Assume input image is mirrored on Y axis
 	//Assume X-Y scale is the same - choose Y
 	//Ymax in device coords is orthoHeight
 	//Yimg in device coords is imageHeight/textureHeight * bgSize 
 	//Scale= -Ymax/Yimg
+
 
 	float yImg = ((float)imageHeight/(float) textureHeight)* texturedQuad->height;
 	float yScale = -(float)orthoHeight/(float)yImg;
@@ -141,12 +143,16 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 	float xImg = ((float)imageWidth/(float) textureWidth)* texturedQuad->width;
 	float xScale = (float)orthoWidth/(float)xImg;
 
-	LOGV(LOGTAG_OPENGL,"Scaling background: xScale=%f,yScale=%f",xScale,yScale);
-	
-	glScalef(-yScale,yScale,1);
-	
-	glTranslatef(0,-yImg,0);
+	float scale = yScale;
 
+	LOGV(LOGTAG_OPENGL,"Scaling background: scale=%f, Ytranslation=%f",scale,-yImg);
+	
+	Mat modelMatrix = Mat::eye(4,4,CV_32F);
+	OpenGLHelper::scale(modelMatrix,Point3f(-scale,scale,1));
+	
+	OpenGLHelper::translate(modelMatrix,Point3f(0,-yImg,0));
+	//LogMat_Tmp(modelMatrix.ptr<float>(0));
+	glUniformMatrix4fv(renderData.modelMatrixLocation,1,GL_FALSE,modelMatrix.ptr<float>(0));
 }
 
 QuadBackground::~QuadBackground()

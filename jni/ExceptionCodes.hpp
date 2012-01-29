@@ -11,5 +11,14 @@ class CodeNotFoundException : exception
 
 };
 
+class OpenGLInitializationException : exception
+{
+public:
+	const char* what()
+	{
+		return "Failed to init OpenGL. See logs";
+	}
+};
+
 
 #endif

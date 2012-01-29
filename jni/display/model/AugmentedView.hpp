@@ -25,7 +25,7 @@ private:
 	cv::Mat * cameraMatrix;
 	cv::Mat * rotation, * position;
 	std::vector<ARObject *> objectVector;
-	void SetCameraPosition();
+	void SetCameraPosition(OpenGLRenderData & renderData);
 	bool canDraw;
 
 };
