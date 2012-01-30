@@ -1,11 +1,12 @@
 #include "display/opengl/QuadBackground.hpp"
 
 
+ColorGLObject * testCube;
 
 QuadBackground::QuadBackground(cv::Size2i size)
 {
 	//Create the texture object
-	calculateTextureSize(size.width,size.height,&textureWidth,&textureHeight);
+	calculateTextureSize(size.width,size.height,textureWidth,textureHeight);
 
 	LOGI(LOGTAG_OPENGL,"Creating texture, width=%d, height=%d", textureWidth, textureHeight);
 	glEnable(GL_TEXTURE_2D);
@@ -20,6 +21,7 @@ QuadBackground::QuadBackground(cv::Size2i size)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	texturedQuad = OpenGLHelper::CreateTexturedQuad(textureWidth,textureHeight,bgSize); 
+	testCube = OpenGLHelper::CreateSolidColorCube(5,Colors::OliveDrab);
 }
 
 void QuadBackground::SetImage(cv::Mat * image) 
@@ -33,16 +35,44 @@ void QuadBackground::SetImage(cv::Mat * image)
 	imagePixels = image->ptr<uint32_t>(0);	
 }
 
+
+static void OpenGLSettings()
+{	
+	/*glDepthMask(true);
+	glClearDepthf(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glDisable(GL_CULL_FACE); 
+
+	glEnable(GL_BLEND);	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
+
+	glDisable(GL_DEPTH_TEST); 
+	glDisable(GL_BLEND);
+}
+
+static void ResetGLSettings()
+{
+	glDisable(GL_DEPTH_TEST); 
+	glDisable(GL_BLEND);	
+
+}
+
 void QuadBackground::Render(OpenGL * openGL)
 {
 	struct timespec start,end;
 	SET_TIME(&start);
-
-	glEnable(GL_TEXTURE_2D);	
-
-	SetMatrices(openGL);
+	OpenGLSettings();
 	
+	//Draw object
+	SetMatrices(openGL);
+
+	//glEnable(GL_TEXTURE_2D);	
+	glActiveTexture(GL_TEXTURE0);	
 	glBindTexture(GL_TEXTURE_2D, textureID);
+	glUniform1i(openGL->renderData.textureLocation,0);
+	
 	
 	//Debugging - Draw a solid color to texture
 	if (ENABLE_TEXTURE_COLOR)
@@ -59,31 +89,29 @@ void QuadBackground::Render(OpenGL * openGL)
 	//Update the texture 
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,imageWidth,imageHeight, GL_RGBA, GL_UNSIGNED_BYTE, imagePixels);
 		
-	//Draw object
+	openGL->DrawGLObject(testCube);
 	openGL->DrawGLObject(texturedQuad);
 	
-	//Restore settings
-	glDisable(GL_TEXTURE_2D);
-	
+	ResetGLSettings();
 	SET_TIME(&end);
 	LOG_TIME("QuadBG Render", start, end);	
 }
 
 
-void QuadBackground::calculateTextureSize(int imageWidth, int imageHeight, int * textureWidth, int * textureHeight)
+void QuadBackground::calculateTextureSize(int imageWidth, int imageHeight, int & _textureWidth, int & _textureHeight)
 {
 	if (USE_POWER2_TEXTURES)
 	{
 		int heightLog = ceilf(logbf((float)imageHeight))+1;
 		int widthLog = ceilf(logbf((float)imageWidth))+1;
 
-		*textureHeight = (int)pow(2,heightLog);
-		*textureWidth = (int)pow(2,widthLog);
+		_textureHeight = (int)pow(2,heightLog);
+		_textureWidth = (int)pow(2,widthLog);
 	}
 	else
 	{
-		*textureWidth = imageWidth;
-		*textureHeight = imageHeight;
+		_textureWidth = imageWidth;
+		_textureHeight = imageHeight;
 	}
 }
 
@@ -100,17 +128,13 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 {	
 	LOGV(LOGTAG_OPENGL,"Prepare BG, width=%d, height=%d",imageWidth,imageHeight);
 
-	//glClearColor(0, 0.2f, 0, 1.0f); 
-	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-
-	
 	OpenGLRenderData renderData = openGL->renderData;
-
+	
 	float aspectRatio = ((float)openGL->screenWidth)/openGL->screenHeight;
 
 	GLfloat orthoHeight;
 	GLfloat orthoWidth;
+	
 	if (aspectRatio > 1)
 	{
 		orthoWidth = aspectRatio * bgSize;
@@ -122,37 +146,28 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 		orthoHeight = ((float)bgSize) / aspectRatio;
 	}
 
+
 	//Define projection matrix
 	Mat camera = Mat::eye(4,4,CV_32F);
+	//LOGV(LOGTAG_OPENGL,"Creating ortho: width=%f,height=%f",orthoWidth,orthoHeight);
 	OpenGLHelper::createOrtho(camera,0.0f,orthoWidth,0.0f,orthoHeight,-10.0f,10.0f);
 
-	LogMat_Tmp(camera.ptr<float>(0));
-	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_FALSE,camera.ptr<float>(0));
+	Mat camT = Mat(camera.t());
+	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_FALSE,camT.ptr<float>(0));
 
 	
-	//Assume input image is mirrored on Y axis
-	//Assume X-Y scale is the same - choose Y
-	//Ymax in device coords is orthoHeight
-	//Yimg in device coords is imageHeight/textureHeight * bgSize 
-	//Scale= -Ymax/Yimg
-
-
-	float yImg = ((float)imageHeight/(float) textureHeight)* texturedQuad->height;
-	float yScale = -(float)orthoHeight/(float)yImg;
-	
-	float xImg = ((float)imageWidth/(float) textureWidth)* texturedQuad->width;
-	float xScale = (float)orthoWidth/(float)xImg;
-
-	float scale = yScale;
-
-	LOGV(LOGTAG_OPENGL,"Scaling background: scale=%f, Ytranslation=%f",scale,-yImg);
-	
+	LOGV(LOGTAG_OPENGL,"ImageHeight=%d,TextureHeight=%d,QuadHeight=%f",imageHeight,textureHeight,texturedQuad->height);	
+	float imageHeightOnTexture = ((float)imageHeight/(float) textureHeight)* texturedQuad->height;
+	float yScale = -(float)orthoHeight/(float)imageHeightOnTexture;	
+	float yTranslation = (imageHeightOnTexture-texturedQuad->height);
+	LOGV(LOGTAG_OPENGL,"Scaling background: scale=%f, Ytranslation=%f",yScale,yTranslation);	
 	Mat modelMatrix = Mat::eye(4,4,CV_32F);
-	OpenGLHelper::scale(modelMatrix,Point3f(-scale,scale,1));
-	
-	OpenGLHelper::translate(modelMatrix,Point3f(0,-yImg,0));
-	//LogMat_Tmp(modelMatrix.ptr<float>(0));
-	glUniformMatrix4fv(renderData.modelMatrixLocation,1,GL_FALSE,modelMatrix.ptr<float>(0));
+
+	OpenGLHelper::scale(modelMatrix,Point3f(-yScale,-yScale,1));		
+	OpenGLHelper::translate(modelMatrix,Point3f(0,yTranslation,0));
+
+	Mat mt = Mat(modelMatrix.t());
+	glUniformMatrix4fv(renderData.modelMatrixLocation,1,GL_FALSE,mt.ptr<float>(0));
 }
 
 QuadBackground::~QuadBackground()

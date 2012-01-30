@@ -32,8 +32,12 @@ void StartupController::ProcessFrame(Engine * engine)
 	}
 	quadBackground->SetImage(rgbaImage);
 
-	//Render using openGL
-	quadBackground->Render(engine->glRender);
+}
+
+void StartupController::Render(OpenGL * openGL)
+{	
+	//Only thing to render in this controller is textured quad
+	quadBackground->Render(openGL);
 }
 
 void StartupController::Initialize(Engine * engine)
@@ -41,7 +45,7 @@ void StartupController::Initialize(Engine * engine)
 	if (isInitialized)
 		return;
 	
-	GridLayout * grid = new GridLayout(engine->ScreenSize(),Size2i(4,3));
+	GridLayout * grid = new GridLayout(engine->ImageSize(),Size2i(4,3));
 
 	//InputScaler * scaler = new InputScaler(imageSize,screenSize,grid);
 	engine->inputHandler->SetRootUIElement(grid);
@@ -64,7 +68,7 @@ void StartupController::Initialize(Engine * engine)
 	}
 	
 
-	quadBackground = new QuadBackground(engine->ScreenSize());
+	quadBackground = new QuadBackground(engine->ImageSize());
 
 	deleteVector.push_back(quadBackground);
 	deleteVector.push_back(grid);
@@ -72,7 +76,7 @@ void StartupController::Initialize(Engine * engine)
 
 	LOGI(LOGTAG_MAIN,"StartupController Initialized");
 
-	rgbaImage = new Mat(engine->ScreenSize(), CV_8UC4);
+	rgbaImage = new Mat(engine->ImageSize(), CV_8UC4);
 
 	isInitialized = true;
 

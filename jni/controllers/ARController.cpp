@@ -20,9 +20,11 @@ ARController::ARController()
 		items[i] = new FrameItem();
 	}
 
-	LOGI(LOGTAG_MAIN,"Created %d frame items",numItems);
+	LOGI(LOGTAG_ARCONTROLLER,"Created %d frame items",numItems);
 
 	drawMode = Configuration::DefaultDrawMode;
+
+	augmentedView = NULL;
 
 	isInitialized = false;
 	isExpired = false;

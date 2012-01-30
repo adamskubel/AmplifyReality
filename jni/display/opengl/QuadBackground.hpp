@@ -27,7 +27,7 @@ private:
 	void * imagePixels;
 
 	void drawTexturedObject(TexturedGLObject *object);
-	void calculateTextureSize(int imageWidth, int imageHeight, int * textureWidth, int * textureHeight);
+	void calculateTextureSize(int imageWidth, int imageHeight, int & textureWidth, int & textureHeight);
 	void SetMatrices(OpenGL * openGL);
 	void CreateTexture(int imageWidth, int imageHeight);
 };

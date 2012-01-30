@@ -6,9 +6,10 @@ ARConfigurator::ARConfigurator(Engine * engine)
 	SetDefaults();
 
 	int padding = 20;
+	DoLayout(Rect(padding,padding,engine->imageWidth-padding*2, engine->imageHeight - padding*2));
+
 	GridLayout * myGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
 	
-
 	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");
 	positionSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARConfigurator,&ARConfigurator::PositionFilterAlphaChanged>(this));
 	myGrid->AddChild(positionSpinner,Point2i(0,0));
@@ -33,9 +34,9 @@ ARConfigurator::ARConfigurator(Engine * engine)
 	minAlignmentSpinner->SetMinimum(100.0f);
 	minAlignmentSpinner->SetMaximum(300.0f);
 	
-	AddChild(myGrid);
 
-	DoLayout(Rect(padding,padding,engine->imageWidth-padding*2, engine->imageHeight - padding*2));
+	
+	AddChild(myGrid);
 
 	SetVisible(false);
 }

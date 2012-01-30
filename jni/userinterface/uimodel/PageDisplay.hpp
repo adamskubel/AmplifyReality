@@ -26,6 +26,8 @@ private:
 	vector<GraphicalUIElement*> Children;
 	int currentPage;
 	Button * nextPage, * previousPage;
+
+	Rect contentRect;
 	
 	void AdjustButtons();
 

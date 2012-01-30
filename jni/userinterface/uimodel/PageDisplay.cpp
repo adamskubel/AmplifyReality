@@ -51,10 +51,10 @@ void PageDisplay::DoLayout(Rect boundaryRectangle)
 		previousPage->AddClickDelegate(ClickEventDelegate::from_method<PageDisplay,&PageDisplay::PreviousPage>(this));
 	}
 
-	Rect contentBoundary = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize);
+	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize);
 	for (int i=0;i<Children.size();i++)
 	{
-		Children.at(i)->DoLayout(contentBoundary);
+		Children.at(i)->DoLayout(contentRect);
 	}
 
 }
@@ -63,17 +63,20 @@ UIElement * PageDisplay::GetElementAt(Point2i point)
 {
 	if (!isVisible)
 		return NULL;
+	UIElement * button = nextPage->GetElementAt(point);
+	if (button != NULL)
+		return button;
+	button = previousPage->GetElementAt(point);
+	if (button != NULL)
+		return button;
 
-	if (currentPage > 0)
-	{
-		return Children.at(currentPage)->GetElementAt(point);
-	}
-	return NULL;
+	return Children.at(currentPage)->GetElementAt(point);
 }
 
 
 void PageDisplay::AddChild(GraphicalUIElement * page)
 {
+	page->DoLayout(contentRect);
 	Children.push_back(page);
 }
 
@@ -132,12 +135,15 @@ void PageDisplay::Draw(Mat * rgbaImage)
 	//LOGD(LOGTAG_INPUT,"Drawing page display, pagenum=%d",currentPage);
 	if (nextPage != NULL && previousPage != NULL)
 	{
-		nextPage->Draw(rgbaImage);
-		previousPage->Draw(rgbaImage);
+		if (nextPage->IsVisible())
+			nextPage->Draw(rgbaImage);
+		if (previousPage->IsVisible())
+			previousPage->Draw(rgbaImage);
 	}
 	if (currentPage >= 0)
 	{
-		Children.at(currentPage)->Draw(rgbaImage);
+		if (Children.at(currentPage)->IsVisible())
+			Children.at(currentPage)->Draw(rgbaImage);
 	}
 }
 

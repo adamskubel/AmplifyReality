@@ -31,11 +31,9 @@ private:
 	EGLContext eglContext;
 
 	void InitializeEGL(ANativeWindow * window);
-	void InitializeShaders(OpenGLRenderData & renderData);
+	void InitializeShaders();
 	void LinkProgram(GLuint program);
 	void CompileShader(GLuint shaderId, const char * shaderCode);
-	GLuint uiProgramObject;      // shader program handle
-
 	void Teardown();
 
 public:
@@ -45,9 +43,11 @@ public:
 	void DrawGLObject(GLObject * object);
 	void StartFrame();
 	void EndFrame();
-
+	
+	void SetAttributeLocations();
 	
 	OpenGLRenderData renderData;
+	GLuint uiProgramObject;      // shader program handle
 
 	~OpenGL();
 

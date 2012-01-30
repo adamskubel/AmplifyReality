@@ -7,4 +7,13 @@
 		<delete dir="${basedir}/obj"/>
 		<delete dir="${basedir}/bin"/>			
 	</target>
+	<target name="cleanAROnly">
+		<delete>
+			<fileset dir="${basedir}/obj/local/armeabi-v7a/objs/amplify_reality">
+			  	<include name="**/*.o"/>
+				<include name="**/*.d"/>
+			  	<exclude name="zxing/**/*"/>
+			</fileset>
+		</delete>
+	</target>
 </project>

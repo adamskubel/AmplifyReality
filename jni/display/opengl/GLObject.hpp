@@ -40,7 +40,6 @@ public:
 		{
 			colorArray[i] = 1.0f;
 		}
-		bufferID = 0;
 
 	}
 	~TexturedGLObject()
@@ -52,23 +51,21 @@ public:
 
 	void Draw(OpenGLRenderData renderData)
 	{
-		
-		if (bufferID == NULL)
-		{
-			glGenBuffers(1,&bufferID);
-			glBindBuffer(GL_ARRAY_BUFFER,bufferID);
-			GLuint bufferSize = count *  GLObject::vertexComponents;		
-		}
-		glBufferData(
+
+		glUniform1i(renderData.useTextureFlagLocation,1);
+
+		glEnableVertexAttribArray(renderData.vertexArrayLocation);
+		glEnableVertexAttribArray(renderData.textureArrayLocation);
+		glEnableVertexAttribArray(renderData.colorArrayLocation);
 
 		glVertexAttribPointer( renderData.vertexArrayLocation,GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );		
 		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
 		glVertexAttribPointer( renderData.textureArrayLocation, textureComponents , GL_FLOAT, 0, 0, textureArray);
-
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);				
+			
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
 	}
 	
-	GLuint bufferID;
+//	GLuint bufferID;
 	GLfloat *colorArray;
 	GLfloat *textureArray;
 	GLint textureComponents;
@@ -79,7 +76,9 @@ class ColorGLObject : public GLObject
 
 public:
 	static const GLint colorComponents = 4; //Always has 4 color components (RGBA)
-
+	
+	//GLfloat *textureArray;
+	GLfloat *colorArray;
 	int renderGroupSize;
 
 	ColorGLObject(int _vertices, int _renderGroupSize = 1)
@@ -87,24 +86,33 @@ public:
 		renderGroupSize = _renderGroupSize;
 		count = _vertices;
 
-
 		vertexArray = new GLfloat[count * GLObject::vertexComponents];
-		colorArray = new GLfloat[count * ColorGLObject::colorComponents];
+		colorArray = new GLfloat[count * ColorGLObject::colorComponents];		
+		//textureArray = new GLfloat[count * 2];
+
+		//for (int i=0;i<count*2;i++)
+		//{
+		//	textureArray[i] = -1.0f;
+		//}
 	}	
 	~ColorGLObject()
 	{
 		delete[] colorArray;
 		delete[] vertexArray;
+	//	delete[] textureArray;
 	}
 
 	void Draw(OpenGLRenderData renderData)
-	{
-		glVertexAttribPointer( renderData.vertexArrayLocation, GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );
-		glEnableVertexAttribArray( renderData.vertexArrayLocation );
+	{		
+		
+		glUniform1i(renderData.useTextureFlagLocation,0);
 
-		glVertexAttribPointer( renderData.colorArrayLocation, ColorGLObject::colorComponents, GL_FLOAT, 0, 0, colorArray);
+		glEnableVertexAttribArray( renderData.vertexArrayLocation );
 		glEnableVertexAttribArray( renderData.colorArrayLocation );
 
+		glVertexAttribPointer( renderData.vertexArrayLocation, GLObject::vertexComponents, GL_FLOAT, 0, 0, vertexArray );
+		glVertexAttribPointer( renderData.colorArrayLocation, ColorGLObject::colorComponents, GL_FLOAT, 0, 0, colorArray);
+		
 		if (renderGroupSize > 1)
 		{
 			for (int i=0;i<count;i+=renderGroupSize)
@@ -115,11 +123,7 @@ public:
 		else
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
 
-		glDisableVertexAttribArray( renderData.vertexArrayLocation );
-		glDisableVertexAttribArray( renderData.colorArrayLocation );
 	}
-
 	
-	GLfloat *colorArray;
 };
 #endif

@@ -5,7 +5,7 @@ OpenGL::OpenGL(ANativeWindow * window)
 {
 	InitializeEGL(window);
 	
-	InitializeShaders(renderData);
+	InitializeShaders();
 }
 
 OpenGL::~OpenGL()
@@ -62,20 +62,8 @@ void OpenGL::InitializeEGL(ANativeWindow* androidWindow)
 		LOGE("Failed to bind EGL to OpenGL ES Api");
 		return;
 	}
-
 	LOGI(LOGTAG_OPENGL,"Bound to API");
-
-
-	/*EGLint pi32ConfigAttribs[7]; 
-	pi32ConfigAttribs[0] = EGL_SURFACE_TYPE; 
-	pi32ConfigAttribs[1] = EGL_WINDOW_BIT; 
-	pi32ConfigAttribs[2] = EGL_RENDERABLE_TYPE; 
-	pi32ConfigAttribs[3] = EGL_OPENGL_ES2_BIT; 
-	pi32ConfigAttribs[4] = EGL_BUFFER_SIZE; 
-	pi32ConfigAttribs[5] = 16; 
-	pi32ConfigAttribs[6] = EGL_NONE; */
-
-	
+		
 	const EGLint attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT,EGL_RENDERABLE_TYPE,EGL_OPENGL_ES2_BIT,EGL_BLUE_SIZE,
 		8, EGL_GREEN_SIZE, 8, EGL_RED_SIZE, 8, EGL_DEPTH_SIZE, 4, EGL_NONE };
 
@@ -129,14 +117,14 @@ void OpenGL::InitializeEGL(ANativeWindow* androidWindow)
 	glGetIntegerv(GL_DEPTH_BITS, depthBits);
 	LOGI(LOGTAG_OPENGL,"Surface parameters: width=%d, height=%d, Depth Bits = %d", screenWidth,screenHeight,depthBits[0]);
 
+
 }
 
 void OpenGL::StartFrame()
 {	
+	glViewport(0,0,screenWidth,screenHeight);
 	glClearColor(0,0,0.4f,1);
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-	glUseProgram(uiProgramObject); 
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	
 }
 
 void OpenGL::DrawGLObject(GLObject *object) 
@@ -146,20 +134,41 @@ void OpenGL::DrawGLObject(GLObject *object)
 
 void OpenGL::EndFrame()
 {	
+	
+	//float * params = new float[16];
+	//glGetUniformfv(uiProgramObject,renderData.modelMatrixLocation,params);
+
+	//for (int i=0;i<16;i++)
+	//{
+	//	LOGD(LOGTAG_OPENGL,"Model[%d]=%f",i,params[i]);
+	//}
+
+	//delete params;
+
+	//params = new float[16];
+	//glGetUniformfv(uiProgramObject,renderData.projectionMatrixLocation,params);
+
+	//for (int i=0;i<16;i++)
+	//{
+	//	LOGD(LOGTAG_OPENGL,"Project[%d]=%f",i,params[i]);
+	//}
+	//
+	//delete params;
+	//
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	//glFlush();
 	eglSwapBuffers( eglDisplay, eglSurface);
 }
 
 
-void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
+void OpenGL::InitializeShaders()
 {
-	GLuint  ui32Vbo = 0; // Vertex buffer object handle 
+	//GLuint  ui32Vbo = 0; // Vertex buffer object handle 
 
 	LOGI(LOGTAG_OPENGL,"Initializing shaders");	
 	const char * g_strVSProgram =
 		"\
-		attribute vec4 Position;\
+		attribute vec3 Position;\
 		attribute vec4 SourceColor;\
 		varying   vec4 DestinationColor;\
 		\
@@ -171,7 +180,7 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 		\
 		void main()\
 		{\
-			gl_Position  = Projection * ModelView * Position;\
+			gl_Position  = Projection * ModelView * vec4(Position, 1.0);\
 			DestinationColor = SourceColor;\
 			TexCoordOut=TexCoordIn;\
 		}\
@@ -183,14 +192,16 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 		\
 		varying lowp vec2 TexCoordOut;\
 		uniform sampler2D Texture;\
+		uniform bool useTexture;\
 		\
 		void main()\
 		{\
-			gl_FragColor =  texture2D(Texture, TexCoordOut);\
+			if (useTexture)\
+				gl_FragColor = texture2D(Texture, TexCoordOut);\
+			else\
+				gl_FragColor = DestinationColor;\
 		}\
-		";
-
-
+		";	
 
 	// Create the fragment shader object 
 	LOGD(LOGTAG_OPENGL,"Creating fragment shader");
@@ -218,11 +229,6 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 	// Link the program 
 	LinkProgram(uiProgramObject);
 	
-	LOGD(LOGTAG_OPENGL,"Complete. Enabling arrays...");
-	//Enable arrays
-	glEnableVertexAttribArray(renderData.vertexArrayLocation);
-	glEnableVertexAttribArray(renderData.textureArrayLocation);
-	glEnableVertexAttribArray(renderData.colorArrayLocation);
 	LOGD(LOGTAG_OPENGL,"Complete. Activating program...");
 
 	//Activate shader program
@@ -232,13 +238,52 @@ void OpenGL::InitializeShaders(OpenGLRenderData & renderData)
 
 	
 	//Set variable locations
+	SetAttributeLocations();
+
+	
+	LOGD(LOGTAG_OPENGL,"Complete. Enabling arrays...");
+	//Enable arrays
+	glEnableVertexAttribArray(renderData.vertexArrayLocation);
+	glEnableVertexAttribArray(renderData.textureArrayLocation);
+	glEnableVertexAttribArray(renderData.colorArrayLocation);
+	
+	LOGI(LOGTAG_OPENGL,"ProjectLocation=%d,ModelMatLocation=%d,VertexLocation=%d,ColorLocation=%d",
+		renderData.projectionMatrixLocation,renderData.modelMatrixLocation,renderData.vertexArrayLocation,
+		renderData.colorArrayLocation);
+	LOGI(LOGTAG_OPENGL,"Complete. That's it, so...shader initialization complete!");
+
+	//float pfIdentity[] = 
+	//{ 11.0f, 0.0f, 0.0f, 0.0f, 
+ //     0.0f, 11.0f, 0.0f, 0.0f, 
+ //     0.0f, 0.0f, 11.0f, 0.0f, 
+ //     0.0f, 0.0f, 0.0f, 11.0f }; 
+	//
+	//
+	//LOGD(LOGTAG_OPENGL,"Projection matrix location=%d",renderData.projectionMatrixLocation);
+	//glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_TRUE,pfIdentity);
+
+	//
+	//float * params = new float[16];
+	//glGetUniformfv(uiProgramObject,renderData.projectionMatrixLocation,params);
+
+	//for (int i=0;i<16;i++)
+	//{
+	//	LOGD(LOGTAG_OPENGL,"InitCamera[%d]=%f",i,params[i]);
+	//}
+
+	//delete params;
+
+}
+
+void OpenGL::SetAttributeLocations()
+{	
 	renderData.vertexArrayLocation = glGetAttribLocation(uiProgramObject,"Position");
 	renderData.textureArrayLocation = glGetAttribLocation(uiProgramObject,"TexCoordIn");
 	renderData.colorArrayLocation =	glGetAttribLocation(uiProgramObject,"SourceColor");
 	renderData.modelMatrixLocation=  glGetUniformLocation(uiProgramObject,"ModelView");
 	renderData.projectionMatrixLocation = glGetUniformLocation(uiProgramObject,"Projection");
-
-	LOGI(LOGTAG_OPENGL,"Complete. That's it, so...shader initialization complete!");
+	renderData.textureLocation = glGetUniformLocation(uiProgramObject, "Texture");
+	renderData.useTextureFlagLocation = glGetUniformLocation(uiProgramObject, "useTexture");
 }
 
 //Link, then do error checking
@@ -277,7 +322,7 @@ void OpenGL::CompileShader(GLuint shader, const char * shaderSource)
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &i32InfoLogLength); 
 		char * infoLog = new char[i32InfoLogLength];
 		glGetShaderInfoLog(shader, i32InfoLogLength, &i32CharsWritten, infoLog); 
-		LOGE("Failed to compile vertex shader(log length = %d): %s",i32InfoLogLength, infoLog); 
+		LOGE("Failed to compile shader(log length = %d): %s",i32InfoLogLength, infoLog); 
 		delete [] infoLog; 
 		throw OpenGLInitializationException();
 	} 

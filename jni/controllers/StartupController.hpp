@@ -27,6 +27,8 @@ public:
 	
 	void startButtonPress(void * sender, EventArgs args);
 
+	void Render(OpenGL * openGL);
+
 	bool IsExpired();
 	void SetExpired();
 
