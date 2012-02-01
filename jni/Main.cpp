@@ -3,15 +3,22 @@
 #include "android/sensor.h"
 #include <jni.h>
 
+
+static volatile bool jniLock;
+static vector<std::string*> jniDataVector;
+
+
 extern "C"
 {
 	JNIEXPORT void JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_SomeFunction(JNIEnv * env, jobject  obj)
+		Java_com_amplifyreality_AmplifyRealityActivity_OnMessage(JNIEnv * env, jobject  obj, jstring javaString)
 	{
-		LOGE("This is a JNI CALL");
+		jniLock = true;
+		std::string * cString = new std::string(env->GetStringUTFChars(javaString,JNI_FALSE));
+		jniDataVector.push_back(cString);
+		jniLock = false;		
 	}
 }
-
 
 
 
@@ -139,6 +146,7 @@ void shutdownEngine(Engine* engine)
 void android_main(struct android_app* state)
 {	
 	LOG_INTRO();
+	jniLock = true;
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
@@ -172,6 +180,7 @@ void android_main(struct android_app* state)
 			{
 				source->process(state, source);
 			}
+			
 			//Process sensor events
 			if (ident == LOOPER_ID_USER)
 			{
@@ -186,6 +195,21 @@ void android_main(struct android_app* state)
 				return;
 			}
 		}
+
+
+		//Check for messages in JNI queue
+		if (!jniLock && !jniDataVector.empty())
+		{
+			std::string * safeString = new std::string(jniDataVector.back()->c_str());
+
+			LOGD(LOGTAG_NETWORKING,"Network message: %s",safeString->c_str());
+			delete jniDataVector.back();
+			jniDataVector.pop_back();
+
+			mainEngine.messageQueue->push_back(safeString);
+		}
+
+
 		if (mainEngine.animating)
 		{
 			myRunner.DoFrame(&mainEngine);

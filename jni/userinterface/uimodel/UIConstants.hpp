@@ -1,0 +1,7 @@
+#ifndef UI_CONSTANTS_HPP_
+#define UI_CONSTANTS_HPP_
+
+#define MAX_CERTAINTY_INDICATOR_GROW_RADIUS 30
+
+
+#endif

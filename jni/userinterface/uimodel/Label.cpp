@@ -32,22 +32,33 @@ void Label::HandleInput()
 }
 
 void Label::SetCenter(Point2i centerPoint)
-{
+{	
+	LOGD(LOGTAG_INPUT,"Setting label center (%d,%d)",centerPoint.x,centerPoint.y);
 	Size2i size = GetTextSize();
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
+	
+	if (Position.x < 0 || Position.y < 0)
+		Position = Point2i(0,0);
+
+	LOGD(LOGTAG_INPUT,"New position is (%d,%d)",Position.x,Position.y);
 }
 
 void Label::FitTextToBoundary(Size2f limits)
 {
 	Size2i size = GetTextSize();
 
-	if (size.width <= limits.width && size.height <= limits.height)
-		return;
+	/*if (FontScale > 2 && size.width <= limits.width && size.height <= limits.height)
+		return;*/
 
 	float ySpace = limits.height/(float)size.height;
 	float xSpace = limits.width/(float)size.width;
 		
-	FontScale *= std::max(xSpace,ySpace);
+	FontScale *= std::min(xSpace,ySpace);
+
+	if (FontScale > 2.0f)
+		FontScale = 2.0f;
+	if (FontScale <= 0)
+		FontScale = 0.1f;
 	
 	LOGD(LOGTAG_INPUT,"New FontScale is %f",FontScale);
 }
@@ -61,7 +72,7 @@ void Label::SetText(std::string newText)
 }
 
 cv::Size2i Label::GetTextSize()
-{
+{	
 	fontBaseline = 0;
 	Size textSize = getTextSize(Text.c_str(), FontFace, FontScale, FontThickness, &fontBaseline);
 	fontBaseline += FontThickness;
@@ -81,12 +92,15 @@ void Label::Draw(Mat * rgbaImage)
 }
 
 void Label::DoLayout(Rect boundaryRectangle)
-{	
-	Point2i newPoint = Point2i(boundaryRectangle.x + boundaryRectangle.width/2, boundaryRectangle.y + boundaryRectangle.height/2);
-	SetCenter(newPoint);	
+{
+	
+	LOGI(LOGTAG_INPUT,"Adding myself(Label) to layout. Rect = (%d,%d,%d,%d)",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 
-	LOGI(LOGTAG_INPUT,"Adding myself(Label) to layout. Position = (%d,%d)",newPoint.x,newPoint.y);
+	Point2i newPoint = Point2i(boundaryRectangle.x + boundaryRectangle.width/2, boundaryRectangle.y + boundaryRectangle.height/2);
+	
 	FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
+	
+	SetCenter(newPoint);	
 }
 
 

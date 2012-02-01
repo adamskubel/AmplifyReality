@@ -1,21 +1,20 @@
 #include "userinterface/uimodel/GridLayout.hpp"
 
 
-GridLayout::GridLayout()
+GridLayout::GridLayout(Size2i _gridSize)
 {
 	cellSize = Size2i(10,10);
-	gridSize = Size2i(1,1);
+	controlSize = Size2i(100,100);
+	gridSize = _gridSize;
 	Position = Point2i(0,0);
 }
 
 
-GridLayout::GridLayout(Size2i windowSize, Size_<int> _gridSize, Point2i position)
-{
-	cellSize = Size_<int>((int)((float)windowSize.width/_gridSize.width),(int)((float)windowSize.height/_gridSize.height));
-	gridSize = _gridSize;
-	Position = position;
+GridLayout::GridLayout(Size2i _controlSize, Size_<int> _gridSize, Point2i _position) : GraphicalUIElement(true)
+{	
+	ResizeGrid(_controlSize,_gridSize,_position);
 
-	LOGD(LOGTAG_INPUT,"Created Grid with cell size[%d,%d]",cellSize.width,cellSize.height);
+
 }
 
 GridLayout::~GridLayout()
@@ -27,11 +26,15 @@ GridLayout::~GridLayout()
 	LOGD(LOGTAG_INPUT,"Gridlayout deleted successfully.");
 }
 
-void GridLayout::ResizeGrid(Size2i windowSize, Size2i _gridSize, Point2i position)
+void GridLayout::ResizeGrid(Size2i _controlSize, Size2i _gridSize, Point2i _position)
 {
-	cellSize = Size_<int>((int)((float)windowSize.width/_gridSize.width),(int)((float)windowSize.height/_gridSize.height));
+	controlSize = _controlSize;
 	gridSize = _gridSize;
-	Position = position;
+	Position = _position;	
+
+	cellSize = Size_<int>((int)((float)controlSize.width/gridSize.width),(int)((float)controlSize.height/gridSize.height));
+	
+	LOGD(LOGTAG_INPUT,"GridLayout: New Cellsize is [%d,%d]",cellSize.width,cellSize.height);
 
 	//Layout children
 	for (int i=0;i<Children.size();i++)
@@ -39,6 +42,8 @@ void GridLayout::ResizeGrid(Size2i windowSize, Size2i _gridSize, Point2i positio
 		GraphicalUIElement * gridChild = Children.at(i);
 		gridChild->DoLayout(GetRectangleFromGridData(gridChild->gridPoint,gridChild->gridSpan));
 	}
+
+	layoutDefined = true;
 }
 
 Rect GridLayout::GetRectangleFromGridData(Point2i _gridPoint, Size2i _gridSpan)
@@ -69,7 +74,8 @@ void GridLayout::AddChild(GraphicalUIElement * child, Point2i gridPoint, Size_<i
 
 	child->gridPoint = gridPoint;
 	child->gridSpan = gridSpan;
-	child->DoLayout(GetRectangleFromGridData(gridPoint,gridSpan));	
+	if (layoutDefined)
+		child->DoLayout(GetRectangleFromGridData(gridPoint,gridSpan));	
 	Children.push_back(child);
 }
 
@@ -104,6 +110,8 @@ UIElement * GridLayout::GetElementByName(std::string name)
 
 void GridLayout::DoLayout(Rect boundaries)
 {
+	LOGD(LOGTAG_INPUT,"Laying out Grid, Rect=[%d,%d,%d,%d]",boundaries.x,boundaries.y,boundaries.width,boundaries.height);
+	
 	Size2i windowSize = Size2i(boundaries.width, boundaries.height);
 	Position = Point2i(boundaries.x,boundaries.y);
 	
@@ -112,6 +120,9 @@ void GridLayout::DoLayout(Rect boundaries)
 
 void GridLayout::Draw(Mat * rgbaImage)
 {
+	if (!layoutDefined || !IsVisible())
+		return;
+
 	for (int i=0;i<Children.size();i++)
 	{
 		if (Children.at(i)->IsVisible())

@@ -23,6 +23,8 @@
 #define LOGTAG_CALIBRATION "Calibration"
 #define LOGTAG_SENSOR "Sensor"
 #define LOGTAG_POSITION "Positioning"
+#define LOGTAG_IO "IO"
+#define LOGTAG_NETWORKING "Networking"
 
 #define STR(tok) #tok
 

@@ -17,6 +17,7 @@ PageDisplay::~PageDisplay()
 
 void PageDisplay::DoLayout(Rect boundaryRectangle)
 {
+	LOGD(LOGTAG_INPUT,"Laying out PageDisplay, Rect=[%d,%d,%d,%d]",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 	float buttonSize = DefaultButtonSize;
 
 	if (buttonSize > boundaryRectangle.width/2.0f || buttonSize > boundaryRectangle.height /2.0f)
@@ -24,7 +25,9 @@ void PageDisplay::DoLayout(Rect boundaryRectangle)
 		buttonSize = round(min(boundaryRectangle.height /2.0f,boundaryRectangle.width/2.0f));
 		LOGD(LOGTAG_INPUT,"Setting page button size to %f",buttonSize);
 	}
-
+	
+	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize);
+	LOGD(LOGTAG_INPUT,"PageDisplay ContentRect=[%d,%d,%d,%d]",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 	
 	//Bottom right corner
 	Rect nextButtonBoundary = Rect(
@@ -51,18 +54,21 @@ void PageDisplay::DoLayout(Rect boundaryRectangle)
 		previousPage->AddClickDelegate(ClickEventDelegate::from_method<PageDisplay,&PageDisplay::PreviousPage>(this));
 	}
 
-	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize);
 	for (int i=0;i<Children.size();i++)
 	{
 		Children.at(i)->DoLayout(contentRect);
 	}
 
+	AdjustButtons();
+	layoutDefined = true;
 }
 
 UIElement * PageDisplay::GetElementAt(Point2i point)
 {
-	if (!isVisible)
+	if (!isVisible || currentPage < 0)
 		return NULL;
+
+
 	UIElement * button = nextPage->GetElementAt(point);
 	if (button != NULL)
 		return button;
@@ -76,8 +82,16 @@ UIElement * PageDisplay::GetElementAt(Point2i point)
 
 void PageDisplay::AddChild(GraphicalUIElement * page)
 {
-	page->DoLayout(contentRect);
+	if (currentPage == -1)
+		currentPage = 0;
+
 	Children.push_back(page);
+
+	if (layoutDefined)
+	{	
+		page->DoLayout(contentRect);
+		AdjustButtons();
+	}
 }
 
 void PageDisplay::NextPage(void * sender, EventArgs args)
@@ -100,22 +114,25 @@ void PageDisplay::PreviousPage(void * sender, EventArgs args)
 
 void PageDisplay::AdjustButtons()
 {
-	if (currentPage + 1 < Children.size())
+	if (nextPage != NULL && previousPage != NULL)
 	{
-		nextPage->SetVisible(false);
-	}
-	else
-	{
-		nextPage->SetVisible(true);
-	}
+		if (currentPage + 1 < Children.size())
+		{
+			nextPage->SetVisible(true);
+		}
+		else
+		{
+			nextPage->SetVisible(false);
+		}
 
-	if (currentPage - 1 >= 0)
-	{
-		previousPage->SetVisible(false);
-	}
-	else
-	{
-		previousPage->SetVisible(true);
+		if (currentPage - 1 >= 0)
+		{
+			previousPage->SetVisible(true);
+		}
+		else
+		{
+			previousPage->SetVisible(false);
+		}
 	}
 }
 
@@ -132,6 +149,9 @@ void PageDisplay::SetPage(int pageNumber)
 
 void PageDisplay::Draw(Mat * rgbaImage)
 {
+	if (!IsVisible() || !layoutDefined)
+		return;
+
 	//LOGD(LOGTAG_INPUT,"Drawing page display, pagenum=%d",currentPage);
 	if (nextPage != NULL && previousPage != NULL)
 	{

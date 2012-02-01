@@ -420,9 +420,6 @@
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp">
-      <Filter>Header Files\display\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\display\opengl\OpenGLRenderable.hpp">
       <Filter>Header Files\display\opengl</Filter>
     </ClInclude>
@@ -699,11 +696,14 @@
     <ClInclude Include="..\jni\userinterface\uimodel\GraphicalUIElement.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\display\objloader\ObjData.hpp">
-      <Filter>Header Files\display\objloader</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\display\opengl\OpenGLRenderData.hpp">
       <Filter>Header Files\display\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\UIConstants.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

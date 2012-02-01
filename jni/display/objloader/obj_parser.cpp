@@ -4,6 +4,7 @@
 #include "obj_parser.h"
 #include "list.h"
 #include "string_extra.h"
+#include "LogDefinitions.h"
 
 #define WHITESPACE " \t\n\r"
 
@@ -190,7 +191,7 @@ int obj_parse_mtl_file(char *filename, list *material_list)
 	mtl_file_stream = fopen( filename, "r");
 	if(mtl_file_stream == 0)
 	{
-		fprintf(stderr, "Error reading file: %s\n", filename);
+		LOGE("Error reading file: %s", filename);
 		return 0;
 	}
 		
@@ -277,7 +278,7 @@ int obj_parse_mtl_file(char *filename, list *material_list)
 		}
 		else
 		{
-			fprintf(stderr, "Unknown command '%s' in material file %s at line %i:\n\t%s\n",
+			LOGW(LOGTAG_IO, "Unknown command '%s' in material file %s at line %i: %s",
 					current_token, filename, line_number, current_line);
 			//return 0;
 		}
@@ -289,7 +290,7 @@ int obj_parse_mtl_file(char *filename, list *material_list)
 
 }
 
-int obj_parse_obj_file(obj_growable_scene_data *growable_data, char *filename)
+int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filename)
 {
 	FILE* obj_file_stream;
 	int current_material = -1; 
@@ -300,7 +301,7 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, char *filename)
 	obj_file_stream = fopen( filename, "r");
 	if(obj_file_stream == 0)
 	{
-		fprintf(stderr, "Error reading file: %s\n", filename);
+		LOGE("Error reading file: %s\n", filename);
 		return 0;
 	}
 
@@ -416,7 +417,7 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, char *filename)
 
 		else
 		{
-			printf("Unknown command '%s' in scene code at line %i: \"%s\".\n",
+			LOGW(LOGTAG_IO,"Unknown command '%s' in scene code at line %i: \"%s\".\n",
 					current_token, line_number, current_line);
 		}
 	}
@@ -537,7 +538,7 @@ void obj_copy_to_out_storage(obj_scene_data *data_out, obj_growable_scene_data *
 	data_out->camera = growable_data->camera;
 }
 
-int parse_obj_scene(obj_scene_data *data_out, char *filename)
+int parse_obj_scene(obj_scene_data *data_out, const char *filename)
 {
 	obj_growable_scene_data growable_data;
 

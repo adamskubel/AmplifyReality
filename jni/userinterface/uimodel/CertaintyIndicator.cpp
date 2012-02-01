@@ -30,17 +30,13 @@ cv::Scalar CertaintyIndicator::determineColor()
 
 }
 
-void CertaintyIndicator::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan)
+void CertaintyIndicator::DoLayout(Rect boundaryRectangle)
 {
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height); //top-left corner
-	float maxRadius = 0.5f * std::min(cellSize.width, cellSize.height);
-	newPoint = newPoint + Point2i(maxRadius,maxRadius);
+	float newRadius = 0.5f * std::min(boundaryRectangle.width, boundaryRectangle.height);
+	if (newRadius < maxRadius || maxRadius < MAX_CERTAINTY_INDICATOR_GROW_RADIUS)
+		maxRadius = newRadius;
 
-	newPoint += offset;
-
-	CenterPoint = newPoint;
-	SetMaxRadius(maxRadius);
-
+	CenterPoint = boundaryRectangle.tl() + Point2i(maxRadius,maxRadius);	
 	LOGD(LOGTAG_INPUT,"Adding myself (CertaintyIndicator) to grid. Center=(%d,%d), Radius=(%f)",CenterPoint.x, CenterPoint.y, maxRadius);
 }
 

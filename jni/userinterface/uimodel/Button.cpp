@@ -35,9 +35,9 @@ void Button::AddClickDelegate(ClickEventDelegate myDelegate)
 
 UIElement * Button::GetElementAt(cv::Point2i point)
 {
-	if (!isEnabled)
+	if (!isEnabled || !IsVisible())
 	{
-		LOGD(LOGTAG_INPUT,"Button disabled, aborting hit test");
+		LOGV(LOGTAG_INPUT,"Button disabled, aborting hit test");
 		return NULL;
 	}
 	LOGD(LOGTAG_INPUT,"Button: Testing point (%d,%d)",point.x,point.y);
@@ -117,5 +117,5 @@ void Button::SetEnabled(bool enabled)
 
 bool Button::IsEnabled()
 {
-	return isEnabled;
+	return isEnabled && isVisible;
 }

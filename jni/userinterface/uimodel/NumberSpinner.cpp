@@ -2,14 +2,14 @@
 
 
 
-NumberSpinner::NumberSpinner(string description, float intialValue, float delta, string _valueFormat, Point2i position, Size2i size)
+NumberSpinner::NumberSpinner(string description, float intialValue, float delta, string _valueFormat, Point2i position, Size2i size) : GridLayout(size,Size2i(3,2),position)
 {
 	LOGD(LOGTAG_INPUT, "Enter NumberSpinner constructor");
 	//Initialize grid base
-	gridSize = Size2i(3,2);
-	cellSize = Size_<int>((int)((float)size.width/gridSize.width),(int)((float)size.height/gridSize.height));
-	Position = position;
-	
+	//gridSize = Size2i(3,2);
+	//cellSize = Size_<int>((int)((float)size.width/gridSize.width),(int)((float)size.height/gridSize.height));
+	//Position = position;
+	//
 	LOGD(LOGTAG_INPUT, "Cellsize = [%d,%d]",cellSize.width,cellSize.height);
 
 	value = intialValue;

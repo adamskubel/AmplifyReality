@@ -1,23 +1,38 @@
 package com.amplifyreality;
 
+import com.amplifyreality.networking.ARClient;
+
 import android.app.NativeActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 public class AmplifyRealityActivity extends NativeActivity
 {
+	
+	
 	static 
 	{
         System.loadLibrary("amplify_reality");
 	}
 	
-	public native void SomeFunction();
+	public static native void OnMessage(String messageString);
+	
+	ARClient client;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-		SomeFunction();
-		SomeFunction();
+		Log.i("AmplifyR","Creating client");		
+		client = new ARClient();
+	}
+	
+
+	@Override 
+	protected void onDestroy()
+	{
+		client.Shutdown();
+		super.onDestroy();
 	}
 	
 	

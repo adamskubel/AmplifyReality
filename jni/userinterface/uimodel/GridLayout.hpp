@@ -16,7 +16,7 @@ using namespace cv;
 class GridLayout : public GraphicalUIElement
 {
 public:	
-	GridLayout();
+	GridLayout(Size2i gridSize);
 	GridLayout(Size2i windowSize, Size_<int> gridSize, Point2i position = Point2i(0,0));
 	~GridLayout();
 
@@ -36,7 +36,7 @@ public:
 protected:
 	Point2i Position;
 	vector<GraphicalUIElement*> Children;
-	Size_<int> gridSize, cellSize;
+	Size_<int> gridSize, cellSize, controlSize;
 	Rect GetRectangleFromGridData(Point2i gridPoint, Size2i gridSpan);
 	bool CheckGridFit(Point2i gridPoint, Size_<int> gridSpan);
 

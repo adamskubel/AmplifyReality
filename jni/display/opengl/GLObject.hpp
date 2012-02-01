@@ -1,6 +1,9 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include "OpenGLRenderData.hpp"
+#include <opencv2/core/core.hpp>
+#include "display/objloader/objLoader.h"
+
 
 #ifndef GLOBJECT_HPP_
 #define GLOBJECT_HPP_
@@ -16,6 +19,7 @@ public:
 		;//Base destructor
 	}
 	virtual void Draw(OpenGLRenderData renderData);
+
 
 	GLfloat *vertexArray;
 	GLsizei count;
@@ -88,18 +92,11 @@ public:
 
 		vertexArray = new GLfloat[count * GLObject::vertexComponents];
 		colorArray = new GLfloat[count * ColorGLObject::colorComponents];		
-		//textureArray = new GLfloat[count * 2];
-
-		//for (int i=0;i<count*2;i++)
-		//{
-		//	textureArray[i] = -1.0f;
-		//}
 	}	
 	~ColorGLObject()
 	{
 		delete[] colorArray;
 		delete[] vertexArray;
-	//	delete[] textureArray;
 	}
 
 	void Draw(OpenGLRenderData renderData)
@@ -125,5 +122,123 @@ public:
 
 	}
 	
+};
+
+class WavefrontGLObject : public GLObject
+{
+	GLfloat *colorArray;
+	GLfloat *textureArray;
+	GLubyte *indexArray;
+	
+	bool hasTexture;
+
+	int numFaces, numVertices;
+
+public:
+
+	WavefrontGLObject(int _numVertices, int _numFaces)
+	{			
+		numVertices = _numVertices;
+		numFaces = _numFaces;
+
+		vertexArray = new GLfloat[numVertices * 3];
+		colorArray = new GLfloat[numVertices * 4];		
+		textureArray = new GLfloat[numVertices * 2];
+		indexArray = new GLubyte[numFaces * 3];
+
+		for (int i=0;i<numVertices*4;i++)
+		{
+			colorArray[i] = 1.0f;
+		}
+
+		hasTexture = false;
+	}
+
+	void AddVertex(cv::Point3f vertex, cv::Scalar vertexColor, int position)
+	{
+		if (numVertices <= position)
+		{
+			LOGW(LOGTAG_OPENGL,"GLObject::AddVertex - Position is greater than vertex count");
+			return;
+		}
+
+		vertexArray[(position*3) + 0] = vertex.x;
+		vertexArray[(position*3) + 1] = vertex.y;
+		vertexArray[(position*3) + 2] = vertex.z;
+
+		colorArray[(position*4)+0] = (GLfloat) vertexColor[0]/ 255.0f;
+		colorArray[(position*4)+1] = (GLfloat) vertexColor[1]/ 255.0f;
+		colorArray[(position*4)+2] = (GLfloat) vertexColor[2]/ 255.0f;
+		colorArray[(position*4)+3] = (GLfloat) vertexColor[3]/ 255.0f;			
+	}
+
+	void AddFace(GLubyte face[3], int position)
+	{
+		if (numFaces <= position)
+		{
+			LOGW(LOGTAG_OPENGL,"GLObject::AddFace - Position is greater than face count");
+			return;
+		}
+
+		indexArray[(position*3) + 0] = face[0];
+		indexArray[(position*3) + 1] = face[1];
+		indexArray[(position*3) + 2] = face[2];
+	}
+
+	~WavefrontGLObject()
+	{
+		delete[] colorArray;
+		delete[] vertexArray;
+		delete[] textureArray;
+		delete[] indexArray;
+	}
+
+	void Draw(OpenGLRenderData renderData)
+	{		
+		if (hasTexture)
+		{
+			glUniform1i(renderData.useTextureFlagLocation,1);
+			glEnableVertexAttribArray(renderData.textureArrayLocation);
+			glVertexAttribPointer( renderData.textureArrayLocation, 2 , GL_FLOAT, 0, 0, textureArray);
+		}
+		else
+		{
+			glUniform1i(renderData.useTextureFlagLocation,0);
+		}
+
+
+		glEnableVertexAttribArray(renderData.vertexArrayLocation);
+		glEnableVertexAttribArray(renderData.colorArrayLocation);
+
+		glVertexAttribPointer( renderData.vertexArrayLocation,3, GL_FLOAT, 0, 0, vertexArray );		
+		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
+		
+		glDrawElements(GL_TRIANGLE_STRIP,numFaces*3,GL_UNSIGNED_BYTE,indexArray);
+	}
+
+
+	
+	static WavefrontGLObject * FromObjFile(objLoader & loader)
+	{
+		WavefrontGLObject * object = new WavefrontGLObject(loader.vertexCount, loader.faceCount);
+
+		for (int i=0;i<loader.vertexCount;i++)
+		{
+			double * vertex = (loader.vertexList[i])->e;
+			object->AddVertex(cv::Point3f((float)vertex[0],(float)vertex[1],(float)vertex[2]),Colors::RandomColor(),i);
+			LOGD(LOGTAG_OPENGL,"Added vertex [%lf,%lf,%lf]",vertex[0],vertex[1],vertex[2]);
+		}
+
+		for (int i=0;i<loader.faceCount;i++)
+		{
+			int * vertexIndices = (loader.faceList[i])->vertex_index;
+			GLubyte triangle[3] = {vertexIndices[0],vertexIndices[1],vertexIndices[2]};
+
+			object->AddFace(triangle,i);
+			LOGD(LOGTAG_OPENGL,"Added triangle [%u,%u,%u]",triangle[0],triangle[1],triangle[2]);
+		}
+
+		return object;
+	}
 };
 #endif

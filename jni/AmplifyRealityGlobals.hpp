@@ -73,6 +73,12 @@
 		COLOR_TYPE MediumSeaGreen(0x66,0xCD,0xAA,0xFF);
 		COLOR_TYPE PeachPuff(0xFF,0xDA,0xB9,0xFF);
 		COLOR_TYPE Lime(0x00,0xFF,0x00,0xFF);
+
+
+		static cv::Scalar RandomColor()
+		{
+			return cv::Scalar(std::rand() % 255,std::rand() % 255,std::rand() % 255,255);
+		}
 	}
 	#undef COLOR_TYPE
 

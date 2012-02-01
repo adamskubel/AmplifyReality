@@ -22,6 +22,8 @@ public:
 	AndroidInputHandler * inputHandler;
 	SensorCollector * sensorCollector;
 
+	vector<std::string*> * messageQueue;
+
 
 
 	////Putting some configuration stuff in here for now

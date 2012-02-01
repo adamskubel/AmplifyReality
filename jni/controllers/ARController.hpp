@@ -6,6 +6,7 @@
 #include "display/model/AugmentedView.hpp"
 #include "display/model/ARObject.hpp"
 #include "display/opengl/OpenGLRenderable.hpp"
+#include "display/objloader/objLoader.h"
 
 #include "model/Drawable.hpp"
 
@@ -31,6 +32,28 @@
 
 using namespace cv;
 using namespace std;
+
+
+#include "userinterface/uimodel/DataDisplay.hpp"
+#include "userinterface/uimodel/PageDisplay.hpp"
+
+class ARControllerDebugUI : public PageDisplay
+{
+public:
+	ARControllerDebugUI(Engine * engine, Point2i position);
+	void SetTranslation(Mat * data);
+	void SetRotation(Mat * data);
+	void SetPositionCertainty(float certainty);
+
+private:
+	DataDisplay * translationLabel;
+	DataDisplay * rotationLabel;
+	CertaintyIndicator * certaintyIndicator;
+	GridLayout * myGrid;
+
+
+};
+
 
 class ARController : public Controller //,public OpenGLRenderable
 {
@@ -67,9 +90,7 @@ private:
 
 	ARConfigurator * config;
 	//UI objects
-	Label * translationVectorLabel, * gyroDataLabel;
-	CertaintyIndicator * positionCertainty;
-	GridLayout * grid;
+	ARControllerDebugUI * debugUI;
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);
@@ -89,23 +110,7 @@ private:
 
 };
 
-#include "userinterface/uimodel/DataDisplay.hpp"
-#include "userinterface/uimodel/PageDisplay.hpp"
 
-class ARControllerDebugUI : public PageDisplay
-{
-public:
-	ARControllerDebugUI(Engine * engine, Point2i position);
-	void SetTranslation(Mat * data);
-	void SetRotation(Mat * data);
-
-private:
-	DataDisplay * translationLabel;
-	DataDisplay * rotationLabel;
-	GridLayout * myGrid;
-
-
-};
 
 
 #endif

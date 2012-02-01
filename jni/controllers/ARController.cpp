@@ -3,7 +3,7 @@
 
 ARController::ARController()
 {
-	LOGD(LOGTAG_ARCONTROLLER,"ARController created. Using predefined camera matrix.");
+	LOGI(LOGTAG_ARCONTROLLER,"ARController created. Using predefined camera matrix.");
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	double data2[] = DEFAULT_DISTORTION_MATRIX;
 
@@ -28,16 +28,16 @@ ARController::ARController()
 
 	isInitialized = false;
 	isExpired = false;
-	LOGD(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
+	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
 }
 
 ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 {
-	LOGD(LOGTAG_ARCONTROLLER,"ARController created. Using calculated camera and distortion matrices.");
+	LOGI(LOGTAG_ARCONTROLLER,"ARController created. Using calculated camera and distortion matrices.");
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 	
 	isInitialized = false;
-	LOGD(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
+	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
 }
 
 
@@ -74,13 +74,15 @@ void ARController::Initialize(Engine * engine)
 	//engine->sensorCollector->EnableSensors(false,true,false);
 	
 	//Initialize UI
-
 	UIElementCollection * collection = new UIElementCollection();
 
-	ARControllerDebugUI * debugUI = new ARControllerDebugUI(engine,Point2i(10,10));
+	LOGI(LOGTAG_ARCONTROLLER,"Creating debug UI");
+	debugUI = new ARControllerDebugUI(engine,Point2i(10,10));
 	collection->AddChild(debugUI);
 	drawObjects.push_back(debugUI);
+	deletableObjects.push_back(debugUI);
 
+	LOGI(LOGTAG_ARCONTROLLER,"Creating ARConfig");
 	config = new ARConfigurator(engine);
 	collection->AddChild(config);
 	drawObjects.push_back(config);
@@ -89,24 +91,10 @@ void ARController::Initialize(Engine * engine)
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
 	
-	grid = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(4,4));	
+	GridLayout * grid = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(4,4));	
 	drawObjects.push_back(grid);
 	collection->AddChild(grid);
-
-	translationVectorLabel = new Label("T",Point2i(0,0),Scalar::all(255),Scalar::all(0));
-	translationVectorLabel->FontScale = 0.9f;
-	grid->AddChild(translationVectorLabel,Point2i(0,2));
-
-	gyroDataLabel = new Label("R",Point2i(0,0),Scalar::all(255),Scalar::all(0));
-	gyroDataLabel->FontScale = 0.9f;
-	grid->AddChild(gyroDataLabel,Point2i(0,3));	
-
-	positionCertainty = new CertaintyIndicator(0);
-	grid->AddChild(positionCertainty,Point2i(3,3));
-	positionCertainty->SetMaxRadius(20); //Override radius set by grid <<<<---- Bad practice! ...but saves time
-
-
-	
+			
 	Button * toggleConfigButton = new Button("Config", Colors::MidnightBlue);
 	toggleConfigButton->AddClickDelegate(ClickEventDelegate::from_method<ARConfigurator,&ARConfigurator::ToggleVisibility>(config));
 	grid->AddChild(toggleConfigButton,Point2i(3,0));
@@ -124,10 +112,8 @@ void ARController::Initialize(Engine * engine)
 	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(grid);
-	deletableObjects.push_back(gyroDataLabel);
 	deletableObjects.push_back(quadBackground);
 	deletableObjects.push_back(config);
-	deletableObjects.push_back(debugUI);
 	//Finished initialization
 	isInitialized = true;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");
@@ -150,10 +136,22 @@ void ARController::initializeARView()
 	augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
 
 	//Add some cubes
+	objLoader loader;
+
+	LOGI(LOGTAG_ARCONTROLLER, "Loading model from file");
+	std::string fileName = std::string("/sdcard/objtest/cube.obj");
+	loader.load(fileName.c_str());
+	LOGI(LOGTAG_ARCONTROLLER, "Creating GL object from file");
+	ARObject * fromFile = new ARObject(WavefrontGLObject::FromObjFile(loader));
+	LOGI(LOGTAG_ARCONTROLLER, "Load complete");
+	fromFile->scale = Point3f(30,30,30);
+	augmentedView->AddObject(fromFile);	
+
+
 	ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(30),Point3f(0,0,0));
-	augmentedView->AddObject(myCube);	
+	//augmentedView->AddObject(myCube);	
 	myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(0,0,-40));
-	augmentedView->AddObject(myCube);	
+	//augmentedView->AddObject(myCube);	
 	
 	LOGD(LOGTAG_ARCONTROLLER,"AR View Initialization Complete");
 }
@@ -162,9 +160,7 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 {
 	cv::Mat rotationVector = engine->sensorCollector->GetRotation();
 	rotationVector *= (180.0/PI);
-	char string[100];
-	sprintf(string,"[%.2lf,%.2lf,%.2lf]",rotationVector.at<double>(0,0),rotationVector.at<double>(0,1),rotationVector.at<double>(0,2));
-	gyroDataLabel->SetText(string);
+	debugUI->SetRotation(&rotationVector);
 }
 
 void ARController::ProcessFrame(Engine * engine)
@@ -201,18 +197,8 @@ void ARController::ProcessFrame(Engine * engine)
 	if (item->qrCode != NULL && item->qrCode->validCodeFound)
 	{
 		qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
-		if (translationVectorLabel != NULL)
-		{
-			char string[300];
-			sprintf(string,"[%.2lf, %.2lf, %.2lf]",item->translationMatrix->at<double>(0,0),item->translationMatrix->at<double>(0,1),item->translationMatrix->at<double>(0,2));
-			translationVectorLabel->SetText(string);
-		}	
-		if (gyroDataLabel != NULL)
-		{		
-			char string[300];
-			sprintf(string,"[%.2lf,%.2lf,%.2lf]",item->rotationMatrix->at<double>(0,0),item->rotationMatrix->at<double>(0,1),item->rotationMatrix->at<double>(0,2));
-			gyroDataLabel->SetText(string);		
-		}
+		debugUI->SetTranslation(item->translationMatrix);
+		debugUI->SetRotation(item->rotationMatrix);
 	}	
 
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing QRCode");
@@ -230,7 +216,7 @@ void ARController::ProcessFrame(Engine * engine)
 	//Evaluate the position
 	
 	float resultCertainty = positionSelector->UpdatePosition(item);
-	positionCertainty->SetCertainty(resultCertainty);
+	debugUI->SetPositionCertainty(resultCertainty);
 	if (resultCertainty > 0 && augmentedView != NULL)
 	{
 		//Update the 3D AR layer, but only if position certainty is non-zero

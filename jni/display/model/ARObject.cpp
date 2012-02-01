@@ -36,3 +36,16 @@ ARObject::~ARObject()
 {
 	delete glObject;
 }
+
+//ARObject ARObject::FromObjFile(objLoader & loader)
+//{
+//	GLObject * object = new ColorGLObject(loader.vertexCount);
+//	
+//	for (int i=0;i<loader.vertexCount;i++)
+//	{
+//		double * vertex = (loader.vertexList[0])[i].e;
+//		object->AddVertex(cv::Point3f(vertex[0],vertex[1],vertex[2]),i);
+//	}
+//
+//
+//}

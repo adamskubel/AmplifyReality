@@ -8,13 +8,11 @@
 class DataDisplay : public GridLayout
 {
 public:	
-	DataDisplay(const char * _format, Point2i position, Size2i size, cv::Scalar textColor, cv::Scalar backgroundColor = Colors::Transparent);		
+	DataDisplay(const char * _format, cv::Scalar textColor, cv::Scalar backgroundColor = Colors::Transparent);		
 	void SetData(Mat * data);
 
 private: 
-	Point2i position;
 	cv::Scalar textColor, backgroundColor;
-	Size2i controlSize;
 	std::string * formatString;
 	Size2i lastSize;
 };

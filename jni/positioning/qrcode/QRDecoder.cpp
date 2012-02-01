@@ -102,7 +102,7 @@ void QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 	}
 	catch (exception & exp)
 	{
-		LOGE("Error decoding QRCode: %s", exp.what());
+		LOGD("Error decoding QRCode: %s", exp.what());
 	}
 
 //	delete matrix;

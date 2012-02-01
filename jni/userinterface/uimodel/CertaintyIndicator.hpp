@@ -3,6 +3,7 @@
 #include "userinterface/events/EventArgs.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include <opencv2/core/core.hpp>
+#include "UIConstants.hpp"
 
 
 #ifndef CERTAINTY_INDICATOR_HPP_
@@ -18,7 +19,7 @@ public:
 	void SetCertainty(float certainty);
 	void SetMaxRadius(float maxRadius);
 	cv::Point2i CenterPoint;
-	void DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan);
+	void DoLayout(Rect boundaryRectangle);
 
 private:
 	float percentRadius,maxRadius;

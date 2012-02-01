@@ -35,8 +35,15 @@ ARConfigurator::ARConfigurator(Engine * engine)
 	minAlignmentSpinner->SetMaximum(300.0f);
 	
 
-	
+	LOGD(LOGTAG_INPUT,"Adding grid to page display");
 	AddChild(myGrid);
+
+	GridLayout * nextPageGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
+	
+	NumberSpinner * testSpinner = new NumberSpinner("Cats",0.1f,0.05f,"%2.2f");
+	nextPageGrid->AddChild(testSpinner,Point2i(0,0));
+
+	AddChild(nextPageGrid);
 
 	SetVisible(false);
 }

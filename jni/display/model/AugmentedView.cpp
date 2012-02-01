@@ -88,6 +88,8 @@ void AugmentedView::Render(OpenGL * openGL)
 		OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));*/
 
 
+		OpenGLHelper::scale(modelMatrix,object->scale);
+
 		Mat mt = Mat(modelMatrix.t());
 		glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
 

@@ -15,6 +15,13 @@ public:
 	GraphicalUIElement()
 	{
 		isVisible = true;
+		layoutDefined = false;
+	}
+
+	GraphicalUIElement(bool layout)
+	{
+		layoutDefined = layout;
+		isVisible = true;
 	}
 
 	virtual void DoLayout(Rect boundaryRectangle)
@@ -37,6 +44,7 @@ public:
 
 protected:
 	bool isVisible;
+	bool layoutDefined;
 
 };
 

@@ -3,6 +3,8 @@
 	package="com.amplifyreality" android:versionCode="1"
 	android:versionName="1.0">
 	<uses-sdk android:minSdkVersion="10" />
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.CAMERA" />
 
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".AmplifyRealityActivity"
@@ -19,7 +21,6 @@
 
 	</application>
 
-	<uses-permission android:name="android.permission.CAMERA" />
 	<uses-feature android:name="android.hardware.camera" />
 	<uses-feature android:name="android.hardware.camera.autofocus" />
 
