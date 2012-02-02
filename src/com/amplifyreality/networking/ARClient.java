@@ -3,20 +3,26 @@ package com.amplifyreality.networking;
 import java.io.*;
 import java.net.Socket;
 
-import com.amplifyreality.AmplifyRealityActivity;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 
+import com.amplifyreality.AmplifyRealityActivity;
+import com.amplifyreality.networking.model.ARObject;
+import com.amplifyreality.networking.model.Realm;
+import com.amplifyreality.networking.model.DataHeader;
+
+import android.os.Handler;
 import android.util.Log;
 
 public class ARClient
 {
-	
-	
-	
+
 	static String LOGTAG_NETWORKING = "AmplifyR-Networking_Java";
 
 	String host = "192.168.1.9";
 	int port = 12312;
 	volatile boolean listening = false;
+	volatile boolean needsData = true;
 
 	Socket mySocket;
 	BufferedReader reader;
@@ -48,10 +54,13 @@ public class ARClient
 
 					while (listening)
 					{
-						writer.write("DefaultWorld\n");
-						writer.flush();
-						Log.d(LOGTAG_NETWORKING, "Sent message to server. Sleeping 2sec");
-						Thread.sleep(2000);
+					//	if (needsData)
+						{
+							writer.write("JoinWorld\n");
+							writer.flush();
+							Log.d(LOGTAG_NETWORKING, "Sent message to server. Sleeping 2sec");
+						}
+						Thread.sleep(5000);
 					}
 
 				} catch (IOException e)
@@ -76,44 +85,29 @@ public class ARClient
 			@Override
 			public void run()
 			{
-				int expectBytes = 0;
+				DataHeader dataHeader = null;
 				try
 				{
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mySocket.getInputStream()));
 					while (listening)
 					{
 						Log.i(LOGTAG_NETWORKING, "Waiting for line");
-						if (expectBytes <= 0)
+						if (dataHeader == null)
 						{
 							String inputLine = reader.readLine();
 							if (inputLine == null)
 							{
 								Shutdown();
 								break;
-							} else if (inputLine.startsWith("BYTES_NEXT:"))
-							{
-								try
-								{
-									int parseResult = Integer.valueOf(inputLine.split(":")[1]);
-									if (parseResult > 0)
-										expectBytes = parseResult;
-								} catch (NumberFormatException nfe)
-								{
-									expectBytes = 0;
-								}
 							}
+							dataHeader = GetHeader(inputLine);
+
 							AmplifyRealityActivity.OnMessage(inputLine);
-							Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
-						}
-						else
+							// Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
+						} else
 						{
-							char buffer[] = new char[expectBytes];
-							int result = reader.read(buffer, 0, expectBytes);
-							Log.i(LOGTAG_NETWORKING,"Received " + result + " bytes from server.");
-							String data = new String(buffer);
-						//Log.i(LOGTAG_NETWORKING,"Data is" + data);
-							AmplifyRealityActivity.OnMessage(data);
-							expectBytes = 0;
+							ProcessData(dataHeader, reader);
+							dataHeader = null;
 						}
 					}
 				} catch (IOException e)
@@ -128,6 +122,79 @@ public class ARClient
 		t.start();
 	}
 
+	private DataHeader GetHeader(String inputLine)
+	{
+		if (inputLine.startsWith("BYTES_NEXT:"))
+		{
+			try
+			{
+				int parseResult = Integer.valueOf(inputLine.split(":")[1]);
+				if (parseResult > 0)
+				{
+					return new DataHeader(null, parseResult);
+				}
+			} catch (NumberFormatException nfe)
+			{
+				return null;
+			}
+		} else if (inputLine.startsWith("XML_BYTES_NEXT:"))
+		{
+			try
+			{
+				if (inputLine.split(":").length >= 2)
+				{
+					int parseResult = Integer.valueOf(inputLine.split(":")[1]);
+					String xmlName = inputLine.split(":")[2];
+					if (parseResult > 0 && xmlName.length() > 0)
+					{
+						return new DataHeader(xmlName, parseResult);
+					}
+				}
+			} catch (NumberFormatException nfe)
+			{
+				return null;
+			}
+		}
+		return null;
+	}
+
+	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
+	{
+		char buffer[] = new char[dataHeader.NumBytes];
+		int result = bufferedReader.read(buffer, 0, dataHeader.NumBytes);
+		Log.i(LOGTAG_NETWORKING, "Received " + result + " bytes from server.");
+		String data = new String(buffer);
+
+		// No XML definition, so process as a string
+		if (dataHeader.XmlDataType == null)
+		{
+			AmplifyRealityActivity.OnMessage(data);
+		} else
+		// Deserialize
+		{
+			try
+			{
+				String className = dataHeader.XmlDataType;
+
+				Serializer serializer = new Persister();
+				if (className.equals(ARObject.class.getCanonicalName()))
+				{
+					ARObject arObject = serializer.read(ARObject.class, data);
+					Log.i(LOGTAG_NETWORKING, "Received ARObject: " + arObject.toString());
+				} else if (className.equals(Realm.class.getCanonicalName()))
+				{
+					Realm realm = serializer.read(Realm.class, data);
+					Log.i(LOGTAG_NETWORKING, "Received new Realm: " + realm.toString());
+					needsData = false;
+				}
+			} catch (Exception e)
+			{
+				Log.e(LOGTAG_NETWORKING, "Error parsing message from server", e);
+			}
+		}
+
+	}
+
 	private void Connect()
 	{
 		try
@@ -135,7 +202,7 @@ public class ARClient
 			Log.i(LOGTAG_NETWORKING, "Connecting to server");
 			mySocket = new Socket(host, port);
 			Log.i(LOGTAG_NETWORKING, "Socket created");
-			
+
 			RequestData();
 			StartListening();
 

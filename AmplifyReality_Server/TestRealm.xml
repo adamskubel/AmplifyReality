@@ -1,0 +1,20 @@
+<realm Name="TestRealm_Name">
+   <objectMap class="java.util.HashMap">
+      <entry>
+         <string>Obj1</string>
+         <ARObject Name="TestObj1">
+            <Position X="1.0" Y="1.0" Z="1.0"/>
+            <Rotation X="1.0" Y="2.0" Z="3.0"/>
+            <Scale X="-2.0" Y="-2.0" Z="-2.0"/>
+         </ARObject>
+      </entry>
+      <entry>
+         <string>Obj2</string>
+         <ARObject Name="TestObj2">
+            <Position X="31.0" Y="31.0" Z="11.0"/>
+            <Rotation X="-1.1" Y="2.1" Z="3.1"/>
+            <Scale X="-21.0" Y="-21.0" Z="-21.0"/>
+         </ARObject>
+      </entry>
+   </objectMap>
+</realm>

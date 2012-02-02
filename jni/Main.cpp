@@ -2,9 +2,12 @@
 #include "AmplifyRunner.hpp"
 #include "android/sensor.h"
 #include <jni.h>
+#include <pthread.h>
+#include <errno.h>
 
 
-static volatile bool jniLock;
+pthread_mutex_t myMutex;
+
 static vector<std::string*> jniDataVector;
 
 
@@ -13,10 +16,14 @@ extern "C"
 	JNIEXPORT void JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_OnMessage(JNIEnv * env, jobject  obj, jstring javaString)
 	{
-		jniLock = true;
+		pthread_mutex_lock(&myMutex);
+		LOGD(LOGTAG_NETWORKING,"JNI thread locked mutex");
+
 		std::string * cString = new std::string(env->GetStringUTFChars(javaString,JNI_FALSE));
 		jniDataVector.push_back(cString);
-		jniLock = false;		
+
+		pthread_mutex_unlock(&myMutex);
+		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
 	}
 }
 
@@ -137,7 +144,7 @@ void shutdownEngine(Engine* engine)
 	delete engine->imageCollector; 
 	delete engine->inputHandler;
 	delete engine->sensorCollector;
-
+	delete engine->messageQueue;
 
 	LOGI(LOGTAG_MAIN,"Shutdown complete.");
 }
@@ -146,10 +153,14 @@ void shutdownEngine(Engine* engine)
 void android_main(struct android_app* state)
 {	
 	LOG_INTRO();
-	jniLock = true;
+	pthread_mutex_init(&myMutex,NULL);
+
+
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
+
+	mainEngine.messageQueue = new vector<string*>();
 	
 	AmplifyRunner myRunner = AmplifyRunner(&mainEngine);
 
@@ -198,17 +209,26 @@ void android_main(struct android_app* state)
 
 
 		//Check for messages in JNI queue
-		if (!jniLock && !jniDataVector.empty())
+
+		if ( pthread_mutex_trylock(&myMutex) == 0)
 		{
-			std::string * safeString = new std::string(jniDataVector.back()->c_str());
+			if (!jniDataVector.empty())
+			{
+				std::string * safeString = new std::string(jniDataVector.back()->c_str());
 
-			LOGD(LOGTAG_NETWORKING,"Network message: %s",safeString->c_str());
-			delete jniDataVector.back();
-			jniDataVector.pop_back();
+				LOGD(LOGTAG_NETWORKING,"Network message: %s",safeString->c_str());
+				
+				delete jniDataVector.back();
+				jniDataVector.pop_back();
 
-			mainEngine.messageQueue->push_back(safeString);
+				mainEngine.messageQueue->push_back(safeString);
+			}
+			pthread_mutex_unlock(&myMutex);
 		}
-
+		else
+		{
+			LOGI(LOGTAG_NETWORKING,"Unable to lock mutex");
+		}
 
 		if (mainEngine.animating)
 		{
