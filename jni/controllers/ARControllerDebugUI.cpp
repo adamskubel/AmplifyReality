@@ -8,9 +8,11 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
 	translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
 
+	stateLabel = new Label("[State]",Point2i(0,0),Colors::White,Colors::Blue);
 
 	myGrid->AddChild(rotationLabel,Point2i(0,1));
 	myGrid->AddChild(translationLabel,Point2i(0,2));
+	myGrid->AddChild(stateLabel,Point2i(0,0));
 
 	Mat oneMatrix = Mat::ones(1,3,CV_64F);	
 	Mat oneMatrix2 = Mat::zeros(1,3,CV_64F);
@@ -20,7 +22,6 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 
 	certaintyIndicator = new CertaintyIndicator(0);
 	myGrid->AddChild(certaintyIndicator,Point2i(3,2));
-	certaintyIndicator->SetMaxRadius(20); //Override radius set by grid. Should have a true "max radius" field to avoid this.
 
 	AddChild(myGrid);
 
@@ -36,6 +37,11 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	
 
 
+}
+
+void ARControllerDebugUI::SetStateDisplay(string stateDescription)
+{
+	stateLabel->SetText(stateDescription);
 }
 
 void ARControllerDebugUI::SetRotation(Mat * mat)

@@ -34,6 +34,9 @@ ARConfigurator::ARConfigurator(Engine * engine)
 	minAlignmentSpinner->SetMinimum(100.0f);
 	minAlignmentSpinner->SetMaximum(300.0f);
 	
+	
+	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARConfigurator,&ARConfigurator::GlobalTouchEvent>(this));	
+
 
 	LOGD(LOGTAG_INPUT,"Adding grid to page display");
 	AddChild(myGrid);
@@ -82,6 +85,24 @@ void ARConfigurator::ToggleVisibility(void * sender, EventArgs args)
 {
 	isVisible = !isVisible;
 }
+
+void ARConfigurator::GlobalTouchEvent(void* sender, TouchEventArgs args)
+{
+	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
+	switch (currentDrawMode)
+	{
+	case(DrawModes::BinaryImage):
+		currentDrawMode = DrawModes::ColorImage;
+		break;
+	case(DrawModes::GrayImage):
+		currentDrawMode = DrawModes::BinaryImage;
+		break;
+	case(DrawModes::ColorImage):
+		currentDrawMode = DrawModes::GrayImage;
+		break;
+	}
+}
+
 
 
 

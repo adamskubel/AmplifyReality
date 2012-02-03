@@ -21,9 +21,7 @@ ARController::ARController()
 	}
 
 	LOGI(LOGTAG_ARCONTROLLER,"Created %d frame items",numItems);
-
-	drawMode = Configuration::DefaultDrawMode;
-
+	
 	augmentedView = NULL;
 
 	isInitialized = false;
@@ -61,18 +59,8 @@ ARController::~ARController()
 	LOGI(LOGTAG_ARCONTROLLER,"ARController deleted successfully");
 }
 
-
-
-void ARController::Initialize(Engine * engine)
+void ARController::initializeUI(Engine * engine)
 {
-	if (isInitialized)
-		return;
-		
-	LOGD(LOGTAG_ARCONTROLLER,"Initializing ARController");
-		
-	//Sensors - enable gyroscope
-	//engine->sensorCollector->EnableSensors(false,true,false);
-	
 	//Initialize UI
 	UIElementCollection * collection = new UIElementCollection();
 
@@ -99,22 +87,34 @@ void ARController::Initialize(Engine * engine)
 	toggleConfigButton->AddClickDelegate(ClickEventDelegate::from_method<ARConfigurator,&ARConfigurator::ToggleVisibility>(config));
 	grid->AddChild(toggleConfigButton,Point2i(3,0));
 
-	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));	
-	//End UI
-	
-	positionSelector = new PositionSelector(config);
-	
-	initializeARView();
-
-	//Initialize textured quad to render camera image
-	quadBackground = new QuadBackground(engine->ImageSize());
-
 	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(grid);
-	deletableObjects.push_back(quadBackground);
 	deletableObjects.push_back(config);
-	//Finished initialization
+	deletableObjects.push_back(debugUI);
+}
+
+void ARController::Initialize(Engine * engine)
+{
+	if (isInitialized)
+		return;		
+	LOGD(LOGTAG_ARCONTROLLER,"Initializing ARController");	
+
+	initializeUI(engine);
+
+	//Sensors - enable gyroscope
+	engine->sensorCollector->EnableSensors(false,false,false);
+	
+	//WorldLoader Instance
+	worldLoader = new WorldLoader();
+
+	//Position Selector instance
+	positionSelector = new PositionSelector(config);	
+
+	//Initialize textured quad to render camera image
+	quadBackground = new QuadBackground(engine->ImageSize());
+	deletableObjects.push_back(quadBackground);
+
 	isInitialized = true;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");
 }
@@ -163,79 +163,116 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 	debugUI->SetRotation(&rotationVector);
 }
 
-void ARController::ProcessFrame(Engine * engine)
-{
-	if (!isInitialized)
-		return;
-
+FrameItem * ARController::GetFrameItem(Engine * engine)
+{	
 	//Prepare the frame item
 	int lastFrameItem = currentFrameItem;
 	currentFrameItem = (currentFrameItem + 1) % numItems;
-	LOGV(LOGTAG_MAIN,"Using item %d",currentFrameItem);
-	FrameItem * item = items[currentFrameItem];
-
-
-	LOGV(LOGTAG_MAIN,"Clearing old data from item");
-	item->clearOldData();
-	item->drawMode = drawMode;
+	items[currentFrameItem]->clearOldData();
 	
 	//Set frame timestamp
 	struct timespec time;
 	engine->getTime(&time);
-	item->nanotime = time.tv_nsec;
+	items[currentFrameItem]->nanotime = time.tv_nsec;
 		
+	return items[currentFrameItem];
+}
+
+void ARController::ProcessFrame(Engine * engine)
+{
+	if (!isInitialized)
+		return;
+	//This section is the default per-frame operations
+	FrameItem * item = GetFrameItem(engine);	
+	
 	LOGV(LOGTAG_ARCONTROLLER,"Processing frame");
 	getImages(engine,item);
-	
-	//lol static. THIS IS BAD!
-	AlignmentPatternHelper::MinimumAlignmentPatternScore = config->MinAlignmentScore;
+		
+	AlignmentPatternHelper::MinimumAlignmentPatternScore = config->MinAlignmentScore;//lol static. THIS IS BAD!
 	FinderPatternHelper::MinimumFinderPatternScore = config->MinFinderPatternScore;
 
 	vector<Drawable*> debugVector;
 	item->qrCode = QRFinder::LocateQRCodes(*binaryImage, debugVector);
-	
-	if (item->qrCode != NULL && item->qrCode->validCodeFound)
-	{
-		qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
-		debugUI->SetTranslation(item->translationMatrix);
-		debugUI->SetRotation(item->rotationMatrix);
-	}	
-
-	LOGV(LOGTAG_ARCONTROLLER,"Drawing QRCode");
 	item->qrCode->Draw(rgbImage);
-	for (int i=0;i<debugVector.size();i++)
+	while (!debugVector.empty())
 	{
-		debugVector.at(i)->Draw(rgbImage);
+		debugVector.back()->Draw(rgbImage);
+		delete debugVector.back();
+		debugVector.pop_back();
 	}
-	debugVector.clear();
 
+	//What happens past here depends on the state
+	WorldStates::WorldState state = worldLoader->GetState();
+
+	if (state == WorldStates::LookingForCode)
+	{
+		debugUI->SetStateDisplay("Searching");
+		if (item->qrCode != NULL && item->qrCode->validCodeFound)
+		{
+			LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm.");
+			//Move decoding to here
+			worldLoader->LoadRealm(item->qrCode->TextValue);
+		}
+
+		worldLoader->Update(engine);
+	}
+	else if (state == WorldStates::WaitingForRealm || state == WorldStates::WaitingForResources)
+	{		
+		if (state == WorldStates::WaitingForRealm)
+			debugUI->SetStateDisplay("WaitRealm");
+		else
+			debugUI->SetStateDisplay("WaitRsrc");
+
+		//Wait until the world is ready
+		worldLoader->Update(engine);
+	}
+	//The world is ready and loaded, so do normal AR processing
+	else if (state == WorldStates::WorldReady)
+	{
+		debugUI->SetStateDisplay("Rdy");
+
+		if (item->qrCode != NULL && item->qrCode->validCodeFound)
+		{
+			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
+			debugUI->SetTranslation(item->translationMatrix);
+			debugUI->SetRotation(item->rotationMatrix);
+		}	
 		
-	//Read data from gyroscope
-	//readGyroData(engine,item);
-
-	//Evaluate the position
-	
-	float resultCertainty = positionSelector->UpdatePosition(item);
-	debugUI->SetPositionCertainty(resultCertainty);
-	if (resultCertainty > 0 && augmentedView != NULL)
+		//Evaluate the position	
+		float resultCertainty = positionSelector->UpdatePosition(item);
+		debugUI->SetPositionCertainty(resultCertainty);
+		if (resultCertainty > 0 && augmentedView != NULL)
+		{
+			//Update the 3D AR layer, but only if position certainty is non-zero
+			augmentedView->Update(item);
+		}
+	}	
+	else
 	{
-		//Update the 3D AR layer, but only if position certainty is non-zero
-		augmentedView->Update(item);
+		char stateString[100];
+		sprintf(stateString,"State=%d",(int)state);
+		debugUI->SetStateDisplay(stateString);
 	}
+
+	//Do final processing
+	Draw(rgbImage);
+}
+
+void ARController::Draw(Mat * rgbaImage)
+{
 	//Draw objects onto camera texture
 	for (int i=0;i<drawObjects.size();i++)
 	{
 		if (drawObjects.at(i)->IsVisible())
 		{
 			LOGV(LOGTAG_ARCONTROLLER,"Drawing object %d",i);
-			drawObjects.at(i)->Draw(rgbImage);
+			drawObjects.at(i)->Draw(rgbaImage);
 		}
 	}
 
 	//Update textured quad 
-	quadBackground->SetImage(rgbImage);
+	quadBackground->SetImage(rgbaImage);
 }
-
 
 void ARController::Render(OpenGL * openGL)
 {
@@ -260,12 +297,12 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	struct timespec start, end;
 	
 	//Retrieve image from the camera	
-	if (item->drawMode == Configuration::ColorImage)
+	if (config->currentDrawMode == DrawModes::ColorImage)
 	{		
 		engine->imageCollector->newFrame();
 		engine->imageCollector->getCameraImages(*rgbImage, *grayImage);
 	} 
-	else if (item->drawMode == Configuration::GrayImage || item->drawMode == Configuration::BinaryImage)
+	else if (config->currentDrawMode == DrawModes::GrayImage || config->currentDrawMode == DrawModes::BinaryImage)
 	{
 		SET_TIME(&start);
 		engine->imageCollector->newFrame();
@@ -285,7 +322,7 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	else
 		ImageProcessor::SimpleThreshold(grayImage, binaryImage);
 	
-	if (item->drawMode == Configuration::BinaryImage)
+	if (config->currentDrawMode == DrawModes::BinaryImage)
 	{
 		SET_TIME(&start)
 		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
@@ -296,19 +333,3 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 }
 
 
-void ARController::HandleTouchInput(void* sender, TouchEventArgs args)
-{
-	LOGI(LOGTAG_MAIN,"Received touch event: %d", args.InputType);
-	switch (drawMode)
-	{
-	case(Configuration::BinaryImage):
-		drawMode = Configuration::ColorImage;
-		break;
-	case(Configuration::GrayImage):
-		drawMode = Configuration::BinaryImage;
-		break;
-	case(Configuration::ColorImage):
-		drawMode = Configuration::GrayImage;
-		break;
-	}
-}

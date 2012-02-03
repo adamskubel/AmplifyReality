@@ -78,6 +78,9 @@
     <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp" />
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
+    <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
+    <ClCompile Include="..\jni\model\ResourceManager.cpp" />
+    <ClCompile Include="..\jni\model\WorldLoader.cpp" />
     <ClCompile Include="..\jni\positioning\ARConfigurator.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
@@ -178,8 +181,15 @@
     <ClInclude Include="..\jni\model\Drawable.hpp" />
     <ClInclude Include="..\jni\model\Engine.hpp" />
     <ClInclude Include="..\jni\model\FrameItem.hpp" />
+    <ClInclude Include="..\jni\model\network\ARCommunicator.hpp" />
+    <ClInclude Include="..\jni\model\network\ARObjectDefinition.hpp" />
+    <ClInclude Include="..\jni\model\network\NetworkMessages.hpp" />
+    <ClInclude Include="..\jni\model\network\RealmDefinition.hpp" />
+    <ClInclude Include="..\jni\model\network\WavefrontModel.hpp" />
+    <ClInclude Include="..\jni\model\ResourceManager.hpp" />
     <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />
+    <ClInclude Include="..\jni\model\WorldLoader.hpp" />
     <ClInclude Include="..\jni\positioning\ARConfigurator.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />

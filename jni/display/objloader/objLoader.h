@@ -2,6 +2,7 @@
 #define OBJ_LOADER_H
 
 #include "obj_parser.h"
+#include "LogDefinitions.h"
 
 class objLoader
 {
@@ -13,6 +14,9 @@ public:
 	}
 
 	int load(const char * filename);
+	int loadFromString(std::string objString);
+
+	void populate(obj_scene_data & data);
 
 	obj_vector **vertexList;
 	obj_vector **normalList;

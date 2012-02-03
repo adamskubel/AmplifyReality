@@ -290,45 +290,10 @@ int obj_parse_mtl_file(char *filename, list *material_list)
 
 }
 
-int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filename)
+bool parseLine(const char* current_token, int & current_material, obj_growable_scene_data *growable_data)
 {
-	FILE* obj_file_stream;
-	int current_material = -1; 
-	char *current_token = NULL;
-	char current_line[OBJ_LINE_SIZE];
-	int line_number = 0;
-	// open scene
-	obj_file_stream = fopen( filename, "r");
-	if(obj_file_stream == 0)
-	{
-		LOGE("Error reading file: %s\n", filename);
-		return 0;
-	}
-
-/*		
-	extreme_dimensions[0].x = INFINITY; extreme_dimensions[0].y = INFINITY; extreme_dimensions[0].z = INFINITY;
-	extreme_dimensions[1].x = -INFINITY; extreme_dimensions[1].y = -INFINITY; extreme_dimensions[1].z = -INFINITY;
-
-			if(v->x < extreme_dimensions[0].x) extreme_dimensions[0].x = v->x;
-			if(v->x > extreme_dimensions[1].x) extreme_dimensions[1].x = v->x;
-			if(v->y < extreme_dimensions[0].y) extreme_dimensions[0].y = v->y;
-			if(v->y > extreme_dimensions[1].y) extreme_dimensions[1].y = v->y;
-			if(v->z < extreme_dimensions[0].z) extreme_dimensions[0].z = v->z;
-			if(v->z > extreme_dimensions[1].z) extreme_dimensions[1].z = v->z;*/
-
-
-	//parser loop
-	while( fgets(current_line, OBJ_LINE_SIZE, obj_file_stream) )
-	{
-		current_token = strtok( current_line, " \t\n\r");
-		line_number++;
-		
-		//skip comments
-		if( current_token == NULL || current_token[0] == '#')
-			continue;
-
 		//parse objects
-		else if( strequal(current_token, "v") ) //process vertex
+		if( strequal(current_token, "v") ) //process vertex
 		{
 			list_add_item(&growable_data->vertex_list,  obj_parse_vector(), NULL);
 		}
@@ -405,7 +370,7 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filen
 		{
 			strncpy(growable_data->material_filename, strtok(NULL, WHITESPACE), OBJ_FILENAME_LENGTH);
 			obj_parse_mtl_file(growable_data->material_filename, &growable_data->material_list);
-			continue;
+			return true;
 		}
 		
 		else if( strequal(current_token, "o") ) //object name
@@ -417,13 +382,73 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filen
 
 		else
 		{
-			LOGW(LOGTAG_IO,"Unknown command '%s' in scene code at line %i: \"%s\".\n",
-					current_token, line_number, current_line);
+			return false;
+		}
+		return true;
+}
+
+int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filename)
+{
+	FILE* obj_file_stream;
+	int current_material = -1; 
+	char *current_token = NULL;
+	char current_line[OBJ_LINE_SIZE];
+	int line_number = 0;
+	// open scene
+	obj_file_stream = fopen( filename, "r");
+	if(obj_file_stream == 0)
+	{
+		LOGE("Error reading file: %s\n", filename);
+		return 0;
+	}
+	
+	//parser loop
+	while( fgets(current_line, OBJ_LINE_SIZE, obj_file_stream) )
+	{
+		current_token = strtok( current_line, " \t\n\r");
+		line_number++;
+		
+		//skip comments
+		if( current_token != NULL && current_token[0] != '#')		
+		{
+			parseLine(current_token,current_material,growable_data);
 		}
 	}
 
 	fclose(obj_file_stream);
 	
+	return 1;
+}
+
+
+int obj_parse_obj_string(obj_growable_scene_data *growable_data, std::string objText)
+{
+	FILE* obj_file_stream;
+	int current_material = -1; 
+	
+	std::string::iterator lineStart;
+	std::string::iterator lineEnd;
+
+	lineStart = objText.begin();
+	
+	while(lineStart != objText.end()) 
+	{
+		lineEnd = std::find(lineStart, objText.end(), "\t\n\r");
+				
+		bool result = parseLine(std::string(lineStart, lineEnd).c_str(),current_material,growable_data);
+		
+		if (!result)
+		{
+			LOGW(LOGTAG_IO,"Unknown command '%s' in scene code from string",std::string(lineStart, lineEnd).c_str());
+		}
+
+		if(lineEnd == objText.end())
+			break;
+
+		lineStart = lineEnd + 1;
+	}
+		
+		
 	return 1;
 }
 
@@ -549,6 +574,19 @@ int parse_obj_scene(obj_scene_data *data_out, const char *filename)
 	//print_vector(NORMAL, "Max bounds are: ", &growable_data->extreme_dimensions[1]);
 	//print_vector(NORMAL, "Min bounds are: ", &growable_data->extreme_dimensions[0]);
 
+	obj_copy_to_out_storage(data_out, &growable_data);
+	obj_free_temp_storage(&growable_data);
+	return 1;
+}
+
+int parse_obj_scene(obj_scene_data *data_out, std::string objText)
+{
+	obj_growable_scene_data growable_data;
+
+	obj_init_temp_storage(&growable_data);
+	if( obj_parse_obj_string(&growable_data, objText) == 0)
+		return 0;
+	
 	obj_copy_to_out_storage(data_out, &growable_data);
 	obj_free_temp_storage(&growable_data);
 	return 1;

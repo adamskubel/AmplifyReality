@@ -10,6 +10,9 @@ public class ARObject
 
 	@Attribute
 	public String Name;
+	
+	@Attribute
+	public String ModelName;
 
 	public ARObject()
 	{

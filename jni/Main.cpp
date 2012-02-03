@@ -4,26 +4,65 @@
 #include <jni.h>
 #include <pthread.h>
 #include <errno.h>
-
+#include "model/network/RealmDefinition.hpp"
+#include "model/network/NetworkMessages.hpp"
+#include "model/network/WavefrontModel.hpp"
 
 pthread_mutex_t myMutex;
-
-static vector<std::string*> jniDataVector;
+static vector<IncomingMessage*> jniDataVector;
+static vector<OutgoingMessage*> outgoingJNIDataVector;
 
 
 extern "C"
 {
 	JNIEXPORT void JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_OnMessage(JNIEnv * env, jobject  obj, jstring javaString)
+		Java_com_amplifyreality_AmplifyRealityActivity_OnMessage(JNIEnv * env, jobject  obj, jstring javaString, jobject dataObject)
 	{
 		pthread_mutex_lock(&myMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread locked mutex");
 
-		std::string * cString = new std::string(env->GetStringUTFChars(javaString,JNI_FALSE));
-		jniDataVector.push_back(cString);
+		std::string * cString = new std::string(env->GetStringUTFChars(javaString,JNI_FALSE));		
 
+		if (cString->compare("RealmObject") == 0)
+		{
+			LOGD(LOGTAG_JNI,"Creating new realm object");
+			RealmDefinition * realm = RealmDefinition::FromJNIEnv(env,dataObject);
+			jniDataVector.push_back(realm);
+		}
+		else if(cString->compare("WavefrontObject") == 0)
+		{			
+			LOGD(LOGTAG_JNI,"Received wavefront object");
+			jniDataVector.push_back(WavefrontModel::FromJNI(env,dataObject));
+		}
+		else
+		{	
+			LOGD(LOGTAG_JNI,"String message added.");
+			jniDataVector.push_back(new StringMessage(cString));
+		}
+		
 		pthread_mutex_unlock(&myMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
+	}
+
+	JNIEXPORT jobjectArray JNICALL 
+		Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
+	{
+		jclass wrapperClass = env->FindClass("com/amplifyreality/networking/model/NativeMessage");
+		jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
+		
+		jobjectArray returnArray = env->NewObjectArray(outgoingJNIDataVector.size(),wrapperClass,NULL);
+
+		for (int i=0;i<outgoingJNIDataVector.size();i++)
+		{			
+			jstring description = outgoingJNIDataVector.at(i)->GetActionString(env);
+			jobject dataObject = *(outgoingJNIDataVector.at(i)->getJavaObject(env));
+
+			jobject returnObject = env->NewObject(wrapperClass,initMethod,description,dataObject);
+			env->SetObjectArrayElement(returnArray,i,returnObject);
+		}
+
+		outgoingJNIDataVector.clear();
+		return returnArray;
 	}
 }
 
@@ -144,7 +183,7 @@ void shutdownEngine(Engine* engine)
 	delete engine->imageCollector; 
 	delete engine->inputHandler;
 	delete engine->sensorCollector;
-	delete engine->messageQueue;
+	delete engine->communicator;
 
 	LOGI(LOGTAG_MAIN,"Shutdown complete.");
 }
@@ -160,7 +199,7 @@ void android_main(struct android_app* state)
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
 
-	mainEngine.messageQueue = new vector<string*>();
+	mainEngine.communicator = new ARCommunicator();
 	
 	AmplifyRunner myRunner = AmplifyRunner(&mainEngine);
 
@@ -214,14 +253,9 @@ void android_main(struct android_app* state)
 		{
 			if (!jniDataVector.empty())
 			{
-				std::string * safeString = new std::string(jniDataVector.back()->c_str());
-
-				LOGD(LOGTAG_NETWORKING,"Network message: %s",safeString->c_str());
-				
+				mainEngine.communicator->AddIncomingMessage(jniDataVector.back());
 				delete jniDataVector.back();
 				jniDataVector.pop_back();
-
-				mainEngine.messageQueue->push_back(safeString);
 			}
 			pthread_mutex_unlock(&myMutex);
 		}

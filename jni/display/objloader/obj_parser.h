@@ -2,6 +2,7 @@
 #define OBJ_PARSER_H
 
 #include "list.h"
+#include "LogDefinitions.h"
 
 #define OBJ_FILENAME_LENGTH 500
 #define MATERIAL_NAME_SIZE 255
@@ -138,6 +139,9 @@ struct obj_scene_data
 };
 
 int parse_obj_scene(obj_scene_data *data_out, const char *filename);
+int parse_obj_scene(obj_scene_data *data_out, std::string objText);
 void delete_obj_data(obj_scene_data *data_out);
+
+bool parseLine(const char * currentToken,  int & current_material, obj_growable_scene_data * growableData);
 
 #endif

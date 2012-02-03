@@ -2,6 +2,7 @@
 
 #include "model/FrameItem.hpp"
 #include "model/Engine.hpp"
+#include "model/WorldLoader.hpp"
 
 #include "display/model/AugmentedView.hpp"
 #include "display/model/ARObject.hpp"
@@ -44,18 +45,20 @@ public:
 	void SetTranslation(Mat * data);
 	void SetRotation(Mat * data);
 	void SetPositionCertainty(float certainty);
+	void SetStateDisplay(string stateDescription);
 
 private:
 	DataDisplay * translationLabel;
 	DataDisplay * rotationLabel;
 	CertaintyIndicator * certaintyIndicator;
 	GridLayout * myGrid;
+	Label * stateLabel;
 
 
 };
 
 
-class ARController : public Controller //,public OpenGLRenderable
+class ARController : public Controller, private Drawable //,public OpenGLRenderable
 {
 public:
 	ARController();
@@ -66,9 +69,6 @@ public:
 	void Teardown(Engine * engine);
 
 	void Render(OpenGL * openGL);
-	void HandleTouchInput(void* sender, TouchEventArgs args);
-	void IncreaseQRScore(void * sender, EventArgs args);
-	void DecreaseQRScore(void * sender, EventArgs args);
 
 private:
 	//Constants
@@ -80,6 +80,11 @@ private:
 	void locateCodes(Engine* engine, FrameItem * item);	
 	void readGyroData(Engine * engine, FrameItem * item);
 	void initializeARView();
+	void initializeUI(Engine * engine);
+
+	FrameItem * GetFrameItem(Engine * engine);
+
+	void Draw(Mat * rgbaImage);
 
 	std::vector<Drawable*> drawObjects;
 	std::vector<OpenGLRenderable*> renderObjects;
@@ -87,16 +92,16 @@ private:
 
 	QRLocator * qrLocator;
 	AugmentedView * augmentedView;
+	WorldLoader * worldLoader;
 
-	ARConfigurator * config;
 	//UI objects
+	ARConfigurator * config;
 	ARControllerDebugUI * debugUI;
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);
 	
 	QuadBackground * quadBackground;
-	Mat * defaultPosition, * defaultRotation;
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 		
@@ -105,8 +110,6 @@ private:
 	bool isExpired, isInitialized;
 
 	PositionSelector * positionSelector;
-
-	Configuration::DrawMode drawMode;
 
 };
 

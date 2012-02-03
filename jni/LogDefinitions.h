@@ -25,6 +25,8 @@
 #define LOGTAG_POSITION "Positioning"
 #define LOGTAG_IO "IO"
 #define LOGTAG_NETWORKING "Networking"
+#define LOGTAG_JNI "JNI"
+#define LOGTAG_WORLD "WorldLoader"
 
 #define STR(tok) #tok
 

@@ -3,6 +3,7 @@
 #include "userinterface/AndroidInputHandler.hpp"
 #include "datacollection/SensorCollector.hpp"
 #include <opencv2/core/core.hpp>
+#include "model/network/ARCommunicator.hpp"
 
 #ifndef ENGINE_HPP_
 #define ENGINE_HPP_
@@ -21,11 +22,8 @@ public:
 	ImageCollector * imageCollector;
 	AndroidInputHandler * inputHandler;
 	SensorCollector * sensorCollector;
-
-	vector<std::string*> * messageQueue;
-
-
-
+	ARCommunicator * communicator;
+	
 	////Putting some configuration stuff in here for now
 	//Configuration::DrawMode drawMode;
 

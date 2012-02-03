@@ -8,11 +8,12 @@ import org.simpleframework.xml.core.Persister;
 
 import com.amplifyreality.AmplifyRealityActivity;
 import com.amplifyreality.networking.model.ARObject;
+import com.amplifyreality.networking.model.NativeMessage;
 import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.DataHeader;
 
-import android.os.Handler;
 import android.util.Log;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ARClient
 {
@@ -24,6 +25,8 @@ public class ARClient
 	volatile boolean listening = false;
 	volatile boolean needsData = true;
 
+	private LinkedBlockingQueue<NativeMessage> outgoingQueue;
+	
 	Socket mySocket;
 	BufferedReader reader;
 
@@ -31,6 +34,7 @@ public class ARClient
 	{
 		reader = null;
 		Connect();
+		
 	}
 
 	public ARClient(String host, int port)
@@ -55,12 +59,27 @@ public class ARClient
 					while (listening)
 					{
 					//	if (needsData)
+//						{
+//							writer.write("JoinWorld\n");
+//							writer.flush();
+//							Log.d(LOGTAG_NETWORKING, "Sent message to server. Sleeping 2sec");
+//						}
+						
+
+						Object[] msgs = AmplifyRealityActivity.GetOutgoingMessages();
+						for (int i=0;i<msgs.length;i++)
 						{
-							writer.write("JoinWorld\n");
-							writer.flush();
-							Log.d(LOGTAG_NETWORKING, "Sent message to server. Sleeping 2sec");
+							if (msgs[i] == null)
+								continue;
+							
+							NativeMessage message = (NativeMessage)msgs[i];
+							if (message.data == null)
+								continue;
+							
+							Log.i(LOGTAG_NETWORKING,"Sending nativemsg: " + message.data.toString());
+							writer.write(message.data.toString() + "\n");
 						}
-						Thread.sleep(5000);
+						Thread.sleep(2000);
 					}
 
 				} catch (IOException e)
@@ -102,7 +121,7 @@ public class ARClient
 							}
 							dataHeader = GetHeader(inputLine);
 
-							AmplifyRealityActivity.OnMessage(inputLine);
+							AmplifyRealityActivity.OnMessage(inputLine,null);
 							// Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
 						} else
 						{
@@ -120,6 +139,7 @@ public class ARClient
 
 		});
 		t.start();
+		
 	}
 
 	private DataHeader GetHeader(String inputLine)
@@ -168,7 +188,7 @@ public class ARClient
 		// No XML definition, so process as a string
 		if (dataHeader.XmlDataType == null)
 		{
-			AmplifyRealityActivity.OnMessage(data);
+			AmplifyRealityActivity.OnMessage(data,null);
 		} else
 		// Deserialize
 		{
@@ -185,6 +205,7 @@ public class ARClient
 				{
 					Realm realm = serializer.read(Realm.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received new Realm: " + realm.toString());
+					AmplifyRealityActivity.OnMessage("RealmObject",realm);
 					needsData = false;
 				}
 			} catch (Exception e)
@@ -203,6 +224,8 @@ public class ARClient
 			mySocket = new Socket(host, port);
 			Log.i(LOGTAG_NETWORKING, "Socket created");
 
+			outgoingQueue = new LinkedBlockingQueue<NativeMessage>();
+			
 			RequestData();
 			StartListening();
 

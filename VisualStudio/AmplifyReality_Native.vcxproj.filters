@@ -89,6 +89,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Header Files\model\network">
+      <UniqueIdentifier>{50743c8e-b76c-4080-9c0c-58fb145ac6cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{f56eb4c6-44c9-4abb-8e7d-473246391613}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -366,6 +372,15 @@
     </ClCompile>
     <ClCompile Include="..\jni\display\opengl\OpenGL2Renderer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\model\network\RealmDefinition.cpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\model\ResourceManager.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\model\WorldLoader.cpp">
+      <Filter>Header Files\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -704,6 +719,27 @@
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\UIConstants.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\network\ARObjectDefinition.hpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\network\RealmDefinition.hpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\network\WavefrontModel.hpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\ResourceManager.hpp">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\network\ARCommunicator.hpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\network\NetworkMessages.hpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\WorldLoader.hpp">
+      <Filter>Header Files\model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

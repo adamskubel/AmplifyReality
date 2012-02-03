@@ -28,12 +28,14 @@ public class RealmGenerator
 		
 		ARObject object1 = new ARObject();
 		object1.Name = "TestObj1";
+		object1.ModelName = "SphereModel";
 		object1.Position = new Vector3(1,1,1);
 		object1.Scale = new Vector3(-2,-2,-2);
 		object1.Rotation = new Vector3(1.0f,2.0f,3.0f);
 		
 		ARObject object2 = new ARObject();
 		object2.Name = "TestObj2";
+		object2.ModelName = "CubeModel";
 		object2.Position = new Vector3(31,31,11);
 		object2.Scale = new Vector3(-21,-21,-21);
 		object2.Rotation = new Vector3(-1.1f,2.1f,3.1f);

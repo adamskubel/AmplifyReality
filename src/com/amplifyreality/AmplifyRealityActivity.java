@@ -15,7 +15,8 @@ public class AmplifyRealityActivity extends NativeActivity
         System.loadLibrary("amplify_reality");
 	}
 	
-	public static native void OnMessage(String messageString);
+	public static native void OnMessage(String messageString, Object data);
+	public static native Object[] GetOutgoingMessages();
 	
 	ARClient client;
 	

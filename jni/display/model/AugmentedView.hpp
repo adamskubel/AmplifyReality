@@ -3,6 +3,7 @@
 #include "display/opengl/OpenGLRenderable.hpp"
 #include "display/opengl/OpenGLHelper.hpp"
 #include "model/Updateable.hpp"
+#include "model/network/RealmDefinition.hpp"
 
 #ifndef AUGMENTEDVIEW_HPP_
 #define AUGMENTEDVIEW_HPP_

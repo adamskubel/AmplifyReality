@@ -1,5 +1,7 @@
 #include "display/model/AugmentedView.hpp"
 
+#define LOGTAG_AUGMENTEDVIEW "AugmentedView"
+
 AugmentedView::AugmentedView(cv::Mat _cameraMatrix)
 {
 	cameraMatrix = new Mat();
@@ -136,3 +138,4 @@ void AugmentedView::SetCameraPosition(OpenGLRenderData & renderData)
 	glUniformMatrix4fv(renderData.projectionMatrixLocation, 1, GL_FALSE, pt.ptr<float>(0));	
 
 }
+
