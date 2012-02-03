@@ -85,8 +85,8 @@ void ResourceManager::Update(Engine * engine)
 					if (resourcesWaiting.at(j).compare(modelName) == 0)
 					{
 						LOGI(LOGTAG_NETWORKING,"Resource received! Name=%s",modelName.c_str());
-						addToFakeMap(modelName,newMsgs.at(i));
-						//resourceMap[modelName] = newMsgs.at(i);
+						//addToFakeMap(modelName,newMsgs.at(i));
+						resourceMap[modelName] = newMsgs.at(i);
 					}
 				}
 			}

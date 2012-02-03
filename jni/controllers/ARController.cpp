@@ -124,7 +124,6 @@ void ARController::Teardown(Engine * engine)
 	if (!isInitialized)
 		return;
 
-	engine->inputHandler->RemoveDelegate(TouchEventDelegate::from_method<ARController,&ARController::HandleTouchInput>(this));
 	LOGI(LOGTAG_ARCONTROLLER,"Teardown complete");
 }
 

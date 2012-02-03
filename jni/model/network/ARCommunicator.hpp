@@ -8,8 +8,12 @@
 
 class ARCommunicator
 {
+
 public:
-	ARCommunicator();
+	ARCommunicator()
+	{
+		outgoingMessageQueue.clear();
+	}
 
 	void SendMessage(OutgoingMessage * message)
 	{

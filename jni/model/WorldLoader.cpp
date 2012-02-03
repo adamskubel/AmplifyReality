@@ -124,7 +124,7 @@ void WorldLoader::PopulateARView(AugmentedView *& arView)
 	}
 }
 
-OutgoingMessage * createRealmRequest(std::string code)
+OutgoingMessage * WorldLoader::createRealmRequest(std::string code)
 {
 	std::string request("RealmRequest:");
 	request.append(code);

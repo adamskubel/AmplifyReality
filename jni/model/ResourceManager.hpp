@@ -25,7 +25,7 @@ public:
 
 
 private:
-//	map<string, void*> resourceMap;
+	map<string, void*> resourceMap;
 	
 	vector<string> resourcesRequired;
 	vector<string> resourcesWaiting;
@@ -50,23 +50,27 @@ private:
 template< typename T>
 bool ResourceManager::GetResource(std::string resourceName, T * resource)
 {
-	/*map<std::string,void*>::iterator it;
+	//map<std::string,void*>::iterator it;
 
-	it = resourceMap.find(resourceName);
-	if (it == map<std::string,void*>::end)*/
-	void * obj;
-	if (getFromFakeMap(resourceName,obj))
+	//it = resourceMap.find(resourceName);
+	//if (it == map<std::string,void*>::end)
+	//void * obj;
+//	if (getFromFakeMap(resourceName,obj))
+	if (resourceMap.find(resourceName) != resourceMap.end())
 	{
 		if (!AlreadyRequested(resourceName))
 		{
 			LOGD(LOGTAG_IO,"Resource not found, requesting. Name=%s",resourceName.c_str());
 			RequestResource(resourceName);
+			return false;
 		}
 	}
 	else
 	{
 		LOGD(LOGTAG_IO,"Resource found. Name=%s",resourceName.c_str());
-		return (T*)obj;
-		//return (T*)resourceMap.at(it);
+	//	return (T*)obj;
+		resource = (T*)resourceMap.at(resourceName);
+		return true;
 	}
+	return false;
 }

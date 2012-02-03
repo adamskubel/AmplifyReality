@@ -7,6 +7,7 @@
 #include "model/network/RealmDefinition.hpp"
 #include "model/network/NetworkMessages.hpp"
 #include "model/network/WavefrontModel.hpp"
+#include "model/network/ARCommunicator.hpp"
 
 pthread_mutex_t myMutex;
 static vector<IncomingMessage*> jniDataVector;

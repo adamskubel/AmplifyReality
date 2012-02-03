@@ -423,29 +423,26 @@ int obj_parse_obj_file(obj_growable_scene_data *growable_data, const char *filen
 
 int obj_parse_obj_string(obj_growable_scene_data *growable_data, std::string objText)
 {
-	FILE* obj_file_stream;
 	int current_material = -1; 
 	
-	std::string::iterator lineStart;
-	std::string::iterator lineEnd;
+	int lineStart, lineEnd;
 
-	lineStart = objText.begin();
+	lineStart = 0;
+	lineEnd = objText.size();
 	
-	while(lineStart != objText.end()) 
+	while(lineStart < objText.size()) 
 	{
-		lineEnd = std::find(lineStart, objText.end(), "\t\n\r");
+		/*lineEnd = objText.find('\n',lineStart);
+		std::string token = strtok(objText.substr(lineStart,lineEnd).c_str(), " \t\n\r");
 				
-		bool result = parseLine(std::string(lineStart, lineEnd).c_str(),current_material,growable_data);
+		bool result = parseLine(token.c_str(),current_material,growable_data);
 		
 		if (!result)
 		{
 			LOGW(LOGTAG_IO,"Unknown command '%s' in scene code from string",std::string(lineStart, lineEnd).c_str());
 		}
 
-		if(lineEnd == objText.end())
-			break;
-
-		lineStart = lineEnd + 1;
+		lineStart = lineEnd + 1;*/
 	}
 		
 		
