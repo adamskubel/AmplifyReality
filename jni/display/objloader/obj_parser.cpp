@@ -429,23 +429,36 @@ int obj_parse_obj_string(obj_growable_scene_data *growable_data, std::string obj
 
 	lineStart = 0;
 	lineEnd = objText.size();
+	char current_line[OBJ_LINE_SIZE];
+	char * currentToken = NULL;
+	std::string currentLineString = "";
+
+	LOGI(LOGTAG_IO,"Creating OBJ file from string.");
 	
 	while(lineStart < objText.size()) 
 	{
-		/*lineEnd = objText.find('\n',lineStart);
-		std::string token = strtok(objText.substr(lineStart,lineEnd).c_str(), " \t\n\r");
-				
-		bool result = parseLine(token.c_str(),current_material,growable_data);
-		
-		if (!result)
-		{
-			LOGW(LOGTAG_IO,"Unknown command '%s' in scene code from string",std::string(lineStart, lineEnd).c_str());
-		}
+		lineEnd = objText.find('\n',lineStart);
+		currentLineString = objText.substr(lineStart,(lineEnd-lineStart));
 
-		lineStart = lineEnd + 1;*/
-	}
+		memcpy(current_line,currentLineString.c_str(),currentLineString.length());
+		//LOGD(LOGTAG_IO,"Parsing string: %s",currentLineString.c_str());
+		if (currentLineString.length() > OBJ_LINE_SIZE)
+			LOGW(LOGTAG_IO,"Current line %d is longer than 500!",currentLineString.length());
+
+		currentToken = strtok(current_line,WHITESPACE);
+
+	///	LOGI(LOGTAG_IO,"Parsing token: %s; FirstChar=%c",currentToken,currentToken[0]);
+		if( currentToken != NULL && currentToken[0] != '#')	
+		{
+			if (!parseLine(currentToken,current_material,growable_data))
+			{
+				LOGW(LOGTAG_IO,"Unknown command '%s' in scene code from string. Line =%s",currentToken,current_line);
+			}
+		}
+		lineStart = lineEnd + 1;
+	}		
 		
-		
+	LOGI(LOGTAG_IO,"OBJ file created");
 	return 1;
 }
 

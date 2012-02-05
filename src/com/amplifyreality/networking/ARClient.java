@@ -7,10 +7,15 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 import com.amplifyreality.AmplifyRealityActivity;
+import com.amplifyreality.networking.exceptions.InvalidHeaderMessageException;
+import com.amplifyreality.networking.exceptions.UnknownClientActionException;
+import com.amplifyreality.networking.message.ClientMessage;
+import com.amplifyreality.networking.message.ClientXMLMessage;
+import com.amplifyreality.networking.message.NativeMessage;
 import com.amplifyreality.networking.model.ARObject;
-import com.amplifyreality.networking.model.NativeMessage;
 import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.DataHeader;
+import com.amplifyreality.networking.model.WavefrontObj;
 
 import android.util.Log;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,9 +28,8 @@ public class ARClient
 	String host = "192.168.1.9";
 	int port = 12312;
 	volatile boolean listening = false;
-	volatile boolean needsData = true;
 
-	private LinkedBlockingQueue<NativeMessage> outgoingQueue;
+	private LinkedBlockingQueue<ClientMessage> outgoingQueue;
 	
 	Socket mySocket;
 	BufferedReader reader;
@@ -52,34 +56,53 @@ public class ARClient
 			@Override
 			public void run()
 			{
+				//Sleep a bit to ensure native layer has started
 				try
 				{
-					PrintWriter writer = new PrintWriter(mySocket.getOutputStream());
-
+					Thread.sleep(6000);
+				} catch (InterruptedException e1)
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				try
+				{
 					while (listening)
-					{
-					//	if (needsData)
-//						{
-//							writer.write("JoinWorld\n");
-//							writer.flush();
-//							Log.d(LOGTAG_NETWORKING, "Sent message to server. Sleeping 2sec");
-//						}
+					{						
+						Object[] msgs = null;						
+						try
+						{
+							msgs = AmplifyRealityActivity.GetOutgoingMessages();
+						}
+						catch (Exception e)
+						{
+							Log.e(LOGTAG_NETWORKING, "Exception checking native layer",e);
+							continue;
+						}
 						
-
-						Object[] msgs = AmplifyRealityActivity.GetOutgoingMessages();
+						if (msgs == null)
+							continue;
 						for (int i=0;i<msgs.length;i++)
 						{
 							if (msgs[i] == null)
 								continue;
 							
 							NativeMessage message = (NativeMessage)msgs[i];
-							if (message.data == null)
-								continue;
+							Serializer xmlSerializer = new Persister();
+																											
+							try
+							{
+								ClientXMLMessage msg = new ClientXMLMessage(xmlSerializer, message.GetXMLObject());
+								Log.i(LOGTAG_NETWORKING,"Sending nativemsg: " + message.action);
+								msg.SendMessage(mySocket.getOutputStream());
+							} catch (UnknownClientActionException e)
+							{
+								Log.w(LOGTAG_NETWORKING,"Unknown client action '" +message.action + "'");
+							}
 							
-							Log.i(LOGTAG_NETWORKING,"Sending nativemsg: " + message.data.toString());
-							writer.write(message.data.toString() + "\n");
 						}
-						Thread.sleep(2000);
+						Thread.sleep(5000);
 					}
 
 				} catch (IOException e)
@@ -104,13 +127,21 @@ public class ARClient
 			@Override
 			public void run()
 			{
+				//Sleep a bit to ensure native layer has started
+				try
+				{
+					Thread.sleep(6000);
+				} catch (InterruptedException e1)
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				DataHeader dataHeader = null;
 				try
 				{
 					BufferedReader reader = new BufferedReader(new InputStreamReader(mySocket.getInputStream()));
 					while (listening)
 					{
-						Log.i(LOGTAG_NETWORKING, "Waiting for line");
 						if (dataHeader == null)
 						{
 							String inputLine = reader.readLine();
@@ -119,9 +150,14 @@ public class ARClient
 								Shutdown();
 								break;
 							}
-							dataHeader = GetHeader(inputLine);
-
-							AmplifyRealityActivity.OnMessage(inputLine,null);
+							try
+							{
+								dataHeader = DataHeader.CreateHeaderFromMessage(inputLine);
+							} catch (InvalidHeaderMessageException e)
+							{
+								dataHeader = null; //Ignore line, reset header to null
+								AmplifyRealityActivity.OnMessage(inputLine,null); //Process as string
+							}
 							// Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
 						} else
 						{
@@ -142,41 +178,6 @@ public class ARClient
 		
 	}
 
-	private DataHeader GetHeader(String inputLine)
-	{
-		if (inputLine.startsWith("BYTES_NEXT:"))
-		{
-			try
-			{
-				int parseResult = Integer.valueOf(inputLine.split(":")[1]);
-				if (parseResult > 0)
-				{
-					return new DataHeader(null, parseResult);
-				}
-			} catch (NumberFormatException nfe)
-			{
-				return null;
-			}
-		} else if (inputLine.startsWith("XML_BYTES_NEXT:"))
-		{
-			try
-			{
-				if (inputLine.split(":").length >= 2)
-				{
-					int parseResult = Integer.valueOf(inputLine.split(":")[1]);
-					String xmlName = inputLine.split(":")[2];
-					if (parseResult > 0 && xmlName.length() > 0)
-					{
-						return new DataHeader(xmlName, parseResult);
-					}
-				}
-			} catch (NumberFormatException nfe)
-			{
-				return null;
-			}
-		}
-		return null;
-	}
 
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
 	{
@@ -201,12 +202,22 @@ public class ARClient
 				{
 					ARObject arObject = serializer.read(ARObject.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received ARObject: " + arObject.toString());
-				} else if (className.equals(Realm.class.getCanonicalName()))
+				} 
+				else if (className.equals(Realm.class.getCanonicalName()))
 				{
 					Realm realm = serializer.read(Realm.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received new Realm: " + realm.toString());
 					AmplifyRealityActivity.OnMessage("RealmObject",realm);
-					needsData = false;
+				}
+				else if (className.equals(WavefrontObj.class.getCanonicalName()))
+				{
+					WavefrontObj wavefrontObj = serializer.read(WavefrontObj.class, data);
+					Log.i(LOGTAG_NETWORKING, "Received new wavefront model: " + wavefrontObj.toString());
+					AmplifyRealityActivity.OnMessage("WavefrontObject",wavefrontObj);
+				}
+				else
+				{
+					Log.w(LOGTAG_NETWORKING,"Received unknown XML object. Classname=" + className);				
 				}
 			} catch (Exception e)
 			{
@@ -224,8 +235,8 @@ public class ARClient
 			mySocket = new Socket(host, port);
 			Log.i(LOGTAG_NETWORKING, "Socket created");
 
-			outgoingQueue = new LinkedBlockingQueue<NativeMessage>();
-			
+			outgoingQueue = new LinkedBlockingQueue<ClientMessage>();
+		
 			RequestData();
 			StartListening();
 

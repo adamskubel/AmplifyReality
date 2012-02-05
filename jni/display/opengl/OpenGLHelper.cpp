@@ -91,11 +91,11 @@ void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar
 	}
 	//More vertices than colors, so populate until color vector is exhausted, then continue
 	//populating using the last value in the color vector
-	else if (colors->size() < colorObject->count)
+	else if (colors->size() < colorObject->numVertices)
 	{
 		LOGW(LOGTAG_OPENGL,"More vertices than colors");
 		int colorVectorIndex = 0;
-		for (int i=0;i<colorObject->count ;i++)
+		for (int i=0;i<colorObject->numVertices ;i++)
 		{
 			colorVectorIndex = (i < colors->size()) ? i : colors->size() -1;
 			
@@ -109,7 +109,7 @@ void OpenGLHelper::PopulateColors(ColorGLObject * colorObject, vector<cv::Scalar
 	else
 	{
 		LOGW(LOGTAG_OPENGL,"Enough colors for each vertex");
-		for (int i=0;i<colorObject->count;i++)
+		for (int i=0;i<colorObject->numVertices;i++)
 		{
 			colorObject->colorArray[(ColorGLObject::colorComponents*i)+0] = (GLfloat) colors->at(i)[0]/ 255.0f;
 			colorObject->colorArray[(ColorGLObject::colorComponents*i)+1] = (GLfloat) colors->at(i)[1]/ 255.0f;

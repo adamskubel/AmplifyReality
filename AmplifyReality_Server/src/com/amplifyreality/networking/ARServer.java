@@ -5,23 +5,14 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import com.amplifyreality.util.Logging;
+
 public class ARServer 
 {	
 	private List<ClientThread> broadcastList;
 	private volatile boolean listening;
 
-	private final static Logger LOGGER = Logger.getLogger(ARServer.class.getName());
-	static
-	{
-		LOGGER.addHandler(new StreamHandler(System.out,new SimpleFormatter()));
-		try
-		{
-			LOGGER.addHandler(new FileHandler("ARServer.log"));
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
+	private final static Logger LOGGER = Logging.CreateLogger(ARServer.class);
 	
 	public ARServer()
 	{

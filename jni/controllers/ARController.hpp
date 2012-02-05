@@ -57,6 +57,15 @@ private:
 
 };
 
+namespace ControllerStates
+{
+	enum ControllerState
+	{
+		Loading,
+		Running
+	};
+}
+
 
 class ARController : public Controller, private Drawable //,public OpenGLRenderable
 {
@@ -84,6 +93,8 @@ private:
 
 	FrameItem * GetFrameItem(Engine * engine);
 
+	void SetState(ControllerStates::ControllerState state);
+
 	void Draw(Mat * rgbaImage);
 
 	std::vector<Drawable*> drawObjects;
@@ -108,6 +119,8 @@ private:
 	FrameItem ** items;	
 	int currentFrameItem;
 	bool isExpired, isInitialized;
+
+	ControllerStates::ControllerState state;
 
 	PositionSelector * positionSelector;
 

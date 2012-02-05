@@ -24,6 +24,7 @@ class WorldLoader
 {
 public:
 	WorldLoader();
+	~WorldLoader();
 	void LoadRealm(std::string code);
 	void Update(Engine * engine);
 
@@ -31,7 +32,7 @@ public:
 
 	void ResourcesReady(void *);
 
-	void PopulateARView(AugmentedView *& arView);
+	void PopulateARView(AugmentedView * arView);
 
 private:
 	WorldStates::WorldState state;
@@ -41,6 +42,7 @@ private:
 	RealmDefinition * currentRealm;
 	vector<ARObject*> arObjects;
 	
+	void SetState(WorldStates::WorldState state);
 	void SetCurrentRealm(RealmDefinition * realm);
 
 	ResourceManager * resourceManager;

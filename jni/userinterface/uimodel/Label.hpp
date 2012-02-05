@@ -36,6 +36,8 @@ public:
 
 private:
 	int fontBaseline;
+	Size2i lastSize;
+	Point2i lastPosition;
 	std::string Text;
 };
 

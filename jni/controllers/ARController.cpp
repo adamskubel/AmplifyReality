@@ -23,7 +23,7 @@ ARController::ARController()
 	LOGI(LOGTAG_ARCONTROLLER,"Created %d frame items",numItems);
 	
 	augmentedView = NULL;
-
+	state = ControllerStates::Loading;
 	isInitialized = false;
 	isExpired = false;
 	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
@@ -92,6 +92,8 @@ void ARController::initializeUI(Engine * engine)
 	deletableObjects.push_back(grid);
 	deletableObjects.push_back(config);
 	deletableObjects.push_back(debugUI);
+
+	LOGI(LOGTAG_ARCONTROLLER,"UI initialization complete.");
 }
 
 void ARController::Initialize(Engine * engine)
@@ -129,30 +131,31 @@ void ARController::Teardown(Engine * engine)
 
 void ARController::initializeARView()
 {
-	LOGD(LOGTAG_ARCONTROLLER,"Initializing AR View");
+	LOGI(LOGTAG_ARCONTROLLER,"Initializing AR View");
 	//Create Augmented View
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
 
 	//Add some cubes
-	objLoader loader;
+	//objLoader loader;
 
-	LOGI(LOGTAG_ARCONTROLLER, "Loading model from file");
-	std::string fileName = std::string("/sdcard/objtest/cube.obj");
-	loader.load(fileName.c_str());
-	LOGI(LOGTAG_ARCONTROLLER, "Creating GL object from file");
-	ARObject * fromFile = new ARObject(WavefrontGLObject::FromObjFile(loader));
-	LOGI(LOGTAG_ARCONTROLLER, "Load complete");
-	fromFile->scale = Point3f(30,30,30);
-	augmentedView->AddObject(fromFile);	
+	//LOGI(LOGTAG_ARCONTROLLER, "Loading model from file");
+	//std::string fileName = std::string("/sdcard/objtest/cube.obj");
+	//loader.load(fileName.c_str());
+	//LOGI(LOGTAG_ARCONTROLLER, "Creating GL object from file");
+	//ARObject * fromFile = new ARObject(WavefrontGLObject::FromObjFile(loader));
+	//LOGI(LOGTAG_ARCONTROLLER, "Load complete");
+	//fromFile->scale = Point3f(30,30,30);
+	//augmentedView->AddObject(fromFile);	
 
 
-	ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(30),Point3f(0,0,0));
-	//augmentedView->AddObject(myCube);	
-	myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(0,0,-40));
+	ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
+	augmentedView->AddObject(myCube);	
+
+	//myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(0,0,-40));
 	//augmentedView->AddObject(myCube);	
 	
-	LOGD(LOGTAG_ARCONTROLLER,"AR View Initialization Complete");
+	LOGI(LOGTAG_ARCONTROLLER,"AR View Initialization Complete");
 }
 
 void ARController::readGyroData(Engine * engine, FrameItem * item)
@@ -177,6 +180,12 @@ FrameItem * ARController::GetFrameItem(Engine * engine)
 	return items[currentFrameItem];
 }
 
+void ARController::SetState(ControllerStates::ControllerState newState)
+{
+	LOGD(LOGTAG_ARCONTROLLER,"State changed from %d -> %d",state,newState);
+	state = newState;
+}
+
 void ARController::ProcessFrame(Engine * engine)
 {
 	if (!isInitialized)
@@ -199,36 +208,56 @@ void ARController::ProcessFrame(Engine * engine)
 		delete debugVector.back();
 		debugVector.pop_back();
 	}
+	
 
 	//What happens past here depends on the state
-	WorldStates::WorldState state = worldLoader->GetState();
-
-	if (state == WorldStates::LookingForCode)
-	{
-		debugUI->SetStateDisplay("Searching");
-		if (item->qrCode != NULL && item->qrCode->validCodeFound)
-		{
-			LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm.");
-			//Move decoding to here
-			worldLoader->LoadRealm(item->qrCode->TextValue);
-		}
-
-		worldLoader->Update(engine);
-	}
-	else if (state == WorldStates::WaitingForRealm || state == WorldStates::WaitingForResources)
+	if (state == ControllerStates::Loading)
 	{		
-		if (state == WorldStates::WaitingForRealm)
-			debugUI->SetStateDisplay("WaitRealm");
-		else
-			debugUI->SetStateDisplay("WaitRsrc");
-
-		//Wait until the world is ready
+		//Update world loader
 		worldLoader->Update(engine);
+
+		WorldStates::WorldState state = worldLoader->GetState();
+
+		if (state == WorldStates::LookingForCode)
+		{
+			debugUI->SetStateDisplay("Searching");
+			if (item->qrCode != NULL && item->qrCode->validCodeFound && item->qrCode->TextValue.length() > 2)
+			{
+				LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm.");
+				//TODO: Move decoding to here
+				worldLoader->LoadRealm(item->qrCode->TextValue);
+			}
+		}
+		else if (state == WorldStates::WaitingForRealm || state == WorldStates::WaitingForResources)
+		{		
+			if (state == WorldStates::WaitingForRealm)
+				debugUI->SetStateDisplay("WaitRealm");
+			else
+				debugUI->SetStateDisplay("WaitRsrc");
+
+		}
+		//The world is ready and loaded, so do normal AR processing
+		else if (state == WorldStates::WorldReady)
+		{
+			debugUI->SetStateDisplay("LoadCompl");
+			initializeARView();
+			LOGD(LOGTAG_ARCONTROLLER,"Populating ARView using loaded world");
+			worldLoader->PopulateARView(augmentedView);
+			SetState(ControllerStates::Running);
+			delete worldLoader;
+			worldLoader = NULL;
+		}	
+		else
+		{
+			char stateString[100];
+			sprintf(stateString,"State=%d",(int)state);
+			debugUI->SetStateDisplay(stateString);
+			LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
+		}
 	}
-	//The world is ready and loaded, so do normal AR processing
-	else if (state == WorldStates::WorldReady)
+	else if (state == ControllerStates::Running)
 	{
-		debugUI->SetStateDisplay("Rdy");
+		debugUI->SetStateDisplay("Run");
 
 		if (item->qrCode != NULL && item->qrCode->validCodeFound)
 		{
@@ -236,7 +265,7 @@ void ARController::ProcessFrame(Engine * engine)
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);
 		}	
-		
+
 		//Evaluate the position	
 		float resultCertainty = positionSelector->UpdatePosition(item);
 		debugUI->SetPositionCertainty(resultCertainty);
@@ -245,12 +274,6 @@ void ARController::ProcessFrame(Engine * engine)
 			//Update the 3D AR layer, but only if position certainty is non-zero
 			augmentedView->Update(item);
 		}
-	}	
-	else
-	{
-		char stateString[100];
-		sprintf(stateString,"State=%d",(int)state);
-		debugUI->SetStateDisplay(stateString);
 	}
 
 	//Do final processing

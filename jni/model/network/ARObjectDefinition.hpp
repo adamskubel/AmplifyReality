@@ -51,8 +51,10 @@ public:
 			FromJavaVector(env,rotationObject),
 			FromJavaVector(env,scaleObject));
 				
-		LOGI(LOGTAG_NETWORKING,"Created ARObjectDef with name=%s, modelname=%s, Position=[%f,%f,%f]",
-			newARObject->Name.c_str(),newARObject->ModelName.c_str(),newARObject->Position.x,newARObject->Position.y,newARObject->Position.z);
+		LOGI(LOGTAG_NETWORKING,"Created ARObjectDef with name=%s, modelname=%s, Position=[%f,%f,%f], Scale=[%f,%f,%f], Rotation=[%f,%f,%f]",
+			newARObject->Name.c_str(),newARObject->ModelName.c_str(),newARObject->Position.x,newARObject->Position.y,newARObject->Position.z,
+																	newARObject->Scale.x,newARObject->Scale.y,newARObject->Scale.z,
+																	newARObject->Rotation.x,newARObject->Rotation.y,newARObject->Rotation.z);
 
 		return newARObject;
 	};

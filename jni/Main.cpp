@@ -9,7 +9,7 @@
 #include "model/network/WavefrontModel.hpp"
 #include "model/network/ARCommunicator.hpp"
 
-pthread_mutex_t myMutex;
+pthread_mutex_t incomingMutex, outgoingMutex;
 static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
 
@@ -19,7 +19,7 @@ extern "C"
 	JNIEXPORT void JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_OnMessage(JNIEnv * env, jobject  obj, jstring javaString, jobject dataObject)
 	{
-		pthread_mutex_lock(&myMutex);
+		pthread_mutex_lock(&incomingMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread locked mutex");
 
 		std::string * cString = new std::string(env->GetStringUTFChars(javaString,JNI_FALSE));		
@@ -41,28 +41,43 @@ extern "C"
 			jniDataVector.push_back(new StringMessage(cString));
 		}
 		
-		pthread_mutex_unlock(&myMutex);
+		pthread_mutex_unlock(&incomingMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
 	}
 
 	JNIEXPORT jobjectArray JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
-	{
-		jclass wrapperClass = env->FindClass("com/amplifyreality/networking/model/NativeMessage");
+	{		
+		pthread_mutex_lock(&outgoingMutex);
+
+		if (outgoingJNIDataVector.empty())
+		{
+			pthread_mutex_unlock(&outgoingMutex);
+			return env->NewObjectArray(1,env->FindClass("java/lang/Object"),NULL);
+		}
+
+
+
+		jclass wrapperClass = env->FindClass("com/amplifyreality/networking/message/NativeMessage");
 		jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
 		
 		jobjectArray returnArray = env->NewObjectArray(outgoingJNIDataVector.size(),wrapperClass,NULL);
+		
 
-		for (int i=0;i<outgoingJNIDataVector.size();i++)
-		{			
-			jstring description = outgoingJNIDataVector.at(i)->GetActionString(env);
-			jobject dataObject = *(outgoingJNIDataVector.at(i)->getJavaObject(env));
+		int i= 0;
+		while (!outgoingJNIDataVector.empty())
+		{	
+			jstring description = outgoingJNIDataVector.back()->GetDescription(env);
+			jobject dataObject = outgoingJNIDataVector.back()->getJavaObject(env);
 
 			jobject returnObject = env->NewObject(wrapperClass,initMethod,description,dataObject);
-			env->SetObjectArrayElement(returnArray,i,returnObject);
-		}
+			env->SetObjectArrayElement(returnArray,i++,returnObject);
 
-		outgoingJNIDataVector.clear();
+		//	delete outgoingJNIDataVector.back();
+			outgoingJNIDataVector.pop_back();
+		}
+		
+		pthread_mutex_unlock(&outgoingMutex);
 		return returnArray;
 	}
 }
@@ -193,7 +208,8 @@ void shutdownEngine(Engine* engine)
 void android_main(struct android_app* state)
 {	
 	LOG_INTRO();
-	pthread_mutex_init(&myMutex,NULL);
+	pthread_mutex_init(&incomingMutex,NULL);
+	pthread_mutex_init(&outgoingMutex,NULL);
 
 
 
@@ -250,20 +266,39 @@ void android_main(struct android_app* state)
 
 		//Check for messages in JNI queue
 
-		if ( pthread_mutex_trylock(&myMutex) == 0)
+		if ( pthread_mutex_trylock(&incomingMutex) == 0)
 		{
-			if (!jniDataVector.empty())
+			int count = 0;
+			while (!jniDataVector.empty())
 			{
+				count++;
 				mainEngine.communicator->AddIncomingMessage(jniDataVector.back());
-				delete jniDataVector.back();
+				//delete jniDataVector.back();
 				jniDataVector.pop_back();
 			}
-			pthread_mutex_unlock(&myMutex);
+			if (count > 0)
+				LOGD(LOGTAG_NETWORKING,"Got %d messages from JNI queue");
+			pthread_mutex_unlock(&incomingMutex);
 		}
 		else
 		{
-			LOGI(LOGTAG_NETWORKING,"Unable to lock mutex");
+			LOGD(LOGTAG_NETWORKING,"Unable to lock incoming mutex");
 		}
+
+
+		if (mainEngine.communicator->HasOutgoingMessages())
+		{
+			if ( pthread_mutex_trylock(&outgoingMutex) == 0)
+			{
+				mainEngine.communicator->GetOutgoingMessages(outgoingJNIDataVector);
+				pthread_mutex_unlock(&outgoingMutex);
+			}
+			else
+			{
+				LOGD(LOGTAG_NETWORKING,"Unable to lock outgoing mutex");
+			}
+		}
+	
 
 		if (mainEngine.animating)
 		{

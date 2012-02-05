@@ -2,18 +2,18 @@
    <objectMap class="java.util.HashMap">
       <entry>
          <string>Obj1</string>
-         <ARObject Name="TestObj1" ModelName="SphereModel">
-            <Position X="1.0" Y="1.0" Z="1.0"/>
-            <Rotation X="1.0" Y="2.0" Z="3.0"/>
-            <Scale X="-2.0" Y="-2.0" Z="-2.0"/>
+         <ARObject Name="TestObj1" ModelName="cube.obj">
+            <Position X="50.0" Y="0.0" Z="0.0"/>
+            <Rotation X="0.0" Y="0.0" Z="0.0"/>
+            <Scale X="35.0" Y="35.0" Z="35.0"/>
          </ARObject>
       </entry>
       <entry>
          <string>Obj2</string>
-         <ARObject Name="TestObj2" ModelName="CubeModel">
-            <Position X="31.0" Y="31.0" Z="11.0"/>
+         <ARObject Name="TestObj2" ModelName="cube.obj">
+            <Position X="-50.0" Y="0.0" Z="0.0"/>
             <Rotation X="-1.1" Y="2.1" Z="3.1"/>
-            <Scale X="-21.0" Y="-21.0" Z="-21.0"/>
+            <Scale X="40.0" Y="40.0" Z="40.0"/>
          </ARObject>
       </entry>
    </objectMap>

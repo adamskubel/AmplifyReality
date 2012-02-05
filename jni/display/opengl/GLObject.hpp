@@ -22,7 +22,7 @@ public:
 
 
 	GLfloat *vertexArray;
-	GLsizei count;
+	GLsizei numVertices;
 	GLfloat width,height;
 };
 
@@ -33,14 +33,14 @@ class TexturedGLObject : public GLObject
 public:
 	TexturedGLObject(int _vertices, int _textureComponents)
 	{
-		count = _vertices;
+		numVertices = _vertices;
 		textureComponents = _textureComponents;
 
-		vertexArray = new GLfloat[count *  GLObject::vertexComponents];
-		textureArray = new GLfloat[count * textureComponents];
-		colorArray = new GLfloat[count * 4];
+		vertexArray = new GLfloat[numVertices *  GLObject::vertexComponents];
+		textureArray = new GLfloat[numVertices * textureComponents];
+		colorArray = new GLfloat[numVertices * 4];
 
-		for (int i=0;i<count*4;i++)
+		for (int i=0;i<numVertices*4;i++)
 		{
 			colorArray[i] = 1.0f;
 		}
@@ -66,7 +66,7 @@ public:
 		glVertexAttribPointer( renderData.colorArrayLocation, 4, GL_FLOAT, 0, 0, colorArray);
 		glVertexAttribPointer( renderData.textureArrayLocation, textureComponents , GL_FLOAT, 0, 0, textureArray);
 			
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
 	}
 	
 //	GLuint bufferID;
@@ -88,10 +88,10 @@ public:
 	ColorGLObject(int _vertices, int _renderGroupSize = 1)
 	{			
 		renderGroupSize = _renderGroupSize;
-		count = _vertices;
+		numVertices = _vertices;
 
-		vertexArray = new GLfloat[count * GLObject::vertexComponents];
-		colorArray = new GLfloat[count * ColorGLObject::colorComponents];		
+		vertexArray = new GLfloat[numVertices * GLObject::vertexComponents];
+		colorArray = new GLfloat[numVertices * ColorGLObject::colorComponents];		
 	}	
 	~ColorGLObject()
 	{
@@ -112,13 +112,13 @@ public:
 		
 		if (renderGroupSize > 1)
 		{
-			for (int i=0;i<count;i+=renderGroupSize)
+			for (int i=0;i<numVertices;i+=renderGroupSize)
 			{
 				glDrawArrays(GL_TRIANGLE_STRIP, i, renderGroupSize);
 			}
 		}
 		else
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
 
 	}
 	
@@ -132,7 +132,7 @@ class WavefrontGLObject : public GLObject
 	
 	bool hasTexture;
 
-	int numFaces, numVertices;
+	int numFaces;
 
 public:
 
@@ -158,7 +158,7 @@ public:
 	{
 		if (numVertices <= position)
 		{
-			LOGW(LOGTAG_OPENGL,"GLObject::AddVertex - Position is greater than vertex count");
+			LOGW(LOGTAG_OPENGL,"GLObject::AddVertex - Position is greater than vertex numVertices");
 			return;
 		}
 
@@ -176,7 +176,7 @@ public:
 	{
 		if (numFaces <= position)
 		{
-			LOGW(LOGTAG_OPENGL,"GLObject::AddFace - Position is greater than face count");
+			LOGW(LOGTAG_OPENGL,"GLObject::AddFace - Position is greater than face numVertices");
 			return;
 		}
 
@@ -226,7 +226,7 @@ public:
 		{
 			double * vertex = (loader.vertexList[i])->e;
 			object->AddVertex(cv::Point3f((float)vertex[0],(float)vertex[1],(float)vertex[2]),Colors::RandomColor(),i);
-			LOGD(LOGTAG_OPENGL,"Added vertex [%lf,%lf,%lf]",vertex[0],vertex[1],vertex[2]);
+			LOGV(LOGTAG_OPENGL,"Added vertex [%lf,%lf,%lf]",vertex[0],vertex[1],vertex[2]);
 		}
 
 		for (int i=0;i<loader.faceCount;i++)
@@ -235,7 +235,7 @@ public:
 			GLubyte triangle[3] = {vertexIndices[0],vertexIndices[1],vertexIndices[2]};
 
 			object->AddFace(triangle,i);
-			LOGD(LOGTAG_OPENGL,"Added triangle [%u,%u,%u]",triangle[0],triangle[1],triangle[2]);
+			LOGV(LOGTAG_OPENGL,"Added triangle [%u,%u,%u]",triangle[0],triangle[1],triangle[2]);
 		}
 
 		return object;

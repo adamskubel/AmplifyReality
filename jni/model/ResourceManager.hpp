@@ -2,6 +2,7 @@
 #define RESOURCE_MANAGER_HPP_
 
 #include "model/Engine.hpp"
+#include <set>
 
 using namespace std;
 
@@ -16,61 +17,57 @@ public:
 	ResourceManager();
 	~ResourceManager();
 	void Update(Engine * engine);
+	
+	template<typename T>
+	bool GetResource(std::string resourceName,T *& resource);
 
-
-	template< typename T>
-	bool GetResource(string resourceName, T * resource);
-
+	bool FindResource(std::string resourceName);
 	void AddResourceCallback(ResourcesLoadedDelegate  resourceLoadedDelegate); 
 
 
 private:
-	map<string, void*> resourceMap;
+	map<string, IncomingMessage*> resourceMap;
 	
-	vector<string> resourcesRequired;
-	vector<string> resourcesWaiting;
-
-	vector<string> fakeMapKey;
-	vector<void*> fakeMapValue;
+	set<string> resourcesRequired;
+	set<string> resourcesWaiting;
 
 	void RequestResource(string resourceName);
 
 	bool AlreadyRequested(string resourceName);
 
-	bool getFromFakeMap(std::string key, void *& output);
-	void addToFakeMap(std::string key, void * value);
-
+	OutgoingMessage * createResourceRequest(string resourceName);
 	vector<ResourcesLoadedDelegate> callbackVector;
 
 };
 
-#endif
 
 
-template< typename T>
-bool ResourceManager::GetResource(std::string resourceName, T * resource)
+template<typename T>
+bool ResourceManager::GetResource(std::string resourceName, T *& resource)
 {
-	//map<std::string,void*>::iterator it;
-
-	//it = resourceMap.find(resourceName);
-	//if (it == map<std::string,void*>::end)
-	//void * obj;
-//	if (getFromFakeMap(resourceName,obj))
-	if (resourceMap.find(resourceName) != resourceMap.end())
+	if (resourceMap.find(resourceName) == resourceMap.end())
 	{
 		if (!AlreadyRequested(resourceName))
 		{
 			LOGD(LOGTAG_IO,"Resource not found, requesting. Name=%s",resourceName.c_str());
 			RequestResource(resourceName);
-			return false;
 		}
+		else
+		{
+			LOGV(LOGTAG_IO,"Already requested resource with name=%s",resourceName.c_str());			
+		}
+		return false;
 	}
 	else
 	{
-		LOGD(LOGTAG_IO,"Resource found. Name=%s",resourceName.c_str());
-	//	return (T*)obj;
+		LOGD(LOGTAG_IO,"Resource found, returning. Name=%s",resourceName.c_str());
 		resource = (T*)resourceMap.at(resourceName);
 		return true;
 	}
-	return false;
 }
+
+
+#endif
+
+
+

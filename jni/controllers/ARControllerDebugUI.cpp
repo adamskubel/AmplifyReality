@@ -8,7 +8,7 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
 	translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
 
-	stateLabel = new Label("[State]",Point2i(0,0),Colors::White,Colors::Blue);
+	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue);
 
 	myGrid->AddChild(rotationLabel,Point2i(0,1));
 	myGrid->AddChild(translationLabel,Point2i(0,2));

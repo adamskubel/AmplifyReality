@@ -30,47 +30,36 @@ public:
 		}
 	}
 
+	bool HasOutgoingMessages()
+	{
+		return (!outgoingMessageQueue.empty());
+	}
+
+
 	void AddIncomingMessage(IncomingMessage * message)
 	{
 		incomingMessageQueue.push_back(message);
 	}
 
-	bool GetNewResourceMessages(std::vector<WavefrontModel*> & newMsgs)
-	{
-		if (incomingMessageQueue.empty())
-			return false;
-		else
-		{
-			bool found = false;
-			for (int i=0;i<incomingMessageQueue.size();i++)
-			{
-				if (incomingMessageQueue.at(i)->GetAction().compare("Wavefront"))
-				{
-					found = true;
-					newMsgs.push_back((WavefrontModel*)incomingMessageQueue.at(i));
-				}
-			}
-			return found;
-		}
-	}
 
 	bool FilterMessages(std::string filter, std::vector<IncomingMessage*> & newMsgs)
 	{
 		if (incomingMessageQueue.empty())
 			return false;
-		else
+		
+		LOGD(LOGTAG_NETWORKING,"%d messages in queue. Returning messages with tag %s", incomingMessageQueue.size(), filter.c_str());
+		bool found = false;
+		for (int i=0;i<incomingMessageQueue.size();i++)
 		{
-			bool found = false;
-			for (int i=0;i<incomingMessageQueue.size();i++)
+			if (incomingMessageQueue.at(i)->GetAction().compare(filter) == 0)
 			{
-				if (incomingMessageQueue.at(i)->GetAction().compare(filter))
-				{
-					found = true;
-					newMsgs.push_back(incomingMessageQueue.at(i));
-				}
+				found = true;
+				newMsgs.push_back(incomingMessageQueue.at(i));
+				incomingMessageQueue.erase(incomingMessageQueue.begin() + i);
+				i--;
 			}
-			return found;
 		}
+		return found;
 	}
 
 private:

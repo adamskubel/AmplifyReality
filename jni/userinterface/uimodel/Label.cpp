@@ -33,18 +33,22 @@ void Label::HandleInput()
 
 void Label::SetCenter(Point2i centerPoint)
 {	
+	lastPosition = centerPoint;
 	LOGD(LOGTAG_INPUT,"Setting label center (%d,%d)",centerPoint.x,centerPoint.y);
 	Size2i size = GetTextSize();
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
 	
 	if (Position.x < 0 || Position.y < 0)
+	{
+		LOGW(LOGTAG_INPUT,"Attempted to place label outside of screen! (%d,%d)",Position.x,Position.y);
 		Position = Point2i(0,0);
-
+	}
 	LOGD(LOGTAG_INPUT,"New position is (%d,%d)",Position.x,Position.y);
 }
 
 void Label::FitTextToBoundary(Size2f limits)
 {
+	lastSize = limits;
 	Size2i size = GetTextSize();
 
 	/*if (FontScale > 2 && size.width <= limits.width && size.height <= limits.height)
@@ -66,9 +70,14 @@ void Label::FitTextToBoundary(Size2f limits)
 void Label::SetText(std::string newText)
 {
 	Size2i size = GetTextSize();
-	Point2i originalPosition = Point2i(Position.x + size.width/2, Position.y - size.height/2);
 	Text = newText;
-	SetCenter(originalPosition);
+
+	if (lastSize.width > 0 && lastSize.height > 0)
+		FitTextToBoundary(lastSize);	
+
+	if (lastPosition.x > 0 && lastPosition.y > 0)
+		SetCenter(lastPosition);
+	
 }
 
 cv::Size2i Label::GetTextSize()

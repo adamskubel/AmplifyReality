@@ -12,6 +12,11 @@ public class WavefrontObj
 	@Element(data = true)
 	public String ObjData;
 	
+	public WavefrontObj()
+	{
+		Name = "";
+		ObjData = "";
+	}
 	
 	public WavefrontObj(String Name, String ObjData)
 	{

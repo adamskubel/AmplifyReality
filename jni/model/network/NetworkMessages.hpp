@@ -17,14 +17,19 @@ public:
 class OutgoingMessage
 {
 public:
-	jstring GetActionString(JNIEnv * env)
+	virtual jstring GetDescription(JNIEnv * env)
 	{
 		return env->NewStringUTF("Base");
 	}
 
-	virtual jobject * getJavaObject(JNIEnv * env)
+	//virtual jstring GetDataString(JNIEnv * env)
+	//{
+	//	return env->NewStringUTF("BaseString");
+	//}
+
+	virtual jobject getJavaObject(JNIEnv * env)
 	{
-		return NULL;
+		return env->NewStringUTF("null");
 	}
 
 };
@@ -52,46 +57,23 @@ public:
 		return std::string("String");
 	}
 
-	jstring GetActionString(JNIEnv * env)
+	jstring GetDescription(JNIEnv * env)
 	{
 		return env->NewStringUTF("String");
 	}
 
+	//jstring GetDataString(JNIEnv * env)
+	//{
+	//	return env->NewStringUTF(StringData->c_str());
+	//}
+
 		
-	jobject * getJavaObject(JNIEnv * env)
+	jobject getJavaObject(JNIEnv * env)
 	{
-		return (jobject*) env->NewStringUTF(StringData->c_str());
+		return  env->NewStringUTF(StringData->c_str());
 	}
 
 	std::string * StringData;
-};
-
-class ResourceRequestMessage : public OutgoingMessage
-{
-public:
-	ResourceRequestMessage(string _resourceName)
-	{
-		resourceName = new string(_resourceName);
-	}
-
-	jstring GetActionString(JNIEnv * env)
-	{
-		return env->NewStringUTF("ResourceRequest");
-	}
-
-
-	jobject * getJavaObject(JNIEnv * env)
-	{
-		return (jobject*) env->NewStringUTF(resourceName->c_str());
-	}
-
-	~ResourceRequestMessage()
-	{
-		delete resourceName;
-	}
-
-private:
-	string * resourceName;
 };
 
 
