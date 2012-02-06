@@ -438,10 +438,11 @@ int obj_parse_obj_string(obj_growable_scene_data *growable_data, std::string obj
 	while(lineStart < objText.size()) 
 	{
 		lineEnd = objText.find('\n',lineStart);
+		lineEnd++;
 		currentLineString = objText.substr(lineStart,(lineEnd-lineStart));
 
 		memcpy(current_line,currentLineString.c_str(),currentLineString.length());
-		//LOGD(LOGTAG_IO,"Parsing string: %s",currentLineString.c_str());
+		LOGD(LOGTAG_IO,"Parsing string: %s",currentLineString.c_str());
 		if (currentLineString.length() > OBJ_LINE_SIZE)
 			LOGW(LOGTAG_IO,"Current line %d is longer than 500!",currentLineString.length());
 
@@ -455,7 +456,7 @@ int obj_parse_obj_string(obj_growable_scene_data *growable_data, std::string obj
 				LOGW(LOGTAG_IO,"Unknown command '%s' in scene code from string. Line =%s",currentToken,current_line);
 			}
 		}
-		lineStart = lineEnd + 1;
+		lineStart = lineEnd;// + 1;
 	}		
 		
 	LOGI(LOGTAG_IO,"OBJ file created");

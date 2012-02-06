@@ -1,7 +1,7 @@
 #include "positioning/PositionSelector.hpp"
 
 
-PositionSelector::PositionSelector(ARConfigurator * _config)
+PositionSelector::PositionSelector(ARControllerDebugUI * _config)
 {
 	config = _config;
 	pastResults = new CircularList<PositioningResults*>(resultsToKeep);

@@ -34,7 +34,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(NDK_HOME)\platforms\android-9\arch-arm\usr\include;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include;$(OPENCV_HOME)\include;$(NDK_HOME)\sources\android\native_app_glue;$(NDK_HOME)\platforms\android-9\arch-arm\usr\include\linux;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\libs\armeabi-v7a\include;$(ProjectDir)\..\jni;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include\tr1</IncludePath>
+    <IncludePath>$(NDK_HOME)\platforms\android-9\arch-arm\usr\include;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include;$(OPENCV_HOME)\include;$(NDK_HOME)\sources\android\native_app_glue;$(NDK_HOME)\platforms\android-9\arch-arm\usr\include\linux;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\libs\armeabi-v7a\include;$(ProjectDir)\..\jni;$(NDK_HOME)\sources\cxx-stl\gnu-libstdc++\include\tr1;$(QCAR_HOME)\build\include</IncludePath>
     <SourcePath>
     </SourcePath>
     <ExecutablePath />
@@ -81,7 +81,6 @@
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
-    <ClCompile Include="..\jni\positioning\ARConfigurator.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp" />
@@ -101,6 +100,7 @@
     <ClCompile Include="..\jni\userinterface\uimodel\Label.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
     <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp" />
     <ClCompile Include="..\jni\zxing\Binarizer.cpp" />
@@ -154,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\AmplifyRunner.hpp" />
+    <ClInclude Include="..\jni\controllers\ARControllerDebugUI.hpp" />
     <ClInclude Include="..\jni\controllers\CalibrationController.hpp" />
     <ClInclude Include="..\jni\controllers\ARController.hpp" />
     <ClInclude Include="..\jni\controllers\StartupController.hpp" />
@@ -190,7 +191,6 @@
     <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\model\WorldLoader.hpp" />
-    <ClInclude Include="..\jni\positioning\ARConfigurator.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp" />
@@ -218,6 +218,7 @@
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\PageDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\SelectBox.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIConstants.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />

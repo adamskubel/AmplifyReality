@@ -23,6 +23,7 @@ public:
 	~CircularList();
 	void add(T data);
 	T front();
+	T next();
 	T getRelative(int offset);
 
 	void pop_front();
@@ -30,6 +31,9 @@ public:
 	void clear();
 	bool empty();
 	int size();
+	int getMaxSize();
+
+
 
 
 private:
@@ -60,15 +64,24 @@ template <typename T>
 void CircularList<T>::add(T data)
 {
 	lastPosition = (lastPosition + 1) % maxSize;
-	LOGV("CLIST","Adding data in position %d",lastPosition);
+	//LOGV("CLIST","Adding data in position %d",lastPosition);
 	dataArray[lastPosition] = data;
 	numDefined = (numDefined > maxSize) ? maxSize : numDefined+1;
-	LOGV("CLIST","Complete");
+	//LOGV("CLIST","Complete");
+}
+
+template <typename T>
+T CircularList<T>::next()
+{
+	lastPosition = (lastPosition + 1) % maxSize;
+	//LOGV("CLIST","Getting data in position=%d",lastPosition);
+	return dataArray[lastPosition];
 }
 
 template <typename T>
 T CircularList<T>::front()
 {
+	//LOGV("CLIST","Getting data in position=%d",lastPosition);
 	return dataArray[lastPosition];
 }
 
@@ -99,6 +112,12 @@ int CircularList<T>::size()
 }
 
 template <typename T>
+int CircularList<T>::getMaxSize()
+{
+	return maxSize;
+}
+
+template <typename T>
 bool CircularList<T>::empty()
 {
 	return numDefined == 0;
@@ -106,12 +125,7 @@ bool CircularList<T>::empty()
 
 template <typename T>
 void CircularList<T>::clear()
-{
-	/*while (!empty())
-	{
-		delete front();
-		pop_front();
-	}*/
+{	
 	delete[] dataArray;
 	dataArray = new T[maxSize];
 }

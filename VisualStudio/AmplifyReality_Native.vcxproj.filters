@@ -100,9 +100,6 @@
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\datacollection\ImageCollector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -165,9 +162,6 @@
     </ClCompile>
     <ClCompile Include="..\jni\datastructures\CircularList.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\ARConfigurator.cpp">
-      <Filter>Header Files\positioning</Filter>
     </ClCompile>
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp">
       <Filter>Source Files\UI</Filter>
@@ -382,6 +376,15 @@
     <ClCompile Include="..\jni\model\WorldLoader.cpp">
       <Filter>Header Files\model</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\datacollection\ImageCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\ARConfigurator.x">
+      <Filter>Header Files\positioning</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -500,9 +503,6 @@
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\ARConfigurator.hpp">
-      <Filter>Header Files\positioning</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
@@ -740,6 +740,12 @@
     </ClInclude>
     <ClInclude Include="..\jni\model\WorldLoader.hpp">
       <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\SelectBox.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\controllers\ARControllerDebugUI.hpp">
+      <Filter>Header Files\controllers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

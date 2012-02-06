@@ -1,15 +1,15 @@
-//#include "userinterface/uimodel/Panel.hpp"
+#ifndef AR_DEBUG_UI_
+#define AR_DEBUG_UI_
+
+#include "userinterface/uimodel/Label.hpp"
+#include "userinterface/uimodel/CertaintyIndicator.hpp"
 #include "userinterface/uimodel/GridLayout.hpp"
-#include "model/Engine.hpp"
-#include "model/Drawable.hpp"
-#include "model/IDeletable.hpp"
-#include "userinterface/uimodel/NumberSpinner.hpp"
-#include "userinterface/uimodel/PageDisplay.hpp"
+#include "userinterface/uimodel/InputScaler.hpp"
 #include "userinterface/events/EventDelegates.hpp"
-
-
-#ifndef POSITION_CONTROL_CONFIGURATOR_HPP_
-#define POSITION_CONTROL_CONFIGURATOR_HPP_
+#include "userinterface/uimodel/SelectBox.hpp"
+#include "userinterface/uimodel/NumberSpinner.hpp"
+#include "userinterface/uimodel/DataDisplay.hpp"
+#include "userinterface/uimodel/PageDisplay.hpp"
 
 namespace DrawModes
 {
@@ -20,12 +20,16 @@ namespace DrawModes
 }
 
 
-using namespace cv;
-class ARConfigurator : public PageDisplay
+class ARControllerDebugUI : public PageDisplay
 {
 public:
-	ARConfigurator(Engine * engine);
+	ARControllerDebugUI(Engine * engine, Point2i position);
+	void SetTranslation(Mat * data);
+	void SetRotation(Mat * data);
+	void SetPositionCertainty(float certainty);
+	void SetStateDisplay(string stateDescription);
 
+	
 	void SetDefaults();		
 
 	void PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
@@ -43,7 +47,18 @@ public:
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
+	void DrawmodeSelectionChanged(void * sender, SelectionChangedEventArgs args);
+
 	DrawModes::DrawMode currentDrawMode;
+
+
+private:
+	void addPage2(Engine * engine);
+
+	DataDisplay * translationLabel;
+	DataDisplay * rotationLabel;
+	CertaintyIndicator * certaintyIndicator;
+	Label * stateLabel;
 
 
 };

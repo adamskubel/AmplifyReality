@@ -47,6 +47,7 @@ ImageCollector::ImageCollector(int width, int height)
 	}
 	else
 	{
+		//Already set during init..
 		myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
 		myCapture->set(CV_CAP_PROP_FRAME_HEIGHT, height);
 

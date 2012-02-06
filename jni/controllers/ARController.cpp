@@ -13,15 +13,17 @@ ARController::ARController()
 	rgbImage = new Mat();
 	binaryImage = new Mat();
 	
-	currentFrameItem = numItems-1;
-	items = new FrameItem*[numItems];
-	for (int i=0;i < numItems; i ++)
+	
+	const int NumFrameItems = 6;
+
+	frameList = new CircularList<FrameItem*>(NumFrameItems);
+	for (int i=0;i < frameList->getMaxSize(); i ++)
 	{
-		items[i] = new FrameItem();
+		frameList->add(new FrameItem());
 	}
 
-	LOGI(LOGTAG_ARCONTROLLER,"Created %d frame items",numItems);
-	
+	LOGD(LOGTAG_ARCONTROLLER,"Created %d frame items",frameList->getMaxSize());
+			
 	augmentedView = NULL;
 	state = ControllerStates::Loading;
 	isInitialized = false;
@@ -69,28 +71,13 @@ void ARController::initializeUI(Engine * engine)
 	collection->AddChild(debugUI);
 	drawObjects.push_back(debugUI);
 	deletableObjects.push_back(debugUI);
-
-	LOGI(LOGTAG_ARCONTROLLER,"Creating ARConfig");
-	config = new ARConfigurator(engine);
-	collection->AddChild(config);
-	drawObjects.push_back(config);
-		
+			
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
 	
-	GridLayout * grid = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(4,4));	
-	drawObjects.push_back(grid);
-	collection->AddChild(grid);
-			
-	Button * toggleConfigButton = new Button("Config", Colors::MidnightBlue);
-	toggleConfigButton->AddClickDelegate(ClickEventDelegate::from_method<ARConfigurator,&ARConfigurator::ToggleVisibility>(config));
-	grid->AddChild(toggleConfigButton,Point2i(3,0));
-
 	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
-	deletableObjects.push_back(grid);
-	deletableObjects.push_back(config);
 	deletableObjects.push_back(debugUI);
 
 	LOGI(LOGTAG_ARCONTROLLER,"UI initialization complete.");
@@ -111,7 +98,7 @@ void ARController::Initialize(Engine * engine)
 	worldLoader = new WorldLoader();
 
 	//Position Selector instance
-	positionSelector = new PositionSelector(config);	
+	positionSelector = new PositionSelector(debugUI);	
 
 	//Initialize textured quad to render camera image
 	quadBackground = new QuadBackground(engine->ImageSize());
@@ -165,20 +152,6 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 	debugUI->SetRotation(&rotationVector);
 }
 
-FrameItem * ARController::GetFrameItem(Engine * engine)
-{	
-	//Prepare the frame item
-	int lastFrameItem = currentFrameItem;
-	currentFrameItem = (currentFrameItem + 1) % numItems;
-	items[currentFrameItem]->clearOldData();
-	
-	//Set frame timestamp
-	struct timespec time;
-	engine->getTime(&time);
-	items[currentFrameItem]->nanotime = time.tv_nsec;
-		
-	return items[currentFrameItem];
-}
 
 void ARController::SetState(ControllerStates::ControllerState newState)
 {
@@ -190,14 +163,17 @@ void ARController::ProcessFrame(Engine * engine)
 {
 	if (!isInitialized)
 		return;
+
 	//This section is the default per-frame operations
-	FrameItem * item = GetFrameItem(engine);	
+	FrameItem * item = frameList->next();
+	item->clearOldData();
+	//engine->getTime(&item->time);
 	
 	LOGV(LOGTAG_ARCONTROLLER,"Processing frame");
 	getImages(engine,item);
 		
-	AlignmentPatternHelper::MinimumAlignmentPatternScore = config->MinAlignmentScore;//lol static. THIS IS BAD!
-	FinderPatternHelper::MinimumFinderPatternScore = config->MinFinderPatternScore;
+	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->MinAlignmentScore;//lol static. THIS IS BAD!
+	FinderPatternHelper::MinimumFinderPatternScore = debugUI->MinFinderPatternScore;
 
 	vector<Drawable*> debugVector;
 	item->qrCode = QRFinder::LocateQRCodes(*binaryImage, debugVector);
@@ -319,12 +295,12 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	struct timespec start, end;
 	
 	//Retrieve image from the camera	
-	if (config->currentDrawMode == DrawModes::ColorImage)
+	if (debugUI->currentDrawMode == DrawModes::ColorImage)
 	{		
 		engine->imageCollector->newFrame();
 		engine->imageCollector->getCameraImages(*rgbImage, *grayImage);
 	} 
-	else if (config->currentDrawMode == DrawModes::GrayImage || config->currentDrawMode == DrawModes::BinaryImage)
+	else if (debugUI->currentDrawMode == DrawModes::GrayImage || debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{
 		SET_TIME(&start);
 		engine->imageCollector->newFrame();
@@ -344,7 +320,7 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 	else
 		ImageProcessor::SimpleThreshold(grayImage, binaryImage);
 	
-	if (config->currentDrawMode == DrawModes::BinaryImage)
+	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{
 		SET_TIME(&start)
 		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);

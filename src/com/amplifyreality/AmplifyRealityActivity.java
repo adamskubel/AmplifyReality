@@ -13,6 +13,7 @@ public class AmplifyRealityActivity extends NativeActivity
 	static 
 	{
         System.loadLibrary("amplify_reality");
+       	Log.i("AmplifyR","Library loaded.");
 	}
 	
 	public static native void OnMessage(String messageString, Object data);

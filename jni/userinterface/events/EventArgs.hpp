@@ -56,4 +56,16 @@ public:
 	float NewValue;
 };
 
+class SelectionChangedEventArgs : public EventArgs
+{
+public:
+	SelectionChangedEventArgs( void * newSelection, void * oldSelection)
+	{
+		NewSelection = newSelection;
+		OldSelection = oldSelection;
+	}
+	void * NewSelection, * OldSelection;
+
+};
+
 #endif

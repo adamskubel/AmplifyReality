@@ -40,6 +40,7 @@ private:
 	void undistortImage(Mat * inputImage, Mat* outputImage);
 	void generateImage(ImageType type);
 	bool canUndistort();
+
 };
 
 #endif

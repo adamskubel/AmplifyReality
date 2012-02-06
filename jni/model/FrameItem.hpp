@@ -23,6 +23,7 @@ public:
 	~FrameItem();
 
 	long nanotime;
+	struct timespec time;
 
 };
 

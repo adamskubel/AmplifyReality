@@ -18,15 +18,11 @@
 #include "positioning/qrcode/QRFinder.hpp"
 #include "positioning/PositionSelector.hpp"
 
-#include "userinterface/uimodel/Label.hpp"
-#include "userinterface/uimodel/CertaintyIndicator.hpp"
-#include "userinterface/uimodel/GridLayout.hpp"
-#include "userinterface/uimodel/InputScaler.hpp"
-#include "userinterface/events/EventDelegates.hpp"
-
-#include "positioning/ARConfigurator.hpp"
-
 #include "display/opengl/QuadBackground.hpp"
+
+#include "datastructures/CircularList.hpp"
+
+#include "ARControllerDebugUI.hpp"
 
 #ifndef ARController_HPP_
 #define ARController_HPP_
@@ -34,28 +30,6 @@
 using namespace cv;
 using namespace std;
 
-
-#include "userinterface/uimodel/DataDisplay.hpp"
-#include "userinterface/uimodel/PageDisplay.hpp"
-
-class ARControllerDebugUI : public PageDisplay
-{
-public:
-	ARControllerDebugUI(Engine * engine, Point2i position);
-	void SetTranslation(Mat * data);
-	void SetRotation(Mat * data);
-	void SetPositionCertainty(float certainty);
-	void SetStateDisplay(string stateDescription);
-
-private:
-	DataDisplay * translationLabel;
-	DataDisplay * rotationLabel;
-	CertaintyIndicator * certaintyIndicator;
-	GridLayout * myGrid;
-	Label * stateLabel;
-
-
-};
 
 namespace ControllerStates
 {
@@ -80,9 +54,6 @@ public:
 	void Render(OpenGL * openGL);
 
 private:
-	//Constants
-	static const int numItems = 6; //Number of previous frames to store
-	//int minQRScore;
 
 	void drawDebugOverlay(FrameItem * item);
 	void getImages(Engine* engine, FrameItem * item);
@@ -90,9 +61,7 @@ private:
 	void readGyroData(Engine * engine, FrameItem * item);
 	void initializeARView();
 	void initializeUI(Engine * engine);
-
-	FrameItem * GetFrameItem(Engine * engine);
-
+	
 	void SetState(ControllerStates::ControllerState state);
 
 	void Draw(Mat * rgbaImage);
@@ -106,7 +75,6 @@ private:
 	WorldLoader * worldLoader;
 
 	//UI objects
-	ARConfigurator * config;
 	ARControllerDebugUI * debugUI;
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
@@ -116,13 +84,15 @@ private:
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 		
-	FrameItem ** items;	
-	int currentFrameItem;
 	bool isExpired, isInitialized;
 
 	ControllerStates::ControllerState state;
 
 	PositionSelector * positionSelector;
+
+	CircularList<FrameItem*> * frameList;
+
+
 
 };
 

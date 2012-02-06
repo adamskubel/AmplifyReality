@@ -1,7 +1,7 @@
 #include "model/FrameItem.hpp"
 #include "datastructures/CircularList.hpp"
 #include "model/IDeletable.hpp"
-#include "ARConfigurator.hpp"
+#include "controllers/ARControllerDebugUI.hpp"
 
 #ifndef POSITION_SELECTOR_HPP_
 #define POSITION_SELECTOR_HPP_
@@ -31,7 +31,7 @@ public:
 class PositionSelector : public IDeletable
 {
 public:
-	PositionSelector(ARConfigurator * config);
+	PositionSelector(ARControllerDebugUI * config);
 	~PositionSelector();
 	float UpdatePosition(FrameItem * item);
 
@@ -40,7 +40,7 @@ private:
 	CircularList<PositioningResults*> * pastResults;
 	static const int resultsToKeep = 40;
 	void LowpassFilter(PositioningResults * current, PositioningResults * previous);
-	ARConfigurator * config;
+	ARControllerDebugUI * config;
 
 };
 
