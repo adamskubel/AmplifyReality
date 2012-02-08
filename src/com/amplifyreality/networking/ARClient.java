@@ -238,23 +238,29 @@ public class ARClient
 
 	private void Connect()
 	{
-		try
+		Thread t = new Thread(new Runnable()
 		{
-			Log.i(LOGTAG_NETWORKING, "Connecting to server");
-			mySocket = new Socket(host, port);
-			Log.i(LOGTAG_NETWORKING, "Socket created");
-
-			RequestData();
-			StartListening();
-
-//			Log.i(LOGTAG_NETWORKING, "Setting java objects in native layer.");
-//			AmplifyRealityActivity.SetJavaEnv(this);
-
-		} catch (Exception e)
-		{
-			Log.e(LOGTAG_NETWORKING, "Connection error", e);
-			Cleanup();
-		}
+			@Override
+			public void run() 
+			{
+				try
+				{
+					Log.i(LOGTAG_NETWORKING, "Connecting to server");
+					mySocket = new Socket(host, port);
+					Log.i(LOGTAG_NETWORKING, "Socket created");
+	
+					RequestData();
+					StartListening();
+	
+	
+				} catch (Exception e)
+				{
+					Log.e(LOGTAG_NETWORKING, "Connection error", e);
+					Cleanup();
+				}
+			}
+		});
+		t.start();
 	}
 
 	// Synchronous shutdown

@@ -17,22 +17,26 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 	if (code == NULL || code->finderPatterns == NULL)
 		return;
 
-	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns->size());
+//	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns->size());
 	for (int i=0;i<code->finderPatterns->size();i++)
 	{
 		FinderPattern * fp = code->finderPatterns->at(i);
+		if (fp->size == 0)
+			continue;
 		
-		float size = fp->size;
-		size *= 1.2f; //Window a bit bigger.
-
-		Rect window = Rect(fp->pt.x - size/2.0f, fp->pt.y-size/2.0f, size,size);
+		float windowSize = fp->size * 1.2f;  //Window a bit bigger.
+	
+		Rect window = Rect(fp->pt.x - windowSize/2.0f, fp->pt.y-windowSize/2.0f, windowSize,windowSize);
 		debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
 
 		vector<KeyPoint> features;
 		
-		LOGD(LOGTAG_QRFAST,"Calling FastWindow");
+		LOGD(LOGTAG_QRFAST,"Calling FastWindow. FP Size is %ld",fp->size);
 		FastWindow(img,features,window);
-		
+		LOGD(LOGTAG_QRFAST,"Windowing complete, %d features found",features.size());
+		if (features.empty())
+			continue;
+
 		map<float,Point2f> pointDistances;	
 		//Sort based on distance from center
 		for (int i=0;i<features.size();i++)
@@ -40,17 +44,15 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 			float distance = GetPointDistance(features.at(i).pt,fp->pt);
 			pointDistances.insert(pair<float,Point2f>(distance,features.at(i).pt));
 		}
-
-		//sort(pointDistances.begin(),pointDistances.end());
-
-		float minSquareSideLength = size * 0.5f;
-		float maxSquareSideLength = size;
-		float maxPointDistance = size * 1.4f;
+		
+		float minSquareSideLength = fp->size * 0.5f;
+		float maxSquareSideLength =  fp->size*1.2f;
+		float maxPointDistance = fp->size * 1.4f;
 
 		float minArea = pow(minSquareSideLength,2);
 		float maxArea = pow(maxSquareSideLength,2);
 
-		float minCosine = 0.3f;
+		float maxCosine = 0.4f;
 		
 		//Search boundaries
 		map<float,Point2f>::iterator searchBegin = pointDistances.upper_bound(maxPointDistance);
@@ -62,38 +64,87 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 		//testPoints.push_back((*searchBegin).second);
 		
 		bool found = false;
-		map<float,Point2f>::iterator it;
-		for (it = searchBegin;it != searchEnd && !found; it--)
+		map<float,Point2f>::iterator it = searchBegin;
+
+		//Store first point
+		testPoints.push_back((*it).second);
+		it--;
+
+		for (;it != searchEnd && !found; it--)
 		{		
+
 			testPoints.push_back((*it).second);
 			LOGD(LOGTAG_QRFAST,"Starting with point (%f,%f)",testPoints.back().x,testPoints.back().y);
-			//Look for four points of appropriate distance
+			//Look for a point that has a good angle
 			map<float,Point2f>::iterator innerIterator;
 			for (innerIterator = it;innerIterator != searchEnd; innerIterator--)
 			{
-				float distance = GetPointDistance(testPoints.back(),(*innerIterator).second);
-				if (distance > minSquareSideLength && distance < maxSquareSideLength)
+				//Check that the point under test is far enough away from all other points in the test vector
+				bool allPass = false;
+				for (int distCheckIndex = 0; distCheckIndex < testPoints.size(); distCheckIndex++)
 				{
-					testPoints.push_back((*innerIterator).second);		
-					LOGD(LOGTAG_QRFAST,"Added point (%f,%f)",testPoints.back().x,testPoints.back().y);
+					float distance = GetPointDistance(testPoints.back(),(*innerIterator).second);
+					if (distance > minSquareSideLength && distance < maxSquareSideLength)
+					{
+						allPass = true;
+					}
+					else
+					{
+						allPass = false;
+						break;
+					}
+				}
+				
+				//If it passes, then perform cosine test
+				if (allPass)
+				{
+					float cosineEnd = angle(*(testPoints.end()-1),*testPoints.end(),(*innerIterator).second);
+					float cosineMiddle = angle(*(testPoints.end()-1),(*innerIterator).second, *testPoints.end());
+
+					//Point belongs at end of chain
+					if (cosineEnd < maxCosine && cosineEnd <= cosineMiddle)
+					{
+						testPoints.push_back((*innerIterator).second);
+						LOGD(LOGTAG_QRFAST,"Added point to end (%f,%f)",testPoints.back().x,testPoints.back().y);
+					}
+					//Point belongs in middle of chain
+					else if (cosineMiddle < maxCosine && cosineMiddle < cosineEnd)
+					{
+						testPoints.insert(testPoints.end()-1,(*innerIterator).second);
+						LOGD(LOGTAG_QRFAST,"Added point to middle (%f,%f)",testPoints.back().x,testPoints.back().y);
+					}
+
+					//If this was the fourth point, then do vector tests
 					if (testPoints.size() == 4)
 					{							
 						float area = getArea(testPoints);
-						if (area < maxArea && area > minArea && getCosine(testPoints) < minCosine)
+						if (area < maxArea && area > minArea )//&& getCosine(testPoints) < minCosine)
 						{
-							debugVector.push_back(new DebugPoly(testPoints,Colors::Gold));
+							LOGD(LOGTAG_QRFAST,"Square (probably) found");
+							
+							while(!testPoints.empty())
+							{
+								debugVector.push_back(new DebugCircle(testPoints.back(),5,Colors::Gold));
+								testPoints.pop_back();
+							}
+							
+							//	debugVector.push_back(new DebugPoly(testPoints,Colors::Gold));
 							found = true;
 							break;
 						}else
 						{
-							LOGD(LOGTAG_QRFAST,"Square check failed, cos = %f, area = %f (min=%f,max=%f)",getCosine(testPoints),area,minArea,maxArea);			
+							LOGD(LOGTAG_QRFAST,"Square check failed, area = %f (min=%f,max=%f)",area,minArea,maxArea);			
+							
+							//Erase the second point in the vector (first one is fixed in this loop)
+							//testPoints.erase(testPoints.begin()+1); 
 							testPoints.pop_back();
 						}
 					}
 				}
+
 			}
 			LOGD(LOGTAG_QRFAST,"No squares found, trying next point");
-			testPoints.clear();
+			testPoints.erase(testPoints.begin());
 		}
 
 
@@ -120,6 +171,7 @@ float FastTracking::getArea(vector<Point2f> & testPoints)
 		throw exception();
 	}
 
+
 	float maxArea = 0;
 	for (int i=0;i<4;i++)
 	{
@@ -130,13 +182,16 @@ float FastTracking::getArea(vector<Point2f> & testPoints)
 	return maxArea;
 }
 
-static double angle( Point pt1, Point pt2, Point pt0 )
+float FastTracking::angle( Point pt1, Point pt2, Point pt0 )
 {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
     double dx2 = pt2.x - pt0.x;
     double dy2 = pt2.y - pt0.y;
-    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+    double cosineDouble = (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+	//cosineDouble = acos(cosineDouble);
+	LOGD(LOGTAG_QRFAST,"Cosine between points  (%d,%d) <- (%d,%d) -> (%d,%d) is %lf",pt1.x,pt1.y,pt0.x,pt0.y,pt2.x,pt2.y,cosineDouble);
+	return (float)cosineDouble;
 }
 
 float FastTracking::getCosine(vector<Point2f> & testPoints)
@@ -147,14 +202,12 @@ float FastTracking::getCosine(vector<Point2f> & testPoints)
 		throw exception();
 	}
 
-	float maxCosine = 0;
+	float averageCosine=0;
 	for (int i=0;i<4;i++)
 	{
-		float cosine = fabs(angle(testPoints[i%4],testPoints[(i+1)%4],testPoints[(i+2)%4]));
-		maxCosine = MAX(maxCosine, cosine);
+		averageCosine += fabs(angle(testPoints[i%4],testPoints[(i+1)%4],testPoints[(i+2)%4]));	
 	}
-
-	return maxCosine;
+	return averageCosine/4.0f;
 }
 
 
@@ -363,3 +416,61 @@ void FastTracking::findSquares( const Mat& image, vector<vector<Point> >& square
 }
 
 */
+
+/*
+bool found = false;
+		map<float,Point2f>::iterator it;
+		for (it = searchBegin;it != searchEnd && !found; it--)
+		{		
+			testPoints.push_back((*it).second);
+			LOGD(LOGTAG_QRFAST,"Starting with point (%f,%f)",testPoints.back().x,testPoints.back().y);
+			//Look for four points of appropriate distance
+			map<float,Point2f>::iterator innerIterator;
+			for (innerIterator = it;innerIterator != searchEnd; innerIterator--)
+			{
+				//Check that the point under test is far enough away from all other points in the test vector
+				bool allPass = false;
+				for (int distCheckIndex = 0; distCheckIndex < testPoints.size(); distCheckIndex++)
+				{
+					float distance = GetPointDistance(testPoints.back(),(*innerIterator).second);
+					if (distance > minSquareSideLength && distance < maxSquareSideLength)
+					{
+						allPass = true;
+					}
+					else
+					{
+						allPass = false;
+						break;
+					}
+				}
+				
+				//If it passes, add it to the vector
+				if (allPass)
+				{
+					testPoints.push_back((*innerIterator).second);	
+					LOGD(LOGTAG_QRFAST,"Added point (%f,%f)",testPoints.back().x,testPoints.back().y);
+					//If this was the fourth point, then do vector tests
+					if (testPoints.size() == 4)
+					{							
+						float area = getArea(testPoints);
+						if (area < maxArea && area > minArea && getCosine(testPoints) < minCosine)
+						{
+							debugVector.push_back(new DebugPoly(testPoints,Colors::Gold));
+							found = true;
+							break;
+						}else
+						{
+							LOGD(LOGTAG_QRFAST,"Square check failed, cos = %f, area = %f (min=%f,max=%f)",getCosine(testPoints),area,minArea,maxArea);			
+							
+							//Erase the second point in the vector (first one is fixed in this loop)
+							testPoints.erase(testPoints.begin()+1); 
+							//testPoints.pop_back();
+						}
+					}
+				}
+
+			}
+			LOGD(LOGTAG_QRFAST,"No squares found, trying next point");
+			testPoints.clear();
+		}
+		*/

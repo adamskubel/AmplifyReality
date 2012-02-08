@@ -22,6 +22,7 @@ private:
 	static float getPolyArea(Point2f a, Point2f b, Point2f c);
 	static float getArea(vector<Point2f> & testPoints);
 	static float getCosine(vector<Point2f> & testPoints);
+	static float angle(Point2i p1, Point2i p2, Point2i p0);
 
 	//static void ConcentricSegmentation(vector<KeyPoint> & features, Point2i center, float innerMost, float middle, float outerMost, vector<KeyPoint> *& kpVecArray);// map<int,vector<KeyPoint> > & concentricMap);
 };
