@@ -233,6 +233,7 @@ void ARController::ProcessFrame(Engine * engine)
 	
 	LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
 	FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);
+	//FastTracking::DoSquareTracking(*binaryImage,item->qrCode,debugVector);
 
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	

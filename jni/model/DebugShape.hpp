@@ -79,5 +79,52 @@ private:
 };
 
 
+class DebugPoly : public Drawable
+{
+public:
+	static int instanceCount;
+	vector<Point2i> points;
+
+
+	DebugPoly(vector<Point> _points, Scalar _color, int _thickness = 1)
+	{
+		
+		points = _points;
+		fillColor = _color;
+		thickness = _thickness;
+	}
+	
+	DebugPoly(vector<Point2f> _points, Scalar _color, int _thickness = 1)
+	{
+		for (int i=0;i<_points.size();i++)
+		{
+			points.push_back(Point2i(_points[i].x,_points[i].y));
+		}
+		fillColor = _color;
+		thickness = _thickness;
+	}
+
+	~DebugPoly()
+	{
+	}
+
+
+	void Draw(Mat * rgbaImage)
+	{		
+		const Point* p = &points[0];
+		int n = (int)points.size();
+		polylines(*rgbaImage, &p, &n, 1, true, fillColor, thickness, CV_AA);
+	}
+
+private:
+	Point2i center;
+	int radius, thickness;
+	Scalar fillColor;
+	
+	
+};
+
+
+
 
 #endif

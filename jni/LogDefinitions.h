@@ -14,6 +14,7 @@
 #define  LOG_TAG_TIME_BASE    "AmplifyR-Time-"
 
 #define LOGTAG_QR "QR"
+#define LOGTAG_QRFAST "QRFast"
 #define LOGTAG_ARCONTROLLER "ARController"
 #define LOGTAG_MAIN "Main"
 #define LOGTAG_OPENGL "OpenGL"
