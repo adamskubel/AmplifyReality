@@ -9,12 +9,15 @@
 #include "model/IDeletable.hpp"
 #include "display/opengl/QuadBackground.hpp"
 #include <opencv2/core/core.hpp>
+#include "CalibrationController.hpp"
+#include "ARController.hpp"
 
 
 #ifndef STARTUP_CONTROLLER_HPP_
 #define STARTUP_CONTROLLER_HPP_
 
 using namespace cv;
+
 
 class StartupController : public Controller
 {
@@ -24,6 +27,8 @@ public:
 	void ProcessFrame(Engine * engine);
 	void Initialize(Engine * engine);
 	void Teardown(Engine * engine);
+
+	Controller * GetSuccessor(Engine * engine);
 	
 	void startButtonPress(void * sender, EventArgs args);
 
@@ -33,6 +38,8 @@ public:
 	void SetExpired();
 
 private:
+	bool doCalibration;
+
 	vector<IDeletable*> deleteVector;
 	vector<Drawable*> drawObjects;
 	GridLayout * grid;

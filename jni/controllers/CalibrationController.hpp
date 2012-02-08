@@ -16,8 +16,10 @@
 #include "userinterface/uimodel/InputScaler.hpp"
 #include "userinterface/events/EventDelegates.hpp"
 #include "userinterface/events/EventArgs.hpp"
-#include "model/Drawable.hpp"
+#include "userinterface/uimodel/DataDisplay.hpp"
 
+#include "model/Drawable.hpp"
+#include "ARController.hpp"
 
 
 
@@ -25,6 +27,20 @@
 #define CALIBRATIONCONTROLLER_HPP_
 
 using namespace cv;
+
+namespace CalibrationControllerStates
+{
+	enum CalibrationControllerState
+	{
+		Running,
+		Calculating1,
+		Calculating2,
+		Calculated,
+		Finding,
+		Exiting,
+		Complete
+	};
+}
 
 class CalibrationController : public Controller
 {
@@ -36,25 +52,27 @@ public:
 	void ProcessFrame(Engine * engine);
 	bool IsExpired();
 	void SetExpired();
-	bool wasSuccessful();
 	void captureImage();
 	void getCameraMatrices(Mat& camera, Mat& distortion);
 	void HandleButtonClick(void * sender, EventArgs args);
 	void Render(OpenGL * openGL);
+	Controller * GetSuccessor(Engine * engine);
+	void CalculateMatrices();
 
 private:
-	static const int SampleCount = NUM_CALIBRATION_SAMPLES;
+	CalibrationControllerStates::CalibrationControllerState state;
 
 	vector<vector<Point3f> > * objectPoints;
 	vector<vector<Point2f> > * imagePoints;
 	int collectionCount;
-	bool calibrationComplete, exitRequested;
-	bool isFinding, isInitialized;
+	bool isInitialized;
 	Size_<int> chessBoardSize;
 	Mat *distortionMatrix, * cameraMatrix;
-	Button * myCaptureButton;
+	Button * captureButton, * calculateButton;
 	QuadBackground * quadBackground;
 	vector<Point3f> generateChessboardPoints(Size_<int> boardDimensions, float squareSize);
+	NumberSpinner * sizeSpinner;
+	DataDisplay * cameraMatDisplay, * distortionMatDisplay;
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 

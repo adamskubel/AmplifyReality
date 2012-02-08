@@ -44,6 +44,11 @@ public:
 		;
 	}
 
+	virtual Controller * GetSuccessor(Engine * engine)
+	{
+		;
+	}
+
 
 
 };

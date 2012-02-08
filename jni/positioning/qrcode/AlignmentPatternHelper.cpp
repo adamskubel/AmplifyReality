@@ -3,6 +3,8 @@
 
 int AlignmentPatternHelper::MinimumAlignmentPatternScore = 180;
 
+//#define DRAW_AP_DEBUG_LAYER
+
 void AlignmentPatternHelper::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Drawable*>& debugVector)
 {
 	Point2i searchCenter = newCode->alignmentPattern;
@@ -19,9 +21,9 @@ void AlignmentPatternHelper::FindAlignmentPattern(Mat & M, QRCode * newCode, vec
 		startY = 0;
 	if (endY >= M.rows)
 		endY = M.rows -1;
-
+#ifdef DRAW_AP_DEBUG_LAYER
 	debugVector.push_back(new DebugRectangle(Rect(Point2i(startX,startY),Point2i(endX,endY)),Colors::CornflowerBlue));
-
+#endif
 	for (int y = startY;y<endY;y+=2)
 	{
 		int bw[3] = { 0 };
@@ -68,24 +70,31 @@ void AlignmentPatternHelper::FindAlignmentPattern(Mat & M, QRCode * newCode, vec
 							if (CheckAlignmentDiagonals(M,Point2i(tx,ty),verticalBw,horizontalBw,debugVector))
 							{									
 								int aPSize =  horizontalBw[2] + horizontalBw[1] + horizontalBw[0];
+#ifdef DRAW_AP_DEBUG_LAYER
 								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::Lime));
+#endif
 								newCode->alignmentPattern = Point2i(tx,ty);
-							//	LOGD(LOGTAG_QR,"Found alignment pattern at (%d,%d) -> (%d,%d), Size=%d",x,y,tx,ty,aPSize);
 								return;
 							}	
 							else
-							{								
+							{			
+#ifdef DRAW_AP_DEBUG_LAYER
 								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::PeachPuff));
+#endif		
 							}
 						}
 						else
 						{
+#ifdef DRAW_AP_DEBUG_LAYER
 							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10, Colors::Gold));
+#endif		
 						}
 					}
 					else
 					{
+#ifdef DRAW_AP_DEBUG_LAYER
 						debugVector.push_back(new DebugCircle(Point2i(tx,y),3,Colors::Red,-1));
+#endif					
 					}
 
 				}
@@ -159,9 +168,9 @@ bool AlignmentPatternHelper::CheckAlignmentDiagonals(const Mat& image, Point2i c
 
 	int  yMin = center.y - (verticalBw[0] + verticalBw[1])/2;
 	int  yMax = center.y + (verticalBw[2] + verticalBw[1])/2;
-
+#ifdef DRAW_AP_DEBUG_LAYER
 	debugVector.push_back(new DebugRectangle(Rect(Point2i(xMin,yMin), Point2i(xMax,yMax)),Colors::Red));
-
+#endif
 	int j = xMin;
 	for (; j < xMax && image.at<unsigned char>(yMin,j) != 0; j++)
 		;

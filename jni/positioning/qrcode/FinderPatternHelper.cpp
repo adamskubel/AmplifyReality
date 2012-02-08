@@ -3,8 +3,11 @@
 
 int FinderPatternHelper::MinimumFinderPatternScore = 180;
 
-void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& fpv, vector<Drawable*> & debugVector)
+//#define DRAW_FP_DEBUG_LAYER
+
+void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector * fpv, vector<Drawable*> & debugVector)
 {
+	LOGD(LOGTAG_QR,"Enter FFP");
 	bool skip = true;
 	int bw[5] = { 0 };
 	int k = 0;
@@ -41,9 +44,9 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 			if (k == 5)
 			{				
 				bool result = false;
-				if (fpv.size() > 0)
+				if (fpv->size() > 0)
 				{
-					result = CheckRatios(bw,fpv.back()->patternWidths);
+					result = CheckRatios(bw,fpv->back()->patternWidths);
 				}
 				else
 				{
@@ -59,26 +62,82 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 
 					if (ty != 0)
 					{
+						LOGD(LOGTAG_QR,"Found vertical");
 						int t = FindCenterHorizontal(M, tx, ty, bw); /* Calculate it again. */
-
-						if (t != 0)
+					
+												
+						if (t == 0)
 						{
-							tx = t;
+#ifdef DRAW_FP_DEBUG_LAYER
+							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10, Colors::Gold));
+#endif
+							return;
 						}
+						
+						LOGD(LOGTAG_QR,"Found horizontal");
+
+						//int hcenterDiag1 = FindCenterHorizontal(M, tx, ty, bw,1); //Calculate diagonal centers
+						//int hcenterDiag2 = FindCenterHorizontal(M, tx, ty, bw,-1); 
+
+						if (false)//hcenterDiag1 == 0)
+						{
+#ifdef DRAW_DP_DEBUG_LAYER
+							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10, Colors::Red));
+#endif							
+							return;
+						}
+						else
+						{
+#ifdef DRAW_FP_DEBUG_LAYER
+							debugVector.push_back(new DebugCircle(Point2i(hcenterDiag1,ty),4, Colors::Red,true));
+#endif
+						}
+
+						if (false)//if (hcenterDiag2 == 0)
+						{
+#ifdef DRAW_FP_DEBUG_LAYER	
+							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10,Colors::Lime));
+#endif
+							return;
+						}
+						else
+						{
+#ifdef DRAW_FP_DEBUG_LAYER								
+							debugVector.push_back(new DebugCircle(Point2i(hcenterDiag2,ty),4,Colors::Lime,true));
+#endif
+						}
+
+						tx = t;
 
 						Point2i pt;
 						pt.x = tx;
 						pt.y = ty;
 
+						
+						LOGD(LOGTAG_QR,"Creating new pattern.");
 						FinderPattern * fp = new FinderPattern();
-						for (int arrayCopy=0;arrayCopy<5;arrayCopy++)
-						{
-							fp->patternWidths[arrayCopy] = bw[arrayCopy];
-						}
+						
 						fp->hitCount = 1;
 						fp->pt = pt;
 						fp->size = bw[0] + bw[1] + bw[2] + bw[3] + bw[4];
-						fpv.push_back_pattern(fp);
+
+						if (fpv->push_back_pattern(fp))
+						{
+							
+							LOGD(LOGTAG_QR,"Pattern already exists, deleting new pattern.");
+							//Pattern already found, so delete this one
+							delete fp;
+							LOGD(LOGTAG_QR,"Delete successful");
+						}
+						else
+						{
+							for (int arrayCopy=0;arrayCopy<5;arrayCopy++)
+							{
+								fp->patternWidths[arrayCopy] = bw[arrayCopy];
+							}
+							LOGD(LOGTAG_QR,"Copied size array");
+						}
+												
 
 						if (skip)
 						{
@@ -98,7 +157,9 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 
 					} else
 					{
-						//debugVector.push_back(Point3i(x, y, 5));
+#ifdef DRAW_FP_DEBUG_LAYER
+						debugVector.push_back(new DebugCircle(Point2i(tx,y),3,Colors::PeachPuff,true));
+#endif
 					}
 				}
 
@@ -111,9 +172,10 @@ void FinderPatternHelper::FindFinderPatterns(cv::Mat& M, FinderPattern_vector& f
 			}
 		}
 	}
+	LOGV(LOGTAG_QR,"Exiting FFP");
 }
 
-bool FinderPatternHelper::CheckRatios(int * newBw, int * oldBw)
+bool FinderPatternHelper::CheckRatios(int * newBw, int * oldBw, float scoreModifier)
 {
 	int newModuleSum = 0, oldModuleSum = 0;
 	bool useOld = oldBw != NULL;
@@ -171,7 +233,7 @@ bool FinderPatternHelper::CheckRatios(int * newBw, int * oldBw)
 
 	int score = comparisonScore * (sizeScore + symmetryScore + oldNewCompareScore);	
 	
-	if (score > MinimumFinderPatternScore)
+	if (score > ((int)(MinimumFinderPatternScore*scoreModifier)))
 	{		
 		//LOGV(LOGTAG_QR,"Found pattern! Scores were: Sym=%d,Size=%d,Compare=%d,OldNewScore=%d < MinimumFinderPatternScore=%d",symmetryScore,sizeScore,comparisonScore,oldNewCompareScore,MinimumFinderPatternScore);
 		return true;
@@ -184,13 +246,13 @@ bool FinderPatternHelper::CheckRatios(int * newBw, int * oldBw)
 	}
 }
 
-int FinderPatternHelper::SkipHeuristic(const FinderPattern_vector& fpv)
+int FinderPatternHelper::SkipHeuristic(FinderPattern_vector * fpv)
 {
 	long skip = 0;
 
-	if (fpv.HitConfidence() >= 2)
+	if (fpv->HitConfidence() >= 2)
 	{
-		skip = abs(fpv[0]->pt.x - fpv[1]->pt.x) - abs(fpv[0]->pt.y - fpv[1]->pt.y);
+		skip = abs(fpv->at(0)->pt.x - fpv->at(1)->pt.x) - abs(fpv->at(0)->pt.y - fpv->at(1)->pt.y);
 		/* Get space between the
 		 two "top" finder patterns. */
 	}
@@ -266,29 +328,30 @@ int FinderPatternHelper::FindCenterVertical(const Mat& image, int x, int y, int 
 	//LOGD( "FindCenterVertical_End");
 	return (i - bw[4] - bw[3]) - (bw[2] / 2);
 }
-int FinderPatternHelper::FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[])
+int FinderPatternHelper::FindCenterHorizontal(const Mat& image, int x, int startY, int fpbw[], int yDelta)
 {
 	int bw[5] = { 0 };
 
 	//LOGD( "FindCenterHorizontal_Start");
 	int j = x;
+	int y = startY;
 
 	/* Calculate horizontal finder pattern left from the center. */
-	for (; j > 0 && image.at<unsigned char>(y, j) == 0; ++bw[2], --j)
+	for (; j > 0 && image.at<unsigned char>(y, j) == 0; ++bw[2], --j, y-= yDelta)
 		;
 	if (j == 0)
 	{
 		return 0;
 	}
 
-	for (; j > 0 && image.at<unsigned char>(y, j) != 0 && bw[1] < fpbw[2]; ++bw[1], --j)
+	for (; j > 0 && image.at<unsigned char>(y, j) != 0 && bw[1] < fpbw[2]; ++bw[1], --j, y-= yDelta)
 		;
 	if (j == 0 || bw[1] >= fpbw[2])
 	{
 		return 0;
 	}
 
-	for (; j >= 0 && image.at<unsigned char>(y, j) == 0 && bw[0] < fpbw[2]; ++bw[0], --j)
+	for (; j >= 0 && image.at<unsigned char>(y, j) == 0 && bw[0] < fpbw[2]; ++bw[0], --j, y-= yDelta)
 		;
 	if (bw[0] >= fpbw[2])
 	{
@@ -297,26 +360,32 @@ int FinderPatternHelper::FindCenterHorizontal(const Mat& image, int x, int y, in
 
 	/* Calculate horizontal finder pattern right from the center. */
 	j = x + 1;
-	for (; j < image.cols && image.at<unsigned char>(y, j) == 0; ++bw[2], ++j)
+	y = startY + yDelta;
+
+	for (; j < image.cols && image.at<unsigned char>(y, j) == 0; ++bw[2], ++j, y+= yDelta)
 		;
 	if (j == image.rows)
 	{
 		return 0;
 	}
 
-	for (; j < image.cols && image.at<unsigned char>(y, j) != 0 && bw[3] < fpbw[2]; ++bw[3], ++j)
+	for (; j < image.cols && image.at<unsigned char>(y, j) != 0 && bw[3] < fpbw[2]; ++bw[3], ++j, y+= yDelta)
 		;
 	if (j == image.cols || bw[3] >= fpbw[2])
 	{
 		return 0;
 	}
 
-	for (; j < image.cols && image.at<unsigned char>(y, j) == 0 && bw[4] < fpbw[2]; ++bw[4], ++j)
+	for (; j < image.cols && image.at<unsigned char>(y, j) == 0 && bw[4] < fpbw[2]; ++bw[4], ++j, y+= yDelta)
 		;
 	if (bw[4] >= fpbw[2])
 	{
 		return 0;
 	}
+
+	float scoreMod = 1.0f;
+	if (yDelta != 0)
+		scoreMod = 0.7f;
 
 	if (CheckRatios(bw,NULL) == false)
 	{

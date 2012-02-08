@@ -36,6 +36,7 @@ public:
 	void RotationFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
 	void MinimumFinderPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
 	void MinimumAlignmentPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
+	void FastThresholdChanged(void * sender, NumberSpinnerEventArgs args);
 
 	void GlobalTouchEvent(void * sender, TouchEventArgs args);
 
@@ -44,6 +45,7 @@ public:
 	float RotationFilterAlpha;
 	float MinFinderPatternScore;
 	float MinAlignmentScore;
+	float FastThreshold;
 
 	void ToggleVisibility(void * sender, EventArgs args);
 

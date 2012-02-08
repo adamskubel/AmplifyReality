@@ -8,10 +8,16 @@
 #include "model/network/NetworkMessages.hpp"
 #include "model/network/WavefrontModel.hpp"
 #include "model/network/ARCommunicator.hpp"
+#include "model/concurrent/ThreadedClass.hpp"
 
 pthread_mutex_t incomingMutex, outgoingMutex;
 static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
+//static JNIEnv * javaEnvironment;
+//static JavaVM * javaVM;
+//static jobject clientObject;
+
+//static volatile bool javaEnvInitialized = false;
 
 
 extern "C"
@@ -44,6 +50,14 @@ extern "C"
 		pthread_mutex_unlock(&incomingMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
 	}
+
+	/*JNIEXPORT jint 
+		JNI_OnLoad(JavaVM * jvm, void * reserved)
+	{
+		LOGD(LOGTAG_JNI,"JNI Load Called");
+		javaVM = jvm;
+		return JNI_VERSION_1_6;
+	}*/
 
 	JNIEXPORT jobjectArray JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
@@ -80,11 +94,29 @@ extern "C"
 		pthread_mutex_unlock(&outgoingMutex);
 		return returnArray;
 	}
+
+	//JNIEXPORT jobjectArray JNICALL 
+	//	Java_com_amplifyreality_AmplifyRealityActivity_SetJavaEnv(JNIEnv * env, jobject  obj, jobject _clientObject)
+	//{		
+	//	clientObject = _clientObject;
+	//	//javaEnvironment = new JNIEnv();
+	//	//LOGI(LOGTAG_JNI,"Copying java environment...");
+	//	//memcpy(javaEnvironment, env, sizeof(JNIEnv));
+	////	javaEnvironment = env;
+
+	//	LOGI(LOGTAG_JNI,"JNIEnv set, version=%d",env->GetVersion());
+
+	//	javaEnvInitialized = true;
+	//}
+
+	
 }
 
 
 
+
 static void engineHandleCommand(struct android_app* app, int32_t cmd);
+static void sendMessagesToJNI(vector<OutgoingMessage*> messages);
 static int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent);
 
 void initializeEngine(struct android_app* state, Engine & engine);
@@ -204,6 +236,12 @@ void shutdownEngine(Engine* engine)
 	LOGI(LOGTAG_MAIN,"Shutdown complete.");
 }
 
+//void sendMessagesToJNI(vector<OutgoingMessage*> messages)
+//{
+//	LOGD(LOGTAG_JNI,"Creating java message thread");
+//	JavaMessageThread * thread = new JavaMessageThread(javaVM, clientObject, &incomingMutex, messages);
+//	LOGD(LOGTAG_JNI,"Thread created.");
+//}
 
 void android_main(struct android_app* state)
 {	
@@ -273,7 +311,8 @@ void android_main(struct android_app* state)
 			{
 				count++;
 				mainEngine.communicator->AddIncomingMessage(jniDataVector.back());
-				//delete jniDataVector.back();
+				LOGD(LOGTAG_MAIN,"Deleting JNI message. Count = %d",count);
+				delete jniDataVector.back();
 				jniDataVector.pop_back();
 			}
 			if (count > 0)
@@ -297,12 +336,25 @@ void android_main(struct android_app* state)
 			{
 				LOGD(LOGTAG_NETWORKING,"Unable to lock outgoing mutex");
 			}
+			
+			/*vector<OutgoingMessage*> outgoingVector;
+			mainEngine.communicator->GetOutgoingMessages(outgoingVector);
+			sendMessagesToJNI(outgoingVector);*/
 		}
 	
 
 		if (mainEngine.animating)
 		{
-			myRunner.DoFrame(&mainEngine);
+			try
+			{
+				myRunner.DoFrame(&mainEngine);
+			}
+			catch (exception & e)
+			{
+				LOGE("Exiting due to caught exception. Message=%s",e.what());
+				myRunner.Teardown(&mainEngine);
+				shutdownEngine(&mainEngine);
+			}
 		}
 	}
 

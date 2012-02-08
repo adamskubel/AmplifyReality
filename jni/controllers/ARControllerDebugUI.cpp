@@ -46,18 +46,7 @@ void ARControllerDebugUI::addPage2(Engine * engine)
 	DoLayout(Rect(padding,padding,engine->imageWidth-padding*2, engine->imageHeight - padding*2));
 
 	GridLayout * myGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
-	
-	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");
-	positionSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::PositionFilterAlphaChanged>(this));
-	myGrid->AddChild(positionSpinner,Point2i(0,0));
-	positionSpinner->SetMaximum(1.0f);
-	positionSpinner->SetMinimum(0.0f);
 
-	NumberSpinner * rotationSpinner = new NumberSpinner("R-Alpha",RotationFilterAlpha,0.05f,"%2.2f");
-	rotationSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::RotationFilterAlphaChanged>(this));
-	myGrid->AddChild(rotationSpinner,Point2i(0,1));
-	rotationSpinner->SetMaximum(1.0f);
-	rotationSpinner->SetMinimum(0.0f);
 
 	NumberSpinner * numberSpinner2 = new NumberSpinner("MinFPScore",MinFinderPatternScore,10.0f,"%3.1f");
 	numberSpinner2->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::MinimumFinderPatternScoreChanged>(this));
@@ -79,6 +68,11 @@ void ARControllerDebugUI::addPage2(Engine * engine)
 	drawModeSelect->SetSelectedIndex(1);
 	myGrid->AddChild(drawModeSelect,Point2i(2,0));
 
+	NumberSpinner * fastThresh = new NumberSpinner("FastThresh",9,1,"%3.1f");
+	fastThresh->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::FastThresholdChanged>(this));
+	fastThresh->SetMaximum(15);
+	fastThresh->SetMinimum(9);
+	myGrid->AddChild(fastThresh,Point2i(0,0));
 	
 	//engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::GlobalTouchEvent>(this));	
 
@@ -87,6 +81,19 @@ void ARControllerDebugUI::addPage2(Engine * engine)
 	AddChild(myGrid);
 
 	GridLayout * nextPageGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
+
+		
+	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");
+	positionSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::PositionFilterAlphaChanged>(this));
+	nextPageGrid->AddChild(positionSpinner,Point2i(0,0));
+	positionSpinner->SetMaximum(1.0f);
+	positionSpinner->SetMinimum(0.0f);
+
+	NumberSpinner * rotationSpinner = new NumberSpinner("R-Alpha",RotationFilterAlpha,0.05f,"%2.2f");
+	rotationSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::RotationFilterAlphaChanged>(this));
+	nextPageGrid->AddChild(rotationSpinner,Point2i(0,1));
+	rotationSpinner->SetMaximum(1.0f);
+	rotationSpinner->SetMinimum(0.0f);
 	
 	NumberSpinner * testSpinner = new NumberSpinner("Cats",0.1f,0.05f,"%2.2f");
 	nextPageGrid->AddChild(testSpinner,Point2i(0,0));
@@ -101,6 +108,12 @@ void ARControllerDebugUI::SetDefaults()
 	MinFinderPatternScore = 190;
 	MinAlignmentScore = 180;
 	currentDrawMode = DrawModes::GrayImage;
+	FastThreshold = 9.0f;
+}
+
+void ARControllerDebugUI::FastThresholdChanged(void * sender, NumberSpinnerEventArgs args)
+{
+	FastThreshold = args.NewValue;
 }
 
 void ARControllerDebugUI::PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args)

@@ -85,9 +85,9 @@ void AugmentedView::Render(OpenGL * openGL)
 		
 		//LOGV(LOGTAG_OPENGL,"With rotation (%f,%f,%f)",object->rotation.x,object->rotation.y,object->rotation.z);
 
-		/*OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
+		OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
 		OpenGLHelper::rotate(modelMatrix,object->rotation.y, Point3f(0.0f, 1.0f, 0.0f));
-		OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));*/
+		OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));
 
 
 		OpenGLHelper::scale(modelMatrix,object->scale);
@@ -129,9 +129,9 @@ void AugmentedView::SetCameraPosition(OpenGLRenderData & renderData)
 		
 		//LOGV(LOGTAG_OPENGL,"With rotation (%f,%f,%f)",object->rotation.x,object->rotation.y,object->rotation.z);
 
-		/*OpenGLHelper::rotate(projection,rotation->at<double>(0,0), Point3f(1.0f, 0.0f, 0.0f));
-		OpenGLHelper::rotate(projection,rotation->at<double>(0,1), Point3f(0.0f, 1.0f, 0.0f));
-		OpenGLHelper::rotate(projection,rotation->at<double>(0,2), Point3f(0.0f, 0.0f, 1.0f));*/
+		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,0), Point3f(1.0f, 0.0f, 0.0f));
+		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,1), Point3f(0.0f, 1.0f, 0.0f));
+		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,2), Point3f(0.0f, 0.0f, 1.0f));
 	}
 	
 	Mat pt = Mat(projection.t());

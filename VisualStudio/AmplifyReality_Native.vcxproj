@@ -84,6 +84,7 @@
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp" />
+    <ClCompile Include="..\jni\positioning\qrcode\FastTracking.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FindPattern.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="..\jni\display\opengl\QuadBackground.hpp" />
     <ClInclude Include="..\jni\ExceptionCodes.hpp" />
     <ClInclude Include="..\jni\LogDefinitions.h" />
+    <ClInclude Include="..\jni\model\concurrent\ThreadedClass.hpp" />
     <ClInclude Include="..\jni\model\DebugShape.hpp" />
     <ClInclude Include="..\jni\model\IDeletable.hpp" />
     <ClInclude Include="..\jni\model\Drawable.hpp" />
@@ -194,6 +196,7 @@
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp" />
+    <ClInclude Include="..\jni\positioning\qrcode\FastTracking.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FindPattern.h" />

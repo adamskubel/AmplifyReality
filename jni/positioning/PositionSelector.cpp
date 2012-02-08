@@ -40,6 +40,7 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			currentResults->Position = *(item->translationMatrix);
 			currentResults->Rotation = *(item->rotationMatrix);
 			currentResults->positioningMethod = PositioningMethods::QRCode;
+			currentResults->PositionCertainty = 1.0f;
 
 			if (!pastResults->empty())
 			{
@@ -47,7 +48,7 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			}
 			pastResults->add(currentResults);
 			
-			return 1.0f;
+			return currentResults->PositionCertainty;
 		}
 		else //Partial or no code. Ignore partial case for now.
 		{
@@ -61,11 +62,12 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 				currentResults->Position = lastResults->Position;
 				currentResults->Rotation = lastResults->Rotation;
 				currentResults->positioningMethod = PositioningMethods::Momentum;
+				currentResults->PositionCertainty = lastResults->PositionCertainty * 0.9f;
 				LowpassFilter(currentResults, pastResults->front());
 				pastResults->add(currentResults);
 		
 				
-				return 0.5f;
+				return currentResults->PositionCertainty;
 			}
 			else //Just started and there are no past results. Position is completely unknown.
 			{

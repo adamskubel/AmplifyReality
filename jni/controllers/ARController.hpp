@@ -44,19 +44,18 @@ namespace ControllerStates
 class ARController : public Controller, private Drawable //,public OpenGLRenderable
 {
 public:
-	ARController();
-	ARController(Mat camera, Mat distortion);
+	ARController(Mat camera = Mat(), Mat distortion = Mat());
 	~ARController();
 	void ProcessFrame(Engine * engine);
 	void Initialize(Engine * engine);
 	void Teardown(Engine * engine);
-
+	
 	void Render(OpenGL * openGL);
 
 private:
 
 	void drawDebugOverlay(FrameItem * item);
-	void getImages(Engine* engine, FrameItem * item);
+	void getImages(Engine* engine);
 	void locateCodes(Engine* engine, FrameItem * item);	
 	void readGyroData(Engine * engine, FrameItem * item);
 	void initializeARView();
@@ -71,6 +70,7 @@ private:
 	std::vector<IDeletable*> deletableObjects;
 
 	QRLocator * qrLocator;
+	QRFinder * qrFinder;
 	AugmentedView * augmentedView;
 	WorldLoader * worldLoader;
 
@@ -86,12 +86,13 @@ private:
 		
 	bool isExpired, isInitialized;
 
-	ControllerStates::ControllerState state;
+	ControllerStates::ControllerState controllerState;
 
 	PositionSelector * positionSelector;
 
 	CircularList<FrameItem*> * frameList;
 
+	int frameCount;
 
 
 };

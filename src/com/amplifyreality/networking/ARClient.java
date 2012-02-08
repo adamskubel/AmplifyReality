@@ -29,16 +29,17 @@ public class ARClient
 	int port = 12312;
 	volatile boolean listening = false;
 
-	private LinkedBlockingQueue<ClientMessage> outgoingQueue;
-	
+	private LinkedBlockingQueue<Object[]> outgoingQueue;
+
 	Socket mySocket;
 	BufferedReader reader;
 
 	public ARClient()
 	{
 		reader = null;
+		outgoingQueue = new LinkedBlockingQueue<Object[]>();
 		Connect();
-		
+
 	}
 
 	public ARClient(String host, int port)
@@ -49,6 +50,43 @@ public class ARClient
 		Connect();
 	}
 
+	private void SendNativeMessages(Object[] msgs)
+	{
+
+		if (msgs == null)
+			return;
+		for (int i = 0; i < msgs.length; i++)
+		{
+			if (msgs[i] == null)
+				continue;
+
+			NativeMessage message = (NativeMessage) msgs[i];
+			Serializer xmlSerializer = new Persister();
+
+			try
+			{
+				ClientXMLMessage msg = new ClientXMLMessage(xmlSerializer, message.GetXMLObject());
+				Log.i(LOGTAG_NETWORKING, "Sending nativemsg: " + message.action);
+				try
+				{
+					msg.SendMessage(mySocket.getOutputStream());
+				} catch (IOException e)
+				{
+					Log.e(LOGTAG_NETWORKING, "Error sending message.", e);
+				}
+			} catch (UnknownClientActionException e)
+			{
+				Log.w(LOGTAG_NETWORKING, "Unknown client action '" + message.action + "'");
+			}
+
+		}
+	}
+
+	public void QueueNativeMessages(Object[] msgs)
+	{
+		outgoingQueue.add(msgs);
+	}
+
 	private void RequestData()
 	{
 		Thread t = new Thread(new Runnable()
@@ -56,61 +94,36 @@ public class ARClient
 			@Override
 			public void run()
 			{
-				//Sleep a bit to ensure native layer has started
-				try
+				while (listening)
 				{
-					Thread.sleep(6000);
-				} catch (InterruptedException e1)
-				{
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
-				try
-				{
-					while (listening)
-					{						
-						Object[] msgs = null;						
-						try
-						{
-							msgs = AmplifyRealityActivity.GetOutgoingMessages();
-						}
-						catch (Exception e)
-						{
-							Log.e(LOGTAG_NETWORKING, "Exception checking native layer",e);
-							continue;
-						}
-						
-						if (msgs == null)
-							continue;
-						for (int i=0;i<msgs.length;i++)
-						{
-							if (msgs[i] == null)
-								continue;
-							
-							NativeMessage message = (NativeMessage)msgs[i];
-							Serializer xmlSerializer = new Persister();
-																											
-							try
-							{
-								ClientXMLMessage msg = new ClientXMLMessage(xmlSerializer, message.GetXMLObject());
-								Log.i(LOGTAG_NETWORKING,"Sending nativemsg: " + message.action);
-								msg.SendMessage(mySocket.getOutputStream());
-							} catch (UnknownClientActionException e)
-							{
-								Log.w(LOGTAG_NETWORKING,"Unknown client action '" +message.action + "'");
-							}
-							
-						}
-						Thread.sleep(5000);
-					}
+					Object[] msgs = null;
+					try
+					{
 
-				} catch (IOException e)
-				{
-					Shutdown();
-				} catch (InterruptedException e)
-				{
-					Log.e(LOGTAG_NETWORKING, "Thread error in RequestData()", e);
+						// msgs = outgoingQueue.take();
+						msgs = AmplifyRealityActivity.GetOutgoingMessages();
+					}
+					// catch (InterruptedException e)
+					// {
+					// Log.e(LOGTAG_NETWORKING,"Interrupted taking data from outgoing queue.",e);
+					// }
+					catch (Exception e)
+					{
+						Log.e(LOGTAG_NETWORKING, "Exception checking native layer", e);
+						continue;
+					}
+					
+					//Process messages
+					SendNativeMessages(msgs);
+					
+					
+					try
+					{
+						Thread.sleep(5000);
+					} catch (InterruptedException e)
+					{
+						Log.e(LOGTAG_NETWORKING, "Interrupted while sleeping.", e);
+					}
 				}
 				Cleanup();
 			}
@@ -127,7 +140,7 @@ public class ARClient
 			@Override
 			public void run()
 			{
-				//Sleep a bit to ensure native layer has started
+				// Sleep a bit to ensure native layer has started
 				try
 				{
 					Thread.sleep(6000);
@@ -155,8 +168,8 @@ public class ARClient
 								dataHeader = DataHeader.CreateHeaderFromMessage(inputLine);
 							} catch (InvalidHeaderMessageException e)
 							{
-								dataHeader = null; //Ignore line, reset header to null
-								AmplifyRealityActivity.OnMessage(inputLine,null); //Process as string
+								dataHeader = null; // Ignore line, reset header to null
+								AmplifyRealityActivity.OnMessage(inputLine, null); // Process as string
 							}
 							// Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
 						} else
@@ -175,9 +188,8 @@ public class ARClient
 
 		});
 		t.start();
-		
-	}
 
+	}
 
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
 	{
@@ -189,7 +201,7 @@ public class ARClient
 		// No XML definition, so process as a string
 		if (dataHeader.XmlDataType == null)
 		{
-			AmplifyRealityActivity.OnMessage(data,null);
+			AmplifyRealityActivity.OnMessage(data, null);
 		} else
 		// Deserialize
 		{
@@ -202,22 +214,19 @@ public class ARClient
 				{
 					ARObject arObject = serializer.read(ARObject.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received ARObject: " + arObject.toString());
-				} 
-				else if (className.equals(Realm.class.getCanonicalName()))
+				} else if (className.equals(Realm.class.getCanonicalName()))
 				{
 					Realm realm = serializer.read(Realm.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received new Realm: " + realm.toString());
-					AmplifyRealityActivity.OnMessage("RealmObject",realm);
-				}
-				else if (className.equals(WavefrontObj.class.getCanonicalName()))
+					AmplifyRealityActivity.OnMessage("RealmObject", realm);
+				} else if (className.equals(WavefrontObj.class.getCanonicalName()))
 				{
 					WavefrontObj wavefrontObj = serializer.read(WavefrontObj.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received new wavefront model: " + wavefrontObj.toString());
-					AmplifyRealityActivity.OnMessage("WavefrontObject",wavefrontObj);
-				}
-				else
+					AmplifyRealityActivity.OnMessage("WavefrontObject", wavefrontObj);
+				} else
 				{
-					Log.w(LOGTAG_NETWORKING,"Received unknown XML object. Classname=" + className);				
+					Log.w(LOGTAG_NETWORKING, "Received unknown XML object. Classname=" + className);
 				}
 			} catch (Exception e)
 			{
@@ -235,10 +244,11 @@ public class ARClient
 			mySocket = new Socket(host, port);
 			Log.i(LOGTAG_NETWORKING, "Socket created");
 
-			outgoingQueue = new LinkedBlockingQueue<ClientMessage>();
-		
 			RequestData();
 			StartListening();
+
+//			Log.i(LOGTAG_NETWORKING, "Setting java objects in native layer.");
+//			AmplifyRealityActivity.SetJavaEnv(this);
 
 		} catch (Exception e)
 		{

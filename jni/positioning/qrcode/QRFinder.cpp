@@ -1,67 +1,96 @@
 #include "QRFinder.hpp"
 #include "LogDefinitions.h"
 #include "QRCode.hpp"
-//#include <PerspectiveTransform.h
 
 
 
+QRFinder::QRFinder()
+{
+	LOGD(LOGTAG_QR,"QRFinder initialized");
+	qrDecoder = new QRDecoder();
+	fastThreshold = 10;
+}
 
-QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector) 
-{	
+QRFinder::~QRFinder()
+{
+	delete qrDecoder;
+	LOGD(LOGTAG_QR,"QRFinder deleted successfully.");
+}
+
+QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector, bool decode) 
+{
+	LOGD(LOGTAG_QR,"Enter QRFinder");
 	struct timespec start,end;
 	SET_TIME(&start);
 
 
-	FinderPattern_vector patternStore;
+	FinderPattern_vector * patternStore = new FinderPattern_vector();
 
-	//FindFinderPatterns_Symmetry(M,patternStore,debugVector);
 	FinderPatternHelper::FindFinderPatterns(M, patternStore, debugVector);
+
+	LOGD(LOGTAG_QR,"Found %d codes",patternStore->size());
 	
 	//If 3 patterns are found, we've probably found a QR code. Generate it and return.
-	if (patternStore.size() == 3)
+	if (patternStore->size() == 3)
 	{		
+		LOGD(LOGTAG_QR,"Creating new code.");
 		QRCode * newCode = new QRCode(QRCode::CreateFromFinderPatterns(patternStore));
 		SET_TIME(&end);
 		LOG_TIME("QR Search(Found)", start, end);
-
+		
+		//FastTracking::DoFastTracking(M,newCode,debugVector);
+		
 		//Determine alignment pattern position
 		SET_TIME(&start);		
-
 		AlignmentPatternHelper::FindAlignmentPattern(M, newCode,debugVector);				
-		
-		//Temp disable of alignment debug
-		debugVector.clear();
-
-
 		SET_TIME(&end);
 		LOG_TIME("Alignment Search", start, end);
 
-		//LOGD(LOGTAG_QR,"QR Search results: %d FP's found, AP = (%d,%d)",newCode->finderPatterns->size(),newCode->alignmentPattern.x,newCode->alignmentPattern.y);
-
 		//Decode the QRCode
-		SET_TIME(&start);
-		QRDecoder * qrDecoder = new QRDecoder();
-		qrDecoder->DecodeQRCode(M,newCode,debugVector);
-		delete qrDecoder;
-
-		SET_TIME(&end);
-		LOG_TIME("QR decode", start, end);
-
+		if (decode)
+		{
+			SET_TIME(&start);
+			qrDecoder->DecodeQRCode(M,newCode,debugVector);
+			SET_TIME(&end);
+			LOG_TIME("QR decode", start, end);
+		}
 		return newCode;
 	} 
 	
+	LOGD(LOGTAG_QR,"Not enough codes");
 	//Less or more than three patterns were found, so just return a vector of all the finder patterns 
-	vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();
-	for (int i=0;i<patternStore.size();i++)
-	{		
-		patternVector->push_back(patternStore.at(i));
-	}
 	
+	vector<FinderPattern*> * patternVector = new vector<FinderPattern*>();
+	for (int i=0;i<patternStore->size();i++)
+	{		
+		LOGD(LOGTAG_QR,"Pushing back FP(%d)",i);
+		patternVector->push_back(patternStore->at(i));
+	}		
+
+	delete patternStore;
+
 	SET_TIME(&end);
 	LOG_TIME("QR Search(NotFound)", start, end);
-	return new QRCode(patternVector,false);
+
+	QRCode * newCode = new QRCode(patternVector,false);	
+	return newCode;
 }
 
+
+void QRFinder::DoFastDetection(Mat & img, vector<Drawable*> & debugVector)
+{
+	vector<KeyPoint> kpVec;
+	LOGD(LOGTAG_QR,"Calling FAST");
+	struct timespec start,end;
+	SET_TIME(&start);
+	cv::FAST(img,kpVec,fastThreshold,true);
+	SET_TIME(&end);
+	LOG_TIME("FAST", start, end);
+	for (int i=0;i<kpVec.size();i++)
+	{
+		debugVector.push_back(new DebugCircle(Point2i(kpVec.at(i).pt.x,kpVec.at(i).pt.y),5,Colors::Lime,false));
+	}
+}
 
 
 

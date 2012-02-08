@@ -1,37 +1,40 @@
+#ifndef QR_FINDER_HPP_
+#define QR_FINDER_HPP_
+
 #include <jni.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
 #include <vector>
-#include <android/log.h>
+#include "LogDefinitions.h"
 #include "FindPattern.h"
 #include "QRCode.hpp"
 #include "model/Drawable.hpp"
 #include "model/DebugShape.hpp"
 #include "QRDecoder.hpp"
-
 #include "FinderPatternHelper.hpp"
 #include "AlignmentPatternHelper.hpp"
+#include "FastTracking.hpp"
 
-#ifndef QR_FINDER_HPP_
-#define QR_FINDER_HPP_
-
-#undef LOG_TAG
-#define LOG_TAG "QRFinder"
 
 using namespace cv;
 using namespace std;
 
 
-struct QRFinder
+class QRFinder
 {
 public:
-	static QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector);
-	static int MinimumAlignmentPatternScore;
+	QRFinder();
+	~QRFinder();
+	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector, bool decode);
+	int MinimumAlignmentPatternScore;
+	int fastThreshold;
 
 private:
+	void DoFastDetection(Mat & img, vector<Drawable*> & debugVector);
 	static void TriangleOrder(const FinderPattern_vector& fpv, FinderPattern& bottom_left, FinderPattern& top_left, FinderPattern& top_right);
-
+	QRDecoder * qrDecoder;
 	
 };
 

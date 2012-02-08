@@ -9,6 +9,8 @@
 #include "zxing/common/Counted.h"
 #include "model/DebugShape.hpp"
 
+//#define QR_DECODE_DEBUGGING
+
 using namespace cv;
 class QRDecoder
 {

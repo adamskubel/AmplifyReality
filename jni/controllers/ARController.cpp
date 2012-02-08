@@ -1,42 +1,60 @@
 #include "controllers/ARController.hpp"
 
+int DebugRectangle::instanceCount = 0;
+int DebugCircle::instanceCount = 0;
+int QRCode::instanceCount = 0;
+int FinderPattern::instanceCount = 0;
 
-ARController::ARController()
+ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 {
-	LOGI(LOGTAG_ARCONTROLLER,"ARController created. Using predefined camera matrix.");
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	double data2[] = DEFAULT_DISTORTION_MATRIX;
 
-	qrLocator = new QRLocator(Mat(3,3,CV_64F,&data), Mat(1,5,CV_64F,&data2));
+	if (cameraMatrix.empty())
+	{
+		LOGI(LOGTAG_ARCONTROLLER,"Using predefined camera matrix.");		
+		cameraMatrix =  Mat(3,3,CV_64F,&data);
+	}
+	if (distortionMatrix.empty())
+	{
+		LOGI(LOGTAG_ARCONTROLLER,"Using predefined distortion matrix.");
+		distortionMatrix = Mat(1,5,CV_64F,&data2);
+	}	
 
+	LOG_Mat(ANDROID_LOG_INFO,LOGTAG_ARCONTROLLER,"Using Camera Matrix",&cameraMatrix);
+	LOG_Mat(ANDROID_LOG_INFO,LOGTAG_ARCONTROLLER,"Using Distortion Matrix",&distortionMatrix);
+	
+	//Create locator object
+	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
+	//Create QRFinder
+	qrFinder = new QRFinder();
+
+	frameCount = 0;
+
+	//Initialize image matrices
 	grayImage = new Mat();
 	rgbImage = new Mat();
 	binaryImage = new Mat();
-	
-	
+		
+	//Populate circular list with frames
 	const int NumFrameItems = 6;
-
 	frameList = new CircularList<FrameItem*>(NumFrameItems);
 	for (int i=0;i < frameList->getMaxSize(); i ++)
 	{
 		frameList->add(new FrameItem());
 	}
-
 	LOGD(LOGTAG_ARCONTROLLER,"Created %d frame items",frameList->getMaxSize());
 			
+	//Set default values
 	augmentedView = NULL;
-	state = ControllerStates::Loading;
+	controllerState = ControllerStates::Loading;
 	isInitialized = false;
 	isExpired = false;
-	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
-}
 
-ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
-{
-	LOGI(LOGTAG_ARCONTROLLER,"ARController created. Using calculated camera and distortion matrices.");
-	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
-	
-	isInitialized = false;
+	QRCode::instanceCount = 0;
+	DebugCircle::instanceCount = 0;
+	DebugRectangle::instanceCount = 0;
+
 	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
 }
 
@@ -155,29 +173,71 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 
 void ARController::SetState(ControllerStates::ControllerState newState)
 {
-	LOGD(LOGTAG_ARCONTROLLER,"State changed from %d -> %d",state,newState);
-	state = newState;
+	LOGD(LOGTAG_ARCONTROLLER,"State changed from %d -> %d",controllerState,newState);
+	controllerState = newState;
 }
+
+
+//static void DoFastDetection(Mat & img, vector<Drawable*> & debugVector, int fastThreshold)
+//{
+//	vector<KeyPoint> kpVec;
+//	bool suppress = (fastThreshold > 12);
+//	if (suppress)
+//	{
+//		fastThreshold -=3;
+//	}
+//
+//	LOGD(LOGTAG_QR,"Calling FAST, thresh = %d, supress = %d",fastThreshold,suppress);
+//	struct timespec start,end;
+//	SET_TIME(&start);
+//	cv::FAST(img,kpVec,fastThreshold,true);
+//	SET_TIME(&end);
+//	LOG_TIME("FAST", start, end);
+//	if (kpVec.size() > 0)
+//	{
+//		KeyPoint first = kpVec.at(0);
+//		LOGD(LOGTAG_QR,"Keypoint #1: angle=%f,octave=%d,size=%f,response=%f,classid=%d",first.angle,first.octave,first.size,first.response,first.class_id);
+//	}
+//	for (int i=0;i<kpVec.size();i++)
+//	{
+//		debugVector.push_back(new DebugCircle(Point2i(kpVec.at(i).pt.x,kpVec.at(i).pt.y),5,Colors::Lime,false));
+//	}
+//}
+
 
 void ARController::ProcessFrame(Engine * engine)
 {
 	if (!isInitialized)
 		return;
 
+	frameCount++;
+
 	//This section is the default per-frame operations
 	FrameItem * item = frameList->next();
 	item->clearOldData();
 	//engine->getTime(&item->time);
 	
-	LOGV(LOGTAG_ARCONTROLLER,"Processing frame");
-	getImages(engine,item);
+	LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
+		frameCount,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
+	getImages(engine);
 		
 	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->MinAlignmentScore;//lol static. THIS IS BAD!
 	FinderPatternHelper::MinimumFinderPatternScore = debugUI->MinFinderPatternScore;
 
 	vector<Drawable*> debugVector;
-	item->qrCode = QRFinder::LocateQRCodes(*binaryImage, debugVector);
-	item->qrCode->Draw(rgbImage);
+
+	bool decode = (controllerState == ControllerStates::Loading && (worldLoader != NULL && worldLoader->GetState() == WorldStates::LookingForCode));
+	LOGV(LOGTAG_ARCONTROLLER,"Decoding=%d",decode);
+
+	item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
+	
+	LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
+	FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);
+
+	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
+	
+	if (item->qrCode != NULL)
+		item->qrCode->Draw(rgbImage);
 	while (!debugVector.empty())
 	{
 		debugVector.back()->Draw(rgbImage);
@@ -187,33 +247,33 @@ void ARController::ProcessFrame(Engine * engine)
 	
 
 	//What happens past here depends on the state
-	if (state == ControllerStates::Loading)
+	if (controllerState == ControllerStates::Loading)
 	{		
 		//Update world loader
 		worldLoader->Update(engine);
 
-		WorldStates::WorldState state = worldLoader->GetState();
+		WorldStates::WorldState worldState = worldLoader->GetState();
 
-		if (state == WorldStates::LookingForCode)
+		if (worldState == WorldStates::LookingForCode)
 		{
 			debugUI->SetStateDisplay("Searching");
 			if (item->qrCode != NULL && item->qrCode->validCodeFound && item->qrCode->TextValue.length() > 2)
 			{
-				LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm.");
+				LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm with text=%s",item->qrCode->TextValue.c_str());
 				//TODO: Move decoding to here
 				worldLoader->LoadRealm(item->qrCode->TextValue);
 			}
 		}
-		else if (state == WorldStates::WaitingForRealm || state == WorldStates::WaitingForResources)
+		else if (worldState == WorldStates::WaitingForRealm || worldState == WorldStates::WaitingForResources)
 		{		
-			if (state == WorldStates::WaitingForRealm)
+			if (worldState == WorldStates::WaitingForRealm)
 				debugUI->SetStateDisplay("WaitRealm");
 			else
 				debugUI->SetStateDisplay("WaitRsrc");
 
 		}
 		//The world is ready and loaded, so do normal AR processing
-		else if (state == WorldStates::WorldReady)
+		else if (worldState == WorldStates::WorldReady)
 		{
 			debugUI->SetStateDisplay("LoadCompl");
 			initializeARView();
@@ -226,12 +286,12 @@ void ARController::ProcessFrame(Engine * engine)
 		else
 		{
 			char stateString[100];
-			sprintf(stateString,"State=%d",(int)state);
+			sprintf(stateString,"WrldState=%d",(int)worldState);
 			debugUI->SetStateDisplay(stateString);
 			LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
 		}
 	}
-	else if (state == ControllerStates::Running)
+	else if (controllerState == ControllerStates::Running)
 	{
 		debugUI->SetStateDisplay("Run");
 
@@ -245,11 +305,19 @@ void ARController::ProcessFrame(Engine * engine)
 		//Evaluate the position	
 		float resultCertainty = positionSelector->UpdatePosition(item);
 		debugUI->SetPositionCertainty(resultCertainty);
+
 		if (resultCertainty > 0 && augmentedView != NULL)
 		{
 			//Update the 3D AR layer, but only if position certainty is non-zero
 			augmentedView->Update(item);
 		}
+	}
+	else
+	{
+		char stateString[100];
+		sprintf(stateString,"ContState=%d",(int)controllerState);
+		debugUI->SetStateDisplay(stateString);
+		LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
 	}
 
 	//Do final processing
@@ -290,7 +358,7 @@ void ARController::Render(OpenGL * openGL)
 }
 
 
-void ARController::getImages(Engine * engine, FrameItem * item)
+void ARController::getImages(Engine * engine)
 {
 	struct timespec start, end;
 	
@@ -315,10 +383,10 @@ void ARController::getImages(Engine * engine, FrameItem * item)
 		LOG_TIME("Gray->RGBA", start, end);
 	} 
 	
-	if (USE_FEEDBACK_THRESH)
-		ImageProcessor::FeedbackBinarization(item);
-	else
-		ImageProcessor::SimpleThreshold(grayImage, binaryImage);
+	//if (USE_FEEDBACK_THRESH)
+	//	ImageProcessor::FeedbackBinarization(item);
+	//else
+	ImageProcessor::SimpleThreshold(grayImage, binaryImage);
 	
 	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{

@@ -6,7 +6,7 @@ AmplifyRunner::AmplifyRunner(Engine * engine)
 
 	currentController = new StartupController();
 	currentActionMode = Startup;
-	LOGI(LOGTAG_MAIN,"Starting in startup mode (durrr)");
+	LOGI(LOGTAG_MAIN,"Starting controller");
 
 	/*if (USE_CALCULATED_CAMERA_MATRIX)
 	{
@@ -78,46 +78,20 @@ void AmplifyRunner::CheckControllerExpiry(Engine * engine)
 {
 	if (currentController->IsExpired())
 	{
-		if (currentActionMode == Calibrate)
-		{
-			LOGI(LOGTAG_MAIN,"Calibration controller expired");
-			//If the camera matrices were created correctly, then create a QR controller with them
-			if (((CalibrationController*)currentController)->wasSuccessful())
-			{				
-				LOGD(LOGTAG_MAIN,"Calibration was completed successfully");
-				Mat camera,distortion;
-				((CalibrationController*)currentController)->getCameraMatrices(camera,distortion);
-				currentController->Teardown(engine);
-				delete currentController;
-				currentController = new ARController(camera,distortion);	
-			}
-			//Otherwise, create the controller using the predefined matrix
-			else
-			{
-				LOGD(LOGTAG_MAIN,"Calibration was not completed");
-				currentController->Teardown(engine);
-				delete currentController;
-				currentController = new ARController();
-			}		
-			currentActionMode = QRTrack;
-		}
-		else if (currentActionMode == QRTrack)
-		{
-			LOGI(LOGTAG_MAIN,"ARController expired");
-			currentController->Teardown(engine);
-			delete currentController;
-			currentController = new CalibrationController();
-			currentActionMode = Calibrate;
-		}
-		else if (currentActionMode == Startup)
-		{
-			LOGI(LOGTAG_MAIN,"StartupController expired");
-			currentController->Teardown(engine);
-			delete currentController;
-			currentController = new ARController();
-			currentActionMode = QRTrack;
-		}
+		LOGI(LOGTAG_MAIN,"Switching controller");
+		Controller * tmp = currentController->GetSuccessor(engine);
+		delete currentController;
+		currentController = tmp;
 	}
+	/*	else if (currentActionMode == QRTrack)
+	{
+	LOGI(LOGTAG_MAIN,"ARController expired");
+	currentController->Teardown(engine);
+	delete currentController;
+	currentController = new CalibrationController();
+	currentActionMode = Calibrate;
+	}
+	}*/
 }
 
 

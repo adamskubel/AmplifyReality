@@ -41,8 +41,8 @@ public class RealmGenerator
 		object2.Rotation = new Vector3(-1.1f,2.1f,3.1f);
 		
 		
-		newRealm.objectMap.put("Obj1",object1);
-		newRealm.objectMap.put("Obj2",object2);
+		//newRealm.objectMap.put("Obj1",object1);
+		//newRealm.objectMap.put("Obj2",object2);
 		
 		Serializer serializer = new Persister();
 		serializer.write(newRealm, new File(filename));

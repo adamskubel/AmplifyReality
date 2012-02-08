@@ -19,6 +19,8 @@ public:
 	void SetMaximum(float max);
 	void SetMinimum(float min);
 
+	float GetValue();
+
 	//Delegates
 	void DecreaseClick(void * sender, EventArgs args);
 	void IncreaseClick(void * sender, EventArgs args);

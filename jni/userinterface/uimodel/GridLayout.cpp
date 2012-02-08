@@ -64,7 +64,7 @@ bool GridLayout::CheckGridFit(Point2i gridPoint, Size_<int> gridSpan)
 		|| (gridPoint.y+gridSpan.height) > gridSize.height || (gridPoint.y) < 0)
 	{
 		LOGE("GridLayout: Point is outside of grid! Grid[%d,%d] Point[%d,%d] Span[%d,%d]",gridSize.width,gridSize.height,gridPoint.x,gridPoint.y,gridSpan.width,gridSpan.height);
-		throw Exception(0,"Requested point exceeds grid size","AddChild","GridLayout.cpp",0);
+		//throw Exception(0,"Requested point exceeds grid size","AddChild","GridLayout.cpp",0);
 	}
 }
 

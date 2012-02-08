@@ -3,20 +3,21 @@
 #include <cmath>
 #include <algorithm>
 #include "FindPattern.h"
+#include "LogDefinitions.h"
 
-long FinderPattern::Distance(const FinderPattern& a, const FinderPattern& b)
+long FinderPattern::Distance(FinderPattern * a,  FinderPattern * b)
 {
-   long xd = a.pt.x - b.pt.x;
-   long yd = a.pt.y - b.pt.y;
+   long xd = a->pt.x - b->pt.x;
+   long yd = a->pt.y - b->pt.y;
 
 /* Currently, this is the only floating-point code in this project. */
    return (long) sqrt((double) (xd * xd + yd * yd));
 }
 
 /* http://en.wikipedia.org/wiki/Cross_product */
-long FinderPattern::AcuteAngleGeometry(const FinderPattern& a, const FinderPattern& b, const FinderPattern& c)
+long FinderPattern::AcuteAngleGeometry(FinderPattern* a, FinderPattern* b, FinderPattern* c)
 {
-   return (b.pt.x - a.pt.x) * (c.pt.y - a.pt.y) - (b.pt.y - a.pt.y) * (c.pt.x - a.pt.x);
+   return (b->pt.x - a->pt.x) * (c->pt.y - a->pt.y) - (b->pt.y - a->pt.y) * (c->pt.x - a->pt.x);
 }
 
 bool operator<(const FinderPattern& fp1, const FinderPattern& fp2)
@@ -63,7 +64,7 @@ bool FinderPattern_vector::push_back_pattern(FinderPattern * fp)
    {
       push_back(fp);
    }
-
+   
    return found;
 }
 

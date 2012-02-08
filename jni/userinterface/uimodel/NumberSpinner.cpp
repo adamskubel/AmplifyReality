@@ -58,6 +58,11 @@ void NumberSpinner::SetMinimum(float min)
 	minValue = min;
 }
 
+float NumberSpinner::GetValue()
+{
+	return value;
+}
+
 void NumberSpinner::IncreaseClick(void * sender, EventArgs args)
 {
 	if (value + clickDelta <= maxValue)

@@ -25,6 +25,7 @@ class PositioningResults
 public:
 	PositioningMethods::PositioningMethod positioningMethod;
 	cv::Mat Rotation, Position;
+	float PositionCertainty;
 };
 
 

@@ -1,8 +1,8 @@
 #include "LogDefinitions.h"
 
 #include "controllers/Controller.hpp"
-#include "controllers/CalibrationController.hpp"
-#include "controllers/ARController.hpp"
+//#include "controllers/CalibrationController.hpp"
+//#include "controllers/ARController.hpp"
 #include "controllers/StartupController.hpp"
 
 #include "display/opengl/OpenGL.hpp"
@@ -39,13 +39,11 @@ private:
 
 	//Members
 	void ProcessFrame(Engine * engine);
-	void Main_HandleTouchInput(void* sender, TouchEventArgs args);
 	void Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args);
-	void HandleButtonClick(void * sender, EventArgs args);
 	void InitializeUserInterface(Engine * engine);
 	void CheckControllerExpiry(Engine * engine);
 	void ControllerExpired(CalibrationController * calibrationController);
-
+	
 	
 
 	//Fields

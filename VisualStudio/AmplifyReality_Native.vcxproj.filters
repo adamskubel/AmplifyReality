@@ -95,6 +95,9 @@
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{f56eb4c6-44c9-4abb-8e7d-473246391613}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\model\concurrent">
+      <UniqueIdentifier>{6092870e-478b-4dba-8b69-7a2f7797c380}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -382,8 +385,8 @@
     <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\ARConfigurator.x">
-      <Filter>Header Files\positioning</Filter>
+    <ClCompile Include="..\jni\positioning\qrcode\FastTracking.cpp">
+      <Filter>Source Files\QR</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -746,6 +749,12 @@
     </ClInclude>
     <ClInclude Include="..\jni\controllers\ARControllerDebugUI.hpp">
       <Filter>Header Files\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\model\concurrent\ThreadedClass.hpp">
+      <Filter>Header Files\model\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\FastTracking.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

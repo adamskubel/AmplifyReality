@@ -11,7 +11,8 @@
 
 	#define USE_FEEDBACK_THRESH false
 
-	#define NUM_CALIBRATION_SAMPLES 4
+	#define MIN_CALIBRATION_SAMPLES 4
+	#define MAX_CALIBRATION_SAMPLES 16
 	#define USE_CALCULATED_CAMERA_MATRIX false
 
 
@@ -27,13 +28,22 @@
 	#define HTC_SENSATION_CAMERA_IMAGE_WIDTH 800
 	#define HTC_SENSATION_CAMERA_IMAGE_HEIGHT 480
 	//#define HTC_SENSATION_CAMERA_MATRIX {92.5, 0, 400, 0, 92.5, 240, 0, 0 ,1};
-	#define HTC_SENSATION_CAMERA_MATRIX {934, 0, 400, 0, 934, 260, 0, 0 ,1}; //This one is from actual calibration
+	#define HTC_SENSATION_CAMERA_MATRIX {771.814475, 0.0, 379.685733, 0.0, 780.082272, 283.918826, 0.0, 0.0 ,1.0}; //This one is from actual calibration
 	#define HTC_SENSATION_DISTORTION_MATRIX {0, 0, 0, 0, 0};
 
 	//NEXUS S Camera Properties
 	#define NEXUS_S_CAMERA_IMAGE_WIDTH 720
 	#define NEXUS_S_CAMERA_IMAGE_HEIGHT 480
 	#define NEXUS_S_CAMERA_MATRIX {934, 0, 400, 0, 934, 260, 0, 0 ,1}; //This one is from actual calibration
+
+//Camera
+//=[,771.814475,0.000000,379.685733]
+//=[,0.000000,780.082272,283.918826]
+//=[,0.000000,0.000000,1.000000]
+
+//Distortion
+//:,0]=[,0.200291,-1.526604,0.002497,-0.018703,3.546408]
+
 	#define NEXUS_S_DISTORTION_MATRIX {0, 0, 0, 0, 0};
 
 	//Default camera properties are for HTC sensation
