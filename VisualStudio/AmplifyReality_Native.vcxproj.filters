@@ -98,6 +98,9 @@
     <Filter Include="Header Files\model\concurrent">
       <UniqueIdentifier>{6092870e-478b-4dba-8b69-7a2f7797c380}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\positioning\fast">
+      <UniqueIdentifier>{4ea7e6ca-30f9-4e41-8dd0-6de53ef34f32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -385,7 +388,10 @@
     <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\qrcode\FastTracking.cpp">
+    <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\fast\FastTracking.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
   </ItemGroup>
@@ -753,8 +759,11 @@
     <ClInclude Include="..\jni\model\concurrent\ThreadedClass.hpp">
       <Filter>Header Files\model\concurrent</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\qrcode\FastTracking.hpp">
-      <Filter>Header Files\positioning\qrcode</Filter>
+    <ClInclude Include="..\jni\positioning\fast\FastQRFinder.hpp">
+      <Filter>Header Files\positioning\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\fast\FastTracking.hpp">
+      <Filter>Header Files\positioning\fast</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

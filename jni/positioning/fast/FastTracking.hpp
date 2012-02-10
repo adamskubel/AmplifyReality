@@ -3,8 +3,8 @@
 
 #include "LogDefinitions.h"
 #include <opencv2/core/core.hpp>
-#include "FindPattern.h"
-#include "QRCode.hpp"
+#include "positioning/qrcode/FindPattern.h"
+#include "positioning/qrcode/QRCode.hpp"
 #include "model/DebugShape.hpp"
 #include "model/Drawable.hpp"
 #include <opencv2/features2d/features2d.hpp>

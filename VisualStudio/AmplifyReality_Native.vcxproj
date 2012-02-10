@@ -81,10 +81,11 @@
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
+    <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp" />
+    <ClCompile Include="..\jni\positioning\fast\FastTracking.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp" />
-    <ClCompile Include="..\jni\positioning\qrcode\FastTracking.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\FindPattern.cpp" />
@@ -193,10 +194,11 @@
     <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\model\WorldLoader.hpp" />
+    <ClInclude Include="..\jni\positioning\fast\FastQRFinder.hpp" />
+    <ClInclude Include="..\jni\positioning\fast\FastTracking.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp" />
-    <ClInclude Include="..\jni\positioning\qrcode\FastTracking.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\FindPattern.h" />

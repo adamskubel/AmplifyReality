@@ -59,6 +59,15 @@ public:
 		thickness = (fill) ? -1 : (radius > 15) ? 2 : 1;
 	}
 
+	DebugCircle(Point2f centerFloat, int _radius, Scalar _color = Colors::Red, bool fill = false)
+	{
+		instanceCount++;
+		center = Point2i((int)round(centerFloat.x),(int)round(centerFloat.y));
+		radius = _radius;
+		color = _color;
+		thickness = (fill) ? -1 : (radius > 15) ? 2 : 1;
+	}
+
 	~DebugCircle()
 	{
 		instanceCount--;

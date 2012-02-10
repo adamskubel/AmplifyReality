@@ -94,5 +94,12 @@
 	#undef COLOR_TYPE
 
 
+	//Some common math functions, should go elsewhere 
+	static float GetPointDistance(Point2f p1, Point2f p2)
+	{
+		return sqrt(pow(abs(p1.x-p2.x),2) + pow(abs(p1.y-p2.y),2));
+	}
+
+
 
 #endif

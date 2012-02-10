@@ -15,7 +15,7 @@
 #include "QRDecoder.hpp"
 #include "FinderPatternHelper.hpp"
 #include "AlignmentPatternHelper.hpp"
-#include "FastTracking.hpp"
+#include "positioning/fast/FastTracking.hpp"
 
 
 using namespace cv;

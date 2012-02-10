@@ -46,13 +46,13 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 		}
 		
 		float minSquareSideLength = fp->size * 0.5f;
-		float maxSquareSideLength =  fp->size*1.2f;
+		float maxSquareSideLength = fp->size *1.2f;
 		float maxPointDistance = fp->size * 1.4f;
 
 		float minArea = pow(minSquareSideLength,2);
 		float maxArea = pow(maxSquareSideLength,2);
-
-		float maxCosine = 0.4f;
+	
+		float maxCosine = 0.8f;
 		
 		//Search boundaries
 		map<float,Point2f>::iterator searchBegin = pointDistances.upper_bound(maxPointDistance);
@@ -105,12 +105,16 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 					if (cosineEnd < maxCosine && cosineEnd <= cosineMiddle)
 					{
 						testPoints.push_back((*innerIterator).second);
+
+						debugVector.push_back(new DebugCircle((*innerIterator).second,6 * testPoints.size(),Colors::Green));
 						LOGD(LOGTAG_QRFAST,"Added point to end (%f,%f)",testPoints.back().x,testPoints.back().y);
 					}
 					//Point belongs in middle of chain
 					else if (cosineMiddle < maxCosine && cosineMiddle < cosineEnd)
 					{
 						testPoints.insert(testPoints.end()-1,(*innerIterator).second);
+
+						debugVector.push_back(new DebugCircle((*innerIterator).second,6 * testPoints.size(),Colors::Red));
 						LOGD(LOGTAG_QRFAST,"Added point to middle (%f,%f)",testPoints.back().x,testPoints.back().y);
 					}
 
@@ -122,13 +126,15 @@ void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & 
 						{
 							LOGD(LOGTAG_QRFAST,"Square (probably) found");
 							
+							
+							debugVector.push_back(new DebugPoly(testPoints,Colors::OliveDrab,2));
+
 							while(!testPoints.empty())
 							{
-								debugVector.push_back(new DebugCircle(testPoints.back(),5,Colors::Gold));
+								debugVector.push_back(new DebugCircle(testPoints.back(),5,Colors::Gold,true));
 								testPoints.pop_back();
 							}
 							
-							//	debugVector.push_back(new DebugPoly(testPoints,Colors::Gold));
 							found = true;
 							break;
 						}else

@@ -24,6 +24,8 @@
 
 #include "ARControllerDebugUI.hpp"
 
+#include "positioning/fast/FastQRFinder.hpp"
+
 #ifndef ARController_HPP_
 #define ARController_HPP_
 
@@ -73,6 +75,7 @@ private:
 	QRFinder * qrFinder;
 	AugmentedView * augmentedView;
 	WorldLoader * worldLoader;
+	FastQRFinder * fastQRFinder;
 
 	//UI objects
 	ARControllerDebugUI * debugUI;

@@ -115,6 +115,9 @@ void ARController::Initialize(Engine * engine)
 	//WorldLoader Instance
 	worldLoader = new WorldLoader();
 
+	//FastQRFinder
+	fastQRFinder = new FastQRFinder(debugUI);
+
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
 
@@ -178,31 +181,31 @@ void ARController::SetState(ControllerStates::ControllerState newState)
 }
 
 
-//static void DoFastDetection(Mat & img, vector<Drawable*> & debugVector, int fastThreshold)
-//{
-//	vector<KeyPoint> kpVec;
-//	bool suppress = (fastThreshold > 12);
-//	if (suppress)
-//	{
-//		fastThreshold -=3;
-//	}
-//
-//	LOGD(LOGTAG_QR,"Calling FAST, thresh = %d, supress = %d",fastThreshold,suppress);
-//	struct timespec start,end;
-//	SET_TIME(&start);
-//	cv::FAST(img,kpVec,fastThreshold,true);
-//	SET_TIME(&end);
-//	LOG_TIME("FAST", start, end);
-//	if (kpVec.size() > 0)
-//	{
-//		KeyPoint first = kpVec.at(0);
-//		LOGD(LOGTAG_QR,"Keypoint #1: angle=%f,octave=%d,size=%f,response=%f,classid=%d",first.angle,first.octave,first.size,first.response,first.class_id);
-//	}
-//	for (int i=0;i<kpVec.size();i++)
-//	{
-//		debugVector.push_back(new DebugCircle(Point2i(kpVec.at(i).pt.x,kpVec.at(i).pt.y),5,Colors::Lime,false));
-//	}
-//}
+static void DoFastDetection(Mat & img, vector<Drawable*> & debugVector, int fastThreshold)
+{
+	vector<KeyPoint> kpVec;
+	bool suppress = (fastThreshold > 12);
+	if (suppress)
+	{
+		fastThreshold -=3;
+	}
+
+	LOGD(LOGTAG_QR,"Calling FAST, thresh = %d, supress = %d",fastThreshold,suppress);
+	struct timespec start,end;
+	SET_TIME(&start);
+	cv::FAST(img,kpVec,fastThreshold,true);
+	SET_TIME(&end);
+	LOG_TIME("FAST", start, end);
+	if (kpVec.size() > 0)
+	{
+		KeyPoint first = kpVec.at(0);
+		LOGD(LOGTAG_QR,"Keypoint #1: angle=%f,octave=%d,size=%f,response=%f,classid=%d",first.angle,first.octave,first.size,first.response,first.class_id);
+	}
+	for (int i=0;i<kpVec.size();i++)
+	{
+		debugVector.push_back(new DebugCircle(Point2i(kpVec.at(i).pt.x,kpVec.at(i).pt.y),5,Colors::Lime,false));
+	}
+}
 
 
 void ARController::ProcessFrame(Engine * engine)
@@ -229,16 +232,36 @@ void ARController::ProcessFrame(Engine * engine)
 	bool decode = (controllerState == ControllerStates::Loading && (worldLoader != NULL && worldLoader->GetState() == WorldStates::LookingForCode));
 	LOGV(LOGTAG_ARCONTROLLER,"Decoding=%d",decode);
 
-	item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
+	//item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
 	
-	LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
-	FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);
+	LOGD(LOGTAG_ARCONTROLLER,"Calling harris detection");
+
+
+	//LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
+	fastQRFinder->FindQRCodes(*grayImage,debugVector);
+
+	//DoFastDetection(*grayImage,debugVector,debugUI->FastThreshold);
+	//FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);
 	//FastTracking::DoSquareTracking(*binaryImage,item->qrCode,debugVector);
+
+
+	//Mat dst, dst_norm, dst_norm_scaled;
+	//dst = Mat::zeros( grayImage->size(), CV_32FC1 );
+	//struct timespec startHarris,endHarris;
+	//SET_TIME(&startHarris);
+	//cv::cornerHarris(*grayImage,dst,2,3,0.4);
+	//dst.convertTo(*grayImage,CV_16UC1);
+	//SET_TIME(&endHarris);
+	//LOG_TIME("HARRISCORNER",startHarris,endHarris);
+	/// Drawing a circle around corners
+	//normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
+
+
 
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	
-	if (item->qrCode != NULL)
-		item->qrCode->Draw(rgbImage);
+	/*if (item->qrCode != NULL)
+		item->qrCode->Draw(rgbImage);*/
 	while (!debugVector.empty())
 	{
 		debugVector.back()->Draw(rgbImage);

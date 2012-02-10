@@ -1,4 +1,4 @@
-#include "ARController.hpp"
+#include "ARControllerDebugUI.hpp"
 
 ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : PageDisplay()
 {	
@@ -69,7 +69,8 @@ void ARControllerDebugUI::addPage2(Engine * engine)
 	myGrid->AddChild(drawModeSelect,Point2i(2,0));
 
 	NumberSpinner * fastThresh = new NumberSpinner("FastThresh",9,1,"%3.1f");
-	fastThresh->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::FastThresholdChanged>(this));
+	fastThresh->Name = "FastThresh";
+	fastThresh->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
 	fastThresh->SetMaximum(15);
 	fastThresh->SetMinimum(9);
 	myGrid->AddChild(fastThresh,Point2i(0,0));
@@ -101,6 +102,18 @@ void ARControllerDebugUI::addPage2(Engine * engine)
 	AddChild(nextPageGrid);
 }
 
+
+void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultValue, float step, float minValue, float maxValue, std::string format)
+{
+	NumberSpinner * newSpinner = new NumberSpinner(paramName,defaultValue,step,format);
+	newSpinner->Name = paramName;
+	newSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
+
+	//Need to add it to somewhere
+	parameterMap.insert(pair<std::string,float>(paramName,defaultValue));
+}
+
+
 void ARControllerDebugUI::SetDefaults()
 {
 	PositionFilterAlpha = 0.9f;	
@@ -108,12 +121,29 @@ void ARControllerDebugUI::SetDefaults()
 	MinFinderPatternScore = 190;
 	MinAlignmentScore = 180;
 	currentDrawMode = DrawModes::GrayImage;
-	FastThreshold = 9.0f;
+	
+	parameterMap.insert(pair<std::string,float>("FastThresh",9.0f));
 }
 
-void ARControllerDebugUI::FastThresholdChanged(void * sender, NumberSpinnerEventArgs args)
+void ARControllerDebugUI::NumberSpinnerValueChanged(void * sender, NumberSpinnerEventArgs args)
 {
-	FastThreshold = args.NewValue;
+	if (sender == NULL)
+		return;
+	
+	parameterMap[(((NumberSpinner*)sender)->Name)] = args.NewValue;
+}
+
+float ARControllerDebugUI::GetParameter(std::string paramName)
+{
+	if (parameterMap.find(paramName) != parameterMap.end())
+	{
+		return parameterMap[paramName];
+	}
+	else
+	{
+		LOGE("Parameter %s does not exit in map!",paramName.c_str());
+		return MAXFLOAT;
+	}
 }
 
 void ARControllerDebugUI::PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args)

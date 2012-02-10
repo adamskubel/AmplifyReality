@@ -29,14 +29,13 @@ public:
 	void SetPositionCertainty(float certainty);
 	void SetStateDisplay(string stateDescription);
 
-	
+	void NumberSpinnerValueChanged(void * sender, NumberSpinnerEventArgs args);
 	void SetDefaults();		
 
 	void PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
 	void RotationFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
 	void MinimumFinderPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
 	void MinimumAlignmentPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
-	void FastThresholdChanged(void * sender, NumberSpinnerEventArgs args);
 
 	void GlobalTouchEvent(void * sender, TouchEventArgs args);
 
@@ -45,7 +44,9 @@ public:
 	float RotationFilterAlpha;
 	float MinFinderPatternScore;
 	float MinAlignmentScore;
-	float FastThreshold;
+
+	float GetParameter(std::string paramName);
+	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f");
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
@@ -61,6 +62,7 @@ private:
 	DataDisplay * rotationLabel;
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
+	map<std::string,float> parameterMap;
 
 
 };
