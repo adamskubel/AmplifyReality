@@ -21,8 +21,7 @@ include $(OPENCV_MK_PATH)
 LOCAL_MODULE    := amplify_reality
 LOCAL_SRC_FILES +=  $(wildcard *.cpp) $(wildcard */*.cpp)  $(wildcard */*/*.cpp)  $(wildcard */*/*/*.cpp)
 
-LOCAL_LDLIBS +=  -llog -ldl -landroid -lEGL -lGLESv2
-LOCAL_SHARED_LIBRARIES += QCAR-prebuilt
+LOCAL_LDLIBS +=  -llog -ldl -landroid -lEGL -lGLESv2 
 LOCAL_STATIC_LIBRARIES += android_native_app_glue
 
 include $(BUILD_SHARED_LIBRARY)

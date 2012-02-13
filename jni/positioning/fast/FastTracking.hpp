@@ -15,6 +15,7 @@ class FastTracking
 public:
 	static void DoSquareTracking(Mat & image, QRCode * qrCode, vector<Drawable*> & debugVector);
 	static void DoFastTracking(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
+	static float angle(Point2i p1, Point2i p2, Point2i p0);
 private:
 	static void findSquares( const Mat& image, vector<vector<Point> >& squares );
 	static void FastWindow(Mat & img, vector<KeyPoint> & features, Rect window);
@@ -22,7 +23,6 @@ private:
 	static float getPolyArea(Point2f a, Point2f b, Point2f c);
 	static float getArea(vector<Point2f> & testPoints);
 	static float getCosine(vector<Point2f> & testPoints);
-	static float angle(Point2i p1, Point2i p2, Point2i p0);
 
 	//static void ConcentricSegmentation(vector<KeyPoint> & features, Point2i center, float innerMost, float middle, float outerMost, vector<KeyPoint> *& kpVecArray);// map<int,vector<KeyPoint> > & concentricMap);
 };

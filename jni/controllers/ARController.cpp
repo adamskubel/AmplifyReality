@@ -238,7 +238,7 @@ void ARController::ProcessFrame(Engine * engine)
 
 
 	//LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
-	fastQRFinder->FindQRCodes(*grayImage,debugVector);
+	fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
 
 	//DoFastDetection(*grayImage,debugVector,debugUI->FastThreshold);
 	//FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);

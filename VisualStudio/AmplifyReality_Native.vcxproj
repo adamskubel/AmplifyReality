@@ -81,6 +81,7 @@
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
+    <ClCompile Include="..\jni\positioning\fast\DetectableSquare.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastTracking.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
