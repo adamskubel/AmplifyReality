@@ -105,5 +105,18 @@
 		return ((p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x)) > 0;
 	}
 
+	static int ipow(int base, int exp)
+	{
+		int result = 1;
+		while (exp)
+		{
+			if (exp & 1)
+				result *= base;
+			exp >>= 1;
+			base *= base;
+		}
+
+		return result;
+	}
 
 #endif

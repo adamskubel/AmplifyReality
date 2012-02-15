@@ -116,8 +116,8 @@ void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
 			cameraMatDisplay->SetVisible(false);
 			distortionMatDisplay->SetVisible(false);
 
-			calculateButton->label = "Calculate";
-			captureButton->label = "Capture";
+			calculateButton->SetText("Calculate");
+			captureButton->SetText("Capture");
 		}
 		else if (state == CalibrationControllerStates::Running)
 		{
@@ -243,14 +243,14 @@ void CalibrationController::ProcessFrame(Engine* engine)
 			//Update label
 			char myString[100];
 			sprintf(myString, "Capture (%d)", collectionCount);
-			captureButton->label = std::string(myString);
+			captureButton->SetText(std::string(myString));
 		}
 
 		
 	}
 	else if (state == CalibrationControllerStates::Calculating1)
 	{
-		calculateButton->label = "Calculating...";
+		calculateButton->SetText("Calculating...");
 		calculateButton->FillColor = Colors::Gold;
 		state = CalibrationControllerStates::Calculating2;
 	}
@@ -308,9 +308,9 @@ void CalibrationController::CalculateMatrices()
 	cameraMatDisplay->SetData(cameraMatrix);
 	distortionMatDisplay->SetData(distortionMatrix);
 
-	calculateButton->label = "Accept";
+	calculateButton->SetText("Accept");
 	calculateButton->FillColor = Colors::MediumSeaGreen;
-	captureButton->label = "Redo";
+	captureButton->SetText("Redo");
 
 }
 

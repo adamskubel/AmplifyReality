@@ -126,13 +126,66 @@ public:
 	}
 
 private:
-	Point2i center;
 	int radius, thickness;
 	Scalar fillColor;
 	
 	
 };
 
+class DebugLine : public Drawable
+{
+public:
+	
+	DebugLine(Point2i _pt0, Point2i _pt1, Scalar _color, int _thickness = 1)
+	{		
+		pt0 = _pt0;
+		pt1 = _pt1;
+		fillColor = _color;
+		thickness = _thickness;
+	}
+	
+	~DebugLine()
+	{
+	}
+	
+	void Draw(Mat * rgbaImage)
+	{		
+		line(*rgbaImage,pt0,pt1,fillColor,thickness,8);
+	}
+
+private:
+	int thickness;
+	Scalar fillColor;
+	Point2i pt0,pt1;	
+};
+
+class DebugLabel : public Drawable
+{
+public:
+	DebugLabel(Point2i _position, std::string _text, Scalar _color = Colors::Black, float _scale = 0.5f,  Scalar _outlineColor = Colors::White)
+	{
+		position = _position;
+		text = _text;
+		color = _color;
+		outlineColor = _outlineColor;
+		scale = _scale;
+	}
+
+	void Draw(Mat * rgbaImage)
+	{		
+		if (outlineColor != Colors::Transparent)
+		{
+			putText(*rgbaImage, text.c_str(), position, FONT_HERSHEY_SIMPLEX, scale, outlineColor, 2, 8);	
+		}
+		putText(*rgbaImage, text.c_str(), position, FONT_HERSHEY_SIMPLEX, scale, color, 1, 8);	
+	}
+
+private:
+	Point2i position;
+	std::string text;
+	Scalar color, outlineColor;
+	float scale;
+};
 
 
 

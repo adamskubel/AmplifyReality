@@ -194,10 +194,10 @@ float FastTracking::angle( Point pt1, Point pt2, Point pt0 )
     double dy1 = pt1.y - pt0.y;
     double dx2 = pt2.x - pt0.x;
     double dy2 = pt2.y - pt0.y;
-    double cosineDouble = (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+    double cosFloat = (dx1*dx2 + dy1*dy2)/sqrtf((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 	//cosineDouble = acos(cosineDouble);
-	LOGD(LOGTAG_QRFAST,"Cosine between points  (%d,%d) <- (%d,%d) -> (%d,%d) is %lf",pt1.x,pt1.y,pt0.x,pt0.y,pt2.x,pt2.y,cosineDouble);
-	return (float)cosineDouble;
+	//LOGV(LOGTAG_QRFAST,"Cosine between points  (%d,%d) <- (%d,%d) -> (%d,%d) is %lf",pt1.x,pt1.y,pt0.x,pt0.y,pt2.x,pt2.y,cosFloat);
+	return (float)cosFloat;
 }
 
 float FastTracking::getCosine(vector<Point2f> & testPoints)

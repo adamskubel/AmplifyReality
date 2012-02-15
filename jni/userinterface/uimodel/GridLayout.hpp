@@ -33,6 +33,9 @@ public:
 
 	GraphicalUIElement * GetElementAtCell(cv::Point2i gridPoint);
 
+	int GetWidth();
+	int GetHeight();
+
 protected:
 	Point2i Position;
 	vector<GraphicalUIElement*> Children;

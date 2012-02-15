@@ -224,8 +224,8 @@ void ARController::ProcessFrame(Engine * engine)
 		frameCount,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
 	getImages(engine);
 		
-	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->MinAlignmentScore;//lol static. THIS IS BAD!
-	FinderPatternHelper::MinimumFinderPatternScore = debugUI->MinFinderPatternScore;
+	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
+	FinderPatternHelper::MinimumFinderPatternScore = debugUI->GetParameter("MinFPScore");
 
 	vector<Drawable*> debugVector;
 

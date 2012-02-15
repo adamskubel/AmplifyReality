@@ -80,10 +80,10 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 
 void PositionSelector::LowpassFilter(PositioningResults * current, PositioningResults * previous)
 {
-	float alpha = config->PositionFilterAlpha;
+	float alpha = config->GetParameter("T-Alpha");
 	current->Position = current->Position * alpha + previous->Position * (1-alpha);
 		
-	alpha = config->RotationFilterAlpha;
+	alpha = config->GetParameter("R-Alpha");
 	current->Rotation = current->Rotation * alpha + previous->Rotation * (1-alpha);
 }
 

@@ -139,3 +139,13 @@ GraphicalUIElement * GridLayout::GetElementAtCell(Point2i gridPoint)
 	}
 	return NULL;
 }
+
+int GridLayout::GetWidth()
+{
+	return gridSize.width;
+}
+
+int GridLayout::GetHeight()
+{
+	return gridSize.height;
+}

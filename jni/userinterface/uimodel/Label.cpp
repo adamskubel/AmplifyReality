@@ -34,7 +34,7 @@ void Label::HandleInput()
 void Label::SetCenter(Point2i centerPoint)
 {	
 	lastPosition = centerPoint;
-	LOGD(LOGTAG_INPUT,"Setting label center (%d,%d)",centerPoint.x,centerPoint.y);
+	//LOGV(LOGTAG_INPUT,"Setting label center (%d,%d)",centerPoint.x,centerPoint.y);
 	Size2i size = GetTextSize();
 	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
 	
@@ -43,7 +43,7 @@ void Label::SetCenter(Point2i centerPoint)
 		LOGW(LOGTAG_INPUT,"Attempted to place label outside of screen! (%d,%d)",Position.x,Position.y);
 		Position = Point2i(0,0);
 	}
-	LOGD(LOGTAG_INPUT,"New position is (%d,%d)",Position.x,Position.y);
+	//LOGV(LOGTAG_INPUT,"New position is (%d,%d)",Position.x,Position.y);
 }
 
 void Label::FitTextToBoundary(Size2f limits)
@@ -60,11 +60,11 @@ void Label::FitTextToBoundary(Size2f limits)
 	FontScale *= std::min(xSpace,ySpace);
 
 	if (FontScale > 2.0f)
-		FontScale = 2.0f;
+		FontScale = 1.8f;
 	if (FontScale <= 0)
 		FontScale = 0.1f;
 	
-	LOGD(LOGTAG_INPUT,"New FontScale is %f",FontScale);
+	//LOGV(LOGTAG_INPUT,"New FontScale is %f",FontScale);
 }
 
 void Label::SetText(std::string newText)
@@ -90,19 +90,19 @@ cv::Size2i Label::GetTextSize()
 
 void Label::Draw(Mat * rgbaImage)
 {	
-	//If FillColor has nonzero alpha, draw background rectangle
+	//If FillColor has nonzero alpha, draw background outline 
 	if(FillColor[3] > 0)
 	{
-		Size2i fontSize = GetTextSize();
-		rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
+		//Size2i fontSize = GetTextSize();
+		//rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
+		putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, FillColor, FontThickness*2, 8);
 	}
 
 	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	
 }
 
 void Label::DoLayout(Rect boundaryRectangle)
-{
-	
+{	
 	LOGI(LOGTAG_INPUT,"Adding myself(Label) to layout. Rect = (%d,%d,%d,%d)",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 
 	Point2i newPoint = Point2i(boundaryRectangle.x + boundaryRectangle.width/2, boundaryRectangle.y + boundaryRectangle.height/2);

@@ -3,6 +3,13 @@
 ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : PageDisplay()
 {	
 	int padding = 20;
+	GridDimensions = Size2i(3,2);
+	
+	GridLayout * empty = new GridLayout(Size2i(2,2));
+	
+	AddChild(empty);
+	
+
 	GridLayout * myGrid = new GridLayout(Size2i(4,3));
 	
 	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
@@ -22,108 +29,114 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 
 	certaintyIndicator = new CertaintyIndicator(0);
 	myGrid->AddChild(certaintyIndicator,Point2i(3,2));
-
 	AddChild(myGrid);
-
-	SetPage(0);
-	addPage2(engine);
-
-	SetVisible(true);
-	LOGD(LOGTAG_INPUT,"Laying out DebugUI");
-
-	DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
-
 	
-	LOGD(LOGTAG_INPUT,"DebugUI Layout complete");
-}
-
-
-void ARControllerDebugUI::addPage2(Engine * engine) 
-{
-	SetDefaults();
-
-	int padding = 20;
-	DoLayout(Rect(padding,padding,engine->imageWidth-padding*2, engine->imageHeight - padding*2));
-
-	GridLayout * myGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
-
-
-	NumberSpinner * numberSpinner2 = new NumberSpinner("MinFPScore",MinFinderPatternScore,10.0f,"%3.1f");
-	numberSpinner2->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::MinimumFinderPatternScoreChanged>(this));
-	myGrid->AddChild(numberSpinner2,Point2i(1,0));
-	numberSpinner2->SetMinimum(100.0f);
-	numberSpinner2->SetMaximum(300.0f);
-
-	NumberSpinner * minAlignmentSpinner = new NumberSpinner("MinAlignScore",MinAlignmentScore,10.0f,"%3.1f");
-	minAlignmentSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::MinimumAlignmentPatternScoreChanged>(this));
-	myGrid->AddChild(minAlignmentSpinner,Point2i(1,1));
-	minAlignmentSpinner->SetMinimum(100.0f);
-	minAlignmentSpinner->SetMaximum(300.0f);
 	
+	AddNewParameter("FastThresh",10,5,1,400,"%3.0f",1);
+	AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f",1);
+
+	AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",2);
+	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",2);
+		
+	//Need to automate this..maybe
 	SelectBox * drawModeSelect = new SelectBox(3,Colors::MidnightBlue);
 	drawModeSelect->AddItem(new SelectBoxItem("Color"));
 	drawModeSelect->AddItem(new SelectBoxItem("Gray"));	
 	drawModeSelect->AddItem(new SelectBoxItem("Binary"));
 	drawModeSelect->AddSelectionChangedDelegate(SelectionChangedEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::DrawmodeSelectionChanged>(this));
 	drawModeSelect->SetSelectedIndex(1);
-	myGrid->AddChild(drawModeSelect,Point2i(2,0));
+	AddInNextPosition(drawModeSelect,1);
 
-	NumberSpinner * fastThresh = new NumberSpinner("FastThresh",9,1,"%3.1f");
-	fastThresh->Name = "FastThresh";
-	fastThresh->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
-	fastThresh->SetMaximum(15);
-	fastThresh->SetMinimum(9);
-	myGrid->AddChild(fastThresh,Point2i(0,0));
-	
-	//engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::GlobalTouchEvent>(this));	
-
-
-	LOGD(LOGTAG_INPUT,"Adding grid to page display");
-	AddChild(myGrid);
-
-	GridLayout * nextPageGrid = new GridLayout(Size2i(100,100),Size2i(3,2));
-
+	currentDrawMode = DrawModes::GrayImage;
 		
-	NumberSpinner * positionSpinner = new NumberSpinner("T-Alpha",PositionFilterAlpha,0.05f,"%2.2f");
-	positionSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::PositionFilterAlphaChanged>(this));
-	nextPageGrid->AddChild(positionSpinner,Point2i(0,0));
-	positionSpinner->SetMaximum(1.0f);
-	positionSpinner->SetMinimum(0.0f);
-
-	NumberSpinner * rotationSpinner = new NumberSpinner("R-Alpha",RotationFilterAlpha,0.05f,"%2.2f");
-	rotationSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::RotationFilterAlphaChanged>(this));
-	nextPageGrid->AddChild(rotationSpinner,Point2i(0,1));
-	rotationSpinner->SetMaximum(1.0f);
-	rotationSpinner->SetMinimum(0.0f);
+	AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",2);
+	AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",2);
 	
-	NumberSpinner * testSpinner = new NumberSpinner("Cats",0.1f,0.05f,"%2.2f");
-	nextPageGrid->AddChild(testSpinner,Point2i(0,0));
 
-	AddChild(nextPageGrid);
+	SetPage(0);
+	SetVisible(true);
+	LOGD(LOGTAG_INPUT,"(DebugUI) Starting layout");
+	DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
 }
 
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultValue, float step, float minValue, float maxValue, std::string format)
+
+
+void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
 {
+	if (parameterMap.find(paramName) != parameterMap.end())	
+	{
+		LOGI(LOGTAG_INPUT,"Parameter already exists, deleting");
+		//Clean up last spinner
+		for (int i=0;i<Children.size();i++)
+		{
+			UIElement * element = ((GridLayout*)Children.at(i))->GetElementByName(paramName);
+			if (element != NULL)
+			{
+				delete element;
+				LOGI(LOGTAG_INPUT,"Parameter deleted successfully.");
+				break;
+			}
+		}
+	}
+
 	NumberSpinner * newSpinner = new NumberSpinner(paramName,defaultValue,step,format);
 	newSpinner->Name = paramName;
+	newSpinner->SetMinimum(minValue);
+	newSpinner->SetMaximum(maxValue);
 	newSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
 
-	//Need to add it to somewhere
 	parameterMap.insert(pair<std::string,float>(paramName,defaultValue));
+	AddInNextPosition(newSpinner,desiredPage);
 }
 
-
-void ARControllerDebugUI::SetDefaults()
+void ARControllerDebugUI::AddInNextPosition(GraphicalUIElement * newControl, int desiredPage)
 {
-	PositionFilterAlpha = 0.9f;	
-	RotationFilterAlpha = 0.9f;	
-	MinFinderPatternScore = 190;
-	MinAlignmentScore = 180;
-	currentDrawMode = DrawModes::GrayImage;
-	
-	parameterMap.insert(pair<std::string,float>("FastThresh",9.0f));
+	Point2i position;
+	int page = -1;
+	FindNextPosition(position,page,desiredPage);
+	GridLayout * grid = (GridLayout*)Children.at(page);
+	LOGI(LOGTAG_INPUT,"Adding new control to cell (%d,%d) on page %d",position.x,position.y,page);
+	grid->AddChild(newControl,position);
 }
+
+void ARControllerDebugUI::FindNextPosition(Point2i & position, int & pageNum, int desiredPage, Size2i controlSize)
+{
+	if (desiredPage >= Children.size())
+	{
+		LOGW(LOGTAG_INPUT, "Requested page %d is out of range, only %d pages present",desiredPage,Children.size());
+		desiredPage = Children.size();
+	}
+
+	for (int page = desiredPage; page < Children.size(); page++)
+	{
+		LOGI(LOGTAG_INPUT,"Looking for empty positions on page %d",page);
+		GridLayout * grid = (GridLayout*) Children[page];
+
+		for (int x = 0; x < grid->GetWidth(); x++)
+		{
+			for (int y= 0;y<grid->GetHeight();y++)
+			{
+				if (grid->GetElementAtCell(Point2i(x,y)) == NULL)
+				{
+					position = Point2i(x,y);
+					pageNum = page;
+					return;
+				}
+			}
+		}
+	}
+
+	//If we haven't returned yet, then all possible positions are full. Add a new page.
+	position = Point2i(0,0);
+
+	GridLayout * newGrid = new GridLayout(GridDimensions);	
+	AddChild(newGrid);
+	pageNum = Children.size()-1;
+	return;
+}
+
+
 
 void ARControllerDebugUI::NumberSpinnerValueChanged(void * sender, NumberSpinnerEventArgs args)
 {
@@ -135,36 +148,16 @@ void ARControllerDebugUI::NumberSpinnerValueChanged(void * sender, NumberSpinner
 
 float ARControllerDebugUI::GetParameter(std::string paramName)
 {
-	if (parameterMap.find(paramName) != parameterMap.end())
+	map<string,float>::iterator paramMapIterator = parameterMap.find(paramName);
+	if (paramMapIterator != parameterMap.end())
 	{
-		return parameterMap[paramName];
+		return (*paramMapIterator).second;
 	}
 	else
 	{
 		LOGE("Parameter %s does not exit in map!",paramName.c_str());
 		return MAXFLOAT;
 	}
-}
-
-void ARControllerDebugUI::PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args)
-{
-	PositionFilterAlpha = args.NewValue;
-}
-
-void ARControllerDebugUI::RotationFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args)
-{
-	RotationFilterAlpha = args.NewValue;
-}
-
-
-void ARControllerDebugUI::MinimumFinderPatternScoreChanged(void * sender, NumberSpinnerEventArgs args)
-{
-	MinFinderPatternScore = args.NewValue;
-}
-
-void ARControllerDebugUI::MinimumAlignmentPatternScoreChanged(void * sender, NumberSpinnerEventArgs args)
-{
-	MinAlignmentScore = args.NewValue;
 }
 
 
@@ -177,7 +170,7 @@ void ARControllerDebugUI::DrawmodeSelectionChanged(void * sender, SelectionChang
 {
 	if (args.NewSelection != NULL)
 	{
-		std::string label = ((SelectBoxItem*)args.NewSelection)->label;
+		std::string label = ((SelectBoxItem*)args.NewSelection)->Name;
 		LOGD(LOGTAG_INPUT,"Processing selection changed, new label = %s",label.c_str());
 		if (label.compare("Color") == 0)
 			currentDrawMode = DrawModes::ColorImage;

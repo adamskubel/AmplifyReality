@@ -42,6 +42,16 @@ public:
 		return isVisible;
 	}
 
+	virtual int GetWidth()
+	{
+		return 0;
+	}
+
+	virtual int GetHeight()
+	{
+		return 0;
+	}
+
 protected:
 	bool isVisible;
 	bool layoutDefined;

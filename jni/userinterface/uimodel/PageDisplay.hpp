@@ -23,13 +23,15 @@ public:
 
 private:
 	static const float DefaultButtonSize = 150;
-	vector<GraphicalUIElement*> Children;
 	int currentPage;
 	Button * nextPage, * previousPage;
 
 	Rect contentRect;
 	
 	void AdjustButtons();
+
+protected:	
+	vector<GraphicalUIElement*> Children;
 
 };
 

@@ -31,22 +31,10 @@ public:
 
 	void NumberSpinnerValueChanged(void * sender, NumberSpinnerEventArgs args);
 	void SetDefaults();		
-
-	void PositionFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
-	void RotationFilterAlphaChanged(void * sender, NumberSpinnerEventArgs args);
-	void MinimumFinderPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
-	void MinimumAlignmentPatternScoreChanged(void * sender, NumberSpinnerEventArgs args);
-
-	void GlobalTouchEvent(void * sender, TouchEventArgs args);
-
-	//Params
-	float PositionFilterAlpha;
-	float RotationFilterAlpha;
-	float MinFinderPatternScore;
-	float MinAlignmentScore;
-
+	//void GlobalTouchEvent(void * sender, TouchEventArgs args);
+	
 	float GetParameter(std::string paramName);
-	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f");
+	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
@@ -63,6 +51,11 @@ private:
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
 	map<std::string,float> parameterMap;
+	Size2i GridDimensions;
+
+	void FindNextPosition(Point2i & page, int & pageNum, int desiredPage = 0, Size2i controlSize = Size2i(1,1));
+	void AddInNextPosition(GraphicalUIElement * newControl, int desiredPage = 0);
+
 
 
 };

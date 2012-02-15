@@ -1,30 +1,31 @@
 #include "userinterface/uimodel/Button.hpp"
 
-Button::Button(std::string _label, cv::Scalar _fillColor)
+Button::Button(std::string _label, cv::Scalar _FillColor, cv::Scalar _TextColor)
 {
 	buttonBoundaries = Rect(0,0,1,1);
-	FillColor = _fillColor;
-	label = _label;
+	FillColor = _FillColor;
+	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::Transparent);
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
 	isEnabled = true;
 }
 
-Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _fillColor)
+Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _FillColor, cv::Scalar _TextColor)
 {
 	buttonBoundaries = _buttonBoundaries;
-	FillColor = _fillColor;
-	label = _label;
+	FillColor = _FillColor;
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
+	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::Transparent);
+	buttonLabel->DoLayout(buttonBoundaries);
 	isEnabled = true;
 }
 
 Button::~Button()
-{
-	;
+{	
+	delete buttonLabel;
 }
 
 void Button::AddClickDelegate(ClickEventDelegate myDelegate)
@@ -67,27 +68,19 @@ void Button::HandleInput(TouchEventArgs args)
 	}
 }
 
-void Button::DoGridLayout(Point2i offset, Size2i cellSize, Point2i gridPoint, Size2i gridSpan)
-{
-	Point2i newPoint = Point2i(gridPoint.x * cellSize.width,gridPoint.y * cellSize.height);
-
-	newPoint += offset;
-
-	buttonBoundaries.x = newPoint.x;
-	buttonBoundaries.y = newPoint.y;
-	buttonBoundaries.width = cellSize.width * gridSpan.width;
-	buttonBoundaries.height = cellSize.height * gridSpan.height;
-	
-	LOGD(LOGTAG_INPUT,"Adding myself(Button) to grid. X=%d,Y=%d,W=%d,H=%d",buttonBoundaries.x,buttonBoundaries.y,
-		buttonBoundaries.width,buttonBoundaries.height);
-}
-
 void Button::DoLayout(Rect boundaries)
 {
 	buttonBoundaries = boundaries;
 	
 	LOGD(LOGTAG_INPUT,"Adding myself(Button) to grid. X=%d,Y=%d,W=%d,H=%d",buttonBoundaries.x,buttonBoundaries.y,
 		buttonBoundaries.width,buttonBoundaries.height);
+
+	buttonLabel->DoLayout(Rect(boundaries.x+2,boundaries.y+2,boundaries.width-4,boundaries.height-4));
+}
+
+void Button::SetText(std::string text)
+{
+	buttonLabel->SetText(text);
 }
 
 void Button::Draw(Mat * rgbaImage)
@@ -97,17 +90,19 @@ void Button::Draw(Mat * rgbaImage)
 	//Draw border
 	cv::rectangle(*rgbaImage,buttonBoundaries,Scalar::all(0),2,CV_AA);
 
+	//Draw label
+	buttonLabel->Draw(rgbaImage);
 
-	//Draw button label
-	int fontFace = FONT_HERSHEY_SIMPLEX;
-	double fontScale = 1.2;
-	int thickness = 2;
-	int baseline = 0;
-	Size textSize = getTextSize(label.c_str(), fontFace, fontScale, thickness, &baseline);
+	////Draw button label
+	//int fontFace = FONT_HERSHEY_SIMPLEX;
+	//double fontScale = 1.2;
+	//int thickness = 2;
+	//int baseline = 0;
+	//Size textSize = getTextSize(label.c_str(), fontFace, fontScale, thickness, &baseline);
 
-	Point2i textLocation = Point2i(buttonBoundaries.x + (buttonBoundaries.width - textSize.width)/2,
-		baseline + buttonBoundaries.y + (buttonBoundaries.height - textSize.height)/2);
-	putText(*rgbaImage, label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
+	//Point2i textLocation = Point2i(buttonBoundaries.x + (buttonBoundaries.width - textSize.width)/2,
+	//	baseline + buttonBoundaries.y + (buttonBoundaries.height - textSize.height)/2);
+	//putText(*rgbaImage, label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
 }
 
 void Button::SetEnabled(bool enabled)
