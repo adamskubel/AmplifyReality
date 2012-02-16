@@ -42,7 +42,7 @@
 #define LOGV(TAG,...)  __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_BASE TAG,__VA_ARGS__) 
 #define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
 #define LOG_TIME_DEBUG(message,start,end) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
-#define SET_TIME(timeObject) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, timeObject);
+#define SET_TIME(timeObject) clock_gettime(CLOCK_MONOTONIC_HR, timeObject);
 
 //Disabling verbose and time logging *MAY* improve performance (these events fire really often)
 #ifndef DETAILED_LOGGING_ENABLED

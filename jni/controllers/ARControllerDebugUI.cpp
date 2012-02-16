@@ -10,22 +10,22 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	AddChild(empty);
 	
 
-	flannTimeLabel = new Label("[FLANN]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
+	//flannTimeLabel = new Label("[FLANN]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
 
-	GridLayout * myGrid = new GridLayout(Size2i(4,3));	
+	GridLayout * myGrid = new GridLayout(Size2i(4,5));	
 	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
 	translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
-	myGrid->AddChild(rotationLabel,Point2i(0,1));
-	myGrid->AddChild(translationLabel,Point2i(0,2));
-	myGrid->AddChild(flannTimeLabel,Point2i(1,2));
+	myGrid->AddChild(rotationLabel,Point2i(0,2));
+	myGrid->AddChild(translationLabel,Point2i(0,3));
+	//myGrid->AddChild(flannTimeLabel,Point2i(1,2));
 
-	GridLayout * miniGrid = new GridLayout(Size2i(1,2));
+	//GridLayout * miniGrid = new GridLayout(Size2i(1,2));
 	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
 	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
-	miniGrid->AddChild(stateLabel,Point2i(0,0));
-	miniGrid->AddChild(fpsLabel,Point2i(0,1));
+	myGrid->AddChild(stateLabel,Point2i(0,1));
+	myGrid->AddChild(fpsLabel,Point2i(0,0));
 
-	myGrid->AddChild(miniGrid,Point2i(0,0));
+	//myGrid->AddChild(miniGrid,Point2i(0,0));
 
 	Mat oneMatrix = Mat::ones(1,3,CV_64F);	
 	Mat oneMatrix2 = Mat::zeros(1,3,CV_64F);
@@ -65,8 +65,33 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
 }
 
+void ARControllerDebugUI::SetLabelValue(std::string labelName, float labelValue)
+{
+	map<std::string,Label*>::iterator labelIterator = labelMap.find(labelName);
 
+	if (labelIterator != labelMap.end())
+	{		
+		std::stringstream textStream;
+		textStream << labelName;
+		textStream << "=";
+		textStream.precision(4);
+		//textStream.setf(ios_base::scientific);
+		textStream << labelValue;
+		(*labelIterator).second->SetText(textStream.str());
+	}
+	else
+	{
+		LOGW(LOGTAG_INPUT,"Attempted to set value of non-existent label: %s",labelName.c_str());
+	}
+}
 
+void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string defaultText, int desiredPage)
+{
+	Label * newLabel = new Label(defaultText,Point2i(0,0),Colors::Black,Colors::White);
+
+	labelMap.insert(pair<std::string,Label*>(labelName,newLabel));
+	AddInNextPosition(newLabel,desiredPage);
+}
 
 void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
 {
@@ -194,12 +219,6 @@ void ARControllerDebugUI::SetFPS(float fps)
 	fpsLabel->SetText(fpsString);
 }
 
-void ARControllerDebugUI::SetFLANNTime(double time)
-{
-	char timeString[100];
-	sprintf(timeString,"FLANN=%6.3lf ms",time);
-	flannTimeLabel->SetText(timeString);
-}
 
 void ARControllerDebugUI::SetStateDisplay(string stateDescription)
 {

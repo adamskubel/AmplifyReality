@@ -36,13 +36,15 @@ public:
 	float GetParameter(std::string paramName);
 	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
 
+	void SetLabelValue(std::string labelName, float value);
+	void AddNewLabel(std::string labelName, std::string defaultText, int desiredPage = 0);
+
 	void ToggleVisibility(void * sender, EventArgs args);
 
 	void DrawmodeSelectionChanged(void * sender, SelectionChangedEventArgs args);
 
 	DrawModes::DrawMode currentDrawMode;
 	void SetFPS(float fps);
-	void SetFLANNTime(double time);
 
 
 private:
@@ -50,10 +52,11 @@ private:
 
 	DataDisplay * translationLabel;
 	DataDisplay * rotationLabel;
-	Label * fpsLabel, * flannTimeLabel;
+	Label * fpsLabel;
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
 	map<std::string,float> parameterMap;
+	map<std::string,Label*> labelMap;
 	Size2i GridDimensions;
 
 	void FindNextPosition(Point2i & page, int & pageNum, int desiredPage = 0, Size2i controlSize = Size2i(1,1));

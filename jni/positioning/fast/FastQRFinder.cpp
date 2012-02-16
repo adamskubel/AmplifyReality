@@ -21,7 +21,23 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 //	config->AddNewParameter("DistanceMode",1,1,0,1,"%1.0f",1);
 	srand(time(NULL));
 
-	flannTime = 20;
+	flannTime = 2000;
+
+	patternTimes[0] = 1000;
+	patternTimes[1] = 1000;
+	patternTimes[2] = 1000;
+	patternTimes[3] = 1000;
+
+	pointTime =0;
+
+
+	config->AddNewLabel("FlannTime","[]", 1);
+	config->AddNewLabel("SortPointsTime","[]", 1);
+	config->AddNewLabel("CheckSlopeTime","[]", 1);
+	config->AddNewLabel("CheckPointsTime","[]", 1);
+	config->AddNewLabel("PerPointTime","[]", 1);
+	config->AddNewLabel("TotalPatternTime","[]", 1);
+	config->AddNewLabel("NumPoints","[]", 1);
 }
 
 //static bool getPointAtXLimit(Point2i & result, map<int,map<int,Point2i>*> & xKeyMap, int xLimit, Point2i approachDirection, int yRangeLower, int yRangeUpper=0)
@@ -498,6 +514,13 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	
 	int numFeatures = outsideCornersVector.size();
 
+	//Nothing to track!
+	if (numFeatures < 2 || insideCornerVector.size() < 2)
+	{
+		return NULL;
+	}
+
+
 	Mat outsideCornerMat = Mat(numFeatures,2,CV_32F);// m_object.convertTo(obj_32f,CV_32FC2);
 	for (int i = 0;i < outsideCornersVector.size();i++)
 	{
@@ -549,8 +572,7 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	LOG_TIME_PRECISE("Building FLANN index",start,end);
 	
 
-	double analyzeTime = 0;
-	double flannTime_local = 0;
+	double flannTime_local = 0, analyzeTime_local;
 	
 	int searchSize = (int)(config->GetParameter("K-NN"));
 	double flannRadius = std::pow(config->GetParameter("FlannRadius"),2);
@@ -558,113 +580,105 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 
 	bool useRadius = (config->GetParameter("UseRadius") == 1.0f);
 	
+	double patternTime_local[4] = {0,0,0,0};
 
+	struct timespec pointStart,pointEnd;
+	double pointTime_local =0;
 	//Find interesting patterns
+	
+	Mat indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
+	Mat distanceMatrix = Mat::zeros(1, searchSize, CV_32F);
+	
+	vector<pair<int,Point2i> > closePointsVector(searchSize);
+	Mat objectPoints = Mat(1,2,CV_32F);
 	for (vector<Point2i>::iterator insideIt = insideCornerVector.begin(); insideIt != insideCornerVector.end(); insideIt++)
 	{
+		SET_TIME(&pointStart);
 		Point2i insideCornerPoint = *insideIt;
 		if (debugLevel > 2)
 			debugVector.push_back(new DebugCircle(insideCornerPoint,4,Colors::Gold));
-	/*	
-		SET_TIME(&start);
-		multimap<int,Point2i> closestPoints;
-		for (vector<Point2i>::iterator outsideIt = outsideCornersVector.begin(); outsideIt != outsideCornersVector.end(); outsideIt++)
-		{
-			Point2i outsideCornerPoint = *outsideIt;
-			int dx = outsideCornerPoint.x - insideCornerPoint.x;
-			int dy = outsideCornerPoint.y - insideCornerPoint.y;
-			int dist;
 
-			if (squareDistance)
-				dist = GetSquaredDistance(dx,dy);
-			else
-				dist = GetDistanceFast(dx,dy);
-
-			if (dist > 0)
-			{
-				closestPoints.insert(pair<int,Point2i>(dist,outsideCornerPoint));
-			}
-			}
-
-			SET_TIME(&end);
-			LOG_TIME_PRECISE("Distance finding",start,end);*/
-
-
-		// find nearest neighbors using FLANN
-
-		//Output matrices
-		
-		Mat indexMatrix = Mat::zeros(1, searchSize, CV_32S);
-		Mat distanceMatrix = Mat::zeros(1, searchSize, CV_32F);
-
-		Mat objectPoints = Mat(1,2,CV_32F);
 		objectPoints.at<float>(0,0) = (float)insideCornerPoint.x;
 		objectPoints.at<float>(0,1) = (float)insideCornerPoint.y;
 
 		struct timespec innerStart,innerEnd;
 		SET_TIME(&innerStart);
 
-		int result = 0;
+		int result = searchSize;
 		
 		if (useRadius)
-			result = flannPointIndex->radiusSearch(objectPoints, indexMatrix, distanceMatrix,flannRadius, searchSize , cv::flann::SearchParams(searchParams)); 
+		{
+			int radiusSearch = flannPointIndex->radiusSearch(objectPoints, indexMatrix, distanceMatrix,flannRadius, searchSize , cv::flann::SearchParams(searchParams)); 
+			if (radiusSearch < searchSize)
+				result = radiusSearch;
+		}
 		else
 		{
-			result = searchSize;
 			flannPointIndex->knnSearch(objectPoints, indexMatrix, distanceMatrix, searchSize, cv::flann::SearchParams(searchParams));
 		}
-		LOGV(LOGTAG_QRFAST,"RadiusMode=%d,Pt(%d,%d) - FLANN(%d < %lf) complete(%d).",useRadius,insideCornerPoint.x,insideCornerPoint.y,searchSize,flannRadius,result);
+		//LOGV(LOGTAG_QRFAST,"RadiusMode=%d,Pt(%d,%d) - FLANN(%d < %lf) complete(%d).",useRadius,insideCornerPoint.x,insideCornerPoint.y,searchSize,flannRadius,result);
 		
 
 		SET_TIME(&innerEnd);
 		flannTime_local += calc_time_double(innerStart,innerEnd);
 
-		//LOGD_Mat(LOGTAG_QRFAST,"KNNIndex",&indexMatrix);
+	//	LOGD_Mat(LOGTAG_QRFAST,"KNNIndex",&indexMatrix);
 
+		if (result != searchSize)
+			closePointsVector.resize(result);
 		SET_TIME(&innerStart);
+		/*clock_gettime(CLOCK_MONOTONIC_HR, &innerStart);*/
 		multimap<int,Point2i> closestPoints;
-		for (int i=0;i<indexMatrix.cols && i < result;i++)
-		{
-			int index = indexMatrix.at<int>(0,i);
-			if (index >= 0 && index < outsideCornerMat.rows)
-			{
-				LOGV(LOGTAG_QRFAST,"Accessing point at index=%d,i=%d",index,i);
-				Point2i objPoint = Point2i(outsideCornerMat.at<float>(index,0),outsideCornerMat.at<float>(index,1));
-				closestPoints.insert(pair<int,Point2i>(distanceMatrix.at<float>(i),objPoint));
-				LOGV(LOGTAG_QRFAST,"Point=(%d,%d),dist=%f",objPoint.x,objPoint.y,distanceMatrix.at<float>(i));
-			}
-			else
-				continue;
-		}
 		
-		if (closestPoints.size() < 2)
+		int * indexPtr = indexMatrix.ptr<int>(0);
+		float * distPtr = distanceMatrix.ptr<float>(0);
+		float * rowPtr;
+		for (int i=0;i < result;i++)
+		{
+			rowPtr = outsideCornerMat.ptr<float>(indexPtr[i]);
+			closePointsVector.push_back(pair<int,Point2i>(distPtr[i],Point2i((int)(rowPtr[0]),(int)(rowPtr[1]))));
+		}
+		SET_TIME(&innerEnd);
+		/*clock_gettime(CLOCK_MONOTONIC_HR , &innerEnd);
+		LOGD(LOGTAG_QRFAST,"VectoringResult=%ld",innerEnd.tv_nsec-innerStart.tv_nsec);*/
+		//LOG_TIME_PRECISE("Result vectorizing",innerStart,innerEnd);
+		patternTime_local[0] += calc_time_double(innerStart,innerEnd);
+		
+		if (closePointsVector.size() < 2)
 		{
 			if (debugLevel > 0)
 			{
 				debugVector.push_back(new DebugCircle(insideCornerPoint,12,Colors::CornflowerBlue));
-				if (debugLevel > 1 && closestPoints.size() == 1)
+				if (debugLevel > 1 && closePointsVector.size() == 1)
 				{
-					debugVector.push_back(new DebugLine(insideCornerPoint,(*closestPoints.begin()).second,Colors::CornflowerBlue));
+					debugVector.push_back(new DebugLine(insideCornerPoint,(*closePointsVector.begin()).second,Colors::CornflowerBlue));
 				}
 			}
 			continue;
 		}
 
-		multimap<int,Point2i>::iterator closePointsIt, closePointsEnd;
+		/*	multimap<int,Point2i>::iterator closePointsIt, closePointsEnd;*/
+		vector<pair<int,Point2i> >::iterator closePointsIt, closePointsEnd;
 
-		closePointsIt = closestPoints.begin();
+		closePointsIt = closePointsVector.begin();
 		int closestDist = (*closePointsIt).first;
 		Point2i firstPoint =  (*closePointsIt).second;
 		closePointsIt++;
-		closePointsEnd = closestPoints.upper_bound(closestDist * 4);
+		closePointsEnd = closePointsVector.end();//closestPoints.upper_bound(closestDist * 4);
 
 		float MaxCosine = -0.8f;
 		float lowestCosine = -0.3f;
 
 		Point2i bestPoint;
 		
+		SET_TIME(&innerStart);
 		for (; closePointsIt != closePointsEnd; closePointsIt++)
-		{
+		{			
+		/*	if ((*closePointsIt).first > closestDist * 4)
+				break;
+			
+*/
+			//LOGV(LOGTAG_QRFAST,"Vector: %d->(%d,%d)",(*closePointsIt).first,(*closePointsIt).second.x,(*closePointsIt).second.y);
 			Point2i testPoint = (*closePointsIt).second;
 			if (GetSquaredDistance(firstPoint,testPoint) < closestDist)
 			{
@@ -683,7 +697,11 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 				bestPoint = testPoint;
 			}
 		}
+		SET_TIME(&innerEnd);
+		patternTime_local[1] += calc_time_double(innerStart,innerEnd);
 
+		
+		SET_TIME(&innerStart);
 		//Validate slope
 		if (bestPoint.x == 0 && bestPoint.y==0)
 		{		
@@ -708,22 +726,72 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 			continue;
 		}		
 		SET_TIME(&innerEnd);
-		analyzeTime += calc_time_double(innerStart,innerEnd);
+		patternTime_local[2] += calc_time_double(innerStart,innerEnd);
 
 		if (debugLevel > -1)
 		{
 			debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Lime,2));
 			debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Lime,2));
 		}
+		
+		closePointsVector.clear();
+		indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
+
+		SET_TIME(&pointEnd);
+		pointTime_local += calc_time_double(pointStart,pointEnd);
 	}
+	patternTime_local[3] = pointTime_local;
 
-	flannTime = (flannTime  + (flannTime_local/1000.0))/2.0;
-	config->SetFLANNTime(flannTime);
 
-	LOGD(LOGTAG_QRFAST,"Total analysis time = %6.2lf ms",analyzeTime/1000.0);
-	//LOGD(LOGTAG_QRFAST,"Total FLANN time = %6.2lf ms",flannTime/1000.0);
-	analyzeTime = 0;
-	flannTime = 0;
+	//flannTime = (flannTime  + (flannTime_local))/2.0;
+
+	config->SetLabelValue("FlannTime",flannTime_local/1000.0);
+	for (int i=0;i<4;i++)
+	{
+		patternTimes[i] = (patternTimes[i] + patternTime_local[i])/2.0;
+	}
+	config->SetLabelValue("SortPointsTime",patternTimes[0]);
+	config->SetLabelValue("CheckPointsTime",patternTimes[1]);
+	config->SetLabelValue("CheckSlopeTime",patternTimes[2]);
+
+	pointTime_local /= (double)insideCornerVector.size();
+	pointTime = (pointTime + pointTime_local)/2.0;
+	config->SetLabelValue("PerPointTime",pointTime);
+	config->SetLabelValue("TotalPatternTime",patternTimes[3]/1000.0);
+	config->SetLabelValue("NumPoints",(float)insideCornerVector.size());
+
+	struct timespec resolution, currentTime;
+	clock_getres(CLOCK_MONOTONIC_HR,&resolution);
+	clock_getres(CLOCK_MONOTONIC_HR,&currentTime);
+	LOGD(LOGTAG_QRFAST,"MonoHRRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"MonoHRTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_REALTIME_HR,&resolution);
+	clock_getres(CLOCK_REALTIME_HR,&currentTime);
+	LOGD(LOGTAG_QRFAST,"RealHRRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"RealHRTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_MONOTONIC,&resolution);
+	clock_getres(CLOCK_MONOTONIC,&currentTime);
+	LOGD(LOGTAG_QRFAST,"MonoRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"MonoTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_REALTIME,&resolution);
+	clock_getres(CLOCK_REALTIME,&currentTime);
+	LOGD(LOGTAG_QRFAST,"RealRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"RealTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_THREAD_CPUTIME_ID,&resolution);
+	clock_getres(CLOCK_THREAD_CPUTIME_ID,&currentTime);
+	LOGD(LOGTAG_QRFAST,"ThreadRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"ThreadTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_PROCESS_CPUTIME_ID,&resolution);
+	clock_getres(CLOCK_PROCESS_CPUTIME_ID,&currentTime);
+	LOGD(LOGTAG_QRFAST,"ProcessRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"ProcessTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	clock_getres(CLOCK_SGI_CYCLE,&resolution);
+	clock_getres(CLOCK_SGI_CYCLE,&currentTime);
+	LOGD(LOGTAG_QRFAST,"SGIRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
+	LOGD(LOGTAG_QRFAST,"SGITime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
+	
+	
+	
 	
 	delete flannPointIndex;
 	//Cleanup maps

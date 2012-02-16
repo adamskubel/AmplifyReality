@@ -85,7 +85,8 @@ private:
 	void GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2i & randomPoint, Point2i & randomPointKey);
 	float getBestEdgeSize(int detectorRadius, Mat & img, Point2i imgPoint, int recurseCount);
 	ARControllerDebugUI * config;
-	double flannTime;
+	double flannTime, pointTime;
+	double patternTimes[4];
 
 	//Utility methods
 	static int GetSquaredDistance(int dx, int dy);
