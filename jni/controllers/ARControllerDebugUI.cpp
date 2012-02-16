@@ -10,16 +10,22 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	AddChild(empty);
 	
 
-	GridLayout * myGrid = new GridLayout(Size2i(4,3));
-	
+	flannTimeLabel = new Label("[FLANN]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
+
+	GridLayout * myGrid = new GridLayout(Size2i(4,3));	
 	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
 	translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
-
-	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue);
-
 	myGrid->AddChild(rotationLabel,Point2i(0,1));
 	myGrid->AddChild(translationLabel,Point2i(0,2));
-	myGrid->AddChild(stateLabel,Point2i(0,0));
+	myGrid->AddChild(flannTimeLabel,Point2i(1,2));
+
+	GridLayout * miniGrid = new GridLayout(Size2i(1,2));
+	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
+	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
+	miniGrid->AddChild(stateLabel,Point2i(0,0));
+	miniGrid->AddChild(fpsLabel,Point2i(0,1));
+
+	myGrid->AddChild(miniGrid,Point2i(0,0));
 
 	Mat oneMatrix = Mat::ones(1,3,CV_64F);	
 	Mat oneMatrix2 = Mat::zeros(1,3,CV_64F);
@@ -32,11 +38,11 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	AddChild(myGrid);
 	
 	
-	AddNewParameter("FastThresh",10,5,1,400,"%3.0f",1);
-	AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f",1);
+	AddNewParameter("FastThresh",10,5,1,400,"%3.0f",2);
+	AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f",2);
 
-	AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",2);
-	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",2);
+	AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",3);
+	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",3);
 		
 	//Need to automate this..maybe
 	SelectBox * drawModeSelect = new SelectBox(3,Colors::MidnightBlue);
@@ -45,12 +51,12 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	drawModeSelect->AddItem(new SelectBoxItem("Binary"));
 	drawModeSelect->AddSelectionChangedDelegate(SelectionChangedEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::DrawmodeSelectionChanged>(this));
 	drawModeSelect->SetSelectedIndex(1);
-	AddInNextPosition(drawModeSelect,1);
+	AddInNextPosition(drawModeSelect,3);
 
 	currentDrawMode = DrawModes::GrayImage;
 		
-	AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",2);
-	AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",2);
+	AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
+	AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
 	
 
 	SetPage(0);
@@ -179,6 +185,20 @@ void ARControllerDebugUI::DrawmodeSelectionChanged(void * sender, SelectionChang
 		else if (label.compare("Binary") == 0)
 			currentDrawMode = DrawModes::BinaryImage;
 	}
+}
+
+void ARControllerDebugUI::SetFPS(float fps)
+{
+	char fpsString[100];
+	sprintf(fpsString,"FPS=%3.1f",fps);
+	fpsLabel->SetText(fpsString);
+}
+
+void ARControllerDebugUI::SetFLANNTime(double time)
+{
+	char timeString[100];
+	sprintf(timeString,"FLANN=%6.3lf ms",time);
+	flannTimeLabel->SetText(timeString);
 }
 
 void ARControllerDebugUI::SetStateDisplay(string stateDescription)

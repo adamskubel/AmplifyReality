@@ -59,9 +59,9 @@ void Label::FitTextToBoundary(Size2f limits)
 		
 	FontScale *= std::min(xSpace,ySpace);
 
-	if (FontScale > 2.0f)
-		FontScale = 1.8f;
-	if (FontScale <= 0)
+	if (FontScale > 1.0f)
+		FontScale = 1.0f;
+	if (FontScale <= 0.1f)
 		FontScale = 0.1f;
 	
 	//LOGV(LOGTAG_INPUT,"New FontScale is %f",FontScale);
@@ -95,7 +95,7 @@ void Label::Draw(Mat * rgbaImage)
 	{
 		//Size2i fontSize = GetTextSize();
 		//rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
-		putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, FillColor, FontThickness*2, 8);
+		putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, FillColor, FontThickness*3, 8);
 	}
 
 	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	

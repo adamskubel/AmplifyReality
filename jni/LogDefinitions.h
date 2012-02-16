@@ -34,6 +34,10 @@
 #define DETAILED_LOGGING_ENABLED 
 
 
+#define calc_time_double(start,end) (((end.tv_sec*1000000000.0 + end.tv_nsec) - (start.tv_sec*1000000000.0 + start.tv_nsec))/1000.0)
+#define LOG_TIME_PRECISE(message,start,end) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_TIME,"%s took %10.3lf us",message,calc_time_double(start,end))
+
+
 #define calc_time(start,end) (((end.tv_sec*1000000000LL + end.tv_nsec) - (start.tv_sec*1000000000LL + start.tv_nsec))/1000000LL)
 #define LOGV(TAG,...)  __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_BASE TAG,__VA_ARGS__) 
 #define LOG_TIME(message,start,end) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG_TIME,"%s took %ld ms",message,calc_time(start,end))
@@ -82,7 +86,48 @@ static void LOG_INTRO()
 }
 
 
-
+//static std::string GetFormatFromDepth(int depth)
+//{
+//	switch(depth)
+//	{
+//	case CV_8U:
+//		return "%u";
+//	case CV_8S:
+//		return "%d";
+//	case CV_16S:
+//		return "%d";
+//	case CV_32S:
+//		return "%d";
+//	case CV_32F:
+//		return "%f";
+//	case CV_64F:
+//		return "%lf";
+//	}
+//	return "UNKNOWNTYPE: %d";
+//	
+//
+//}
+//
+//static std::string WriteMatrixCell(cv::Mat * matrix,std::string & matString)
+//{
+//	switch(matrix->depth())
+//	{
+//	case CV_8U:
+//		sprintf(matString,"%s,%u",matString,matrix->at<
+//	case CV_8S:
+//		return "%d";
+//	case CV_16S:
+//		return "%d";
+//	case CV_32S:
+//		return "%d";
+//	case CV_32F:
+//		return "%f";
+//	case CV_64F:
+//		return "%lf";
+//	}
+//	return "UNKNOWNTYPE: %d";
+//	
+//}
 
 static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, const char * matDescription,cv::Mat * matrix)
 {
@@ -98,18 +143,42 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 	}
 	else
 	{
+		char matString[800];
+		int charCount = 0;
 		for (int i = 0; i < matrix->rows; i++)
-		{
-			char string[300];
-			sprintf(string,"[");
+		{						
 			for (int j = 0; j < matrix->cols*matrix->channels(); j++)
-			{			
-				sprintf(string,"%s,%lf",string,matrix->at<double>(i,j));
+			{		
+				charCount += sprintf(matString,"[%s",matString);
+				switch(matrix->depth())
+				{
+				case CV_8U:
+					charCount = sprintf(matString,"%s,%u",matString,matrix->at<unsigned char>(i,j));
+					break;
+				case CV_8S:
+					charCount = sprintf(matString,"%s,%d",matString,matrix->at<signed char>(i,j));
+					break;
+				case CV_16S:
+					charCount = sprintf(matString,"%s,%d",matString,matrix->at<signed short>(i,j));
+					break;
+				case CV_32S:
+					charCount = sprintf(matString,"%s,%d",matString,matrix->at<int>(i,j));
+					break;
+				case CV_32F:
+					charCount = sprintf(matString,"%s,%f",matString,matrix->at<float>(i,j));
+					break;
+				case CV_64F:
+					charCount = sprintf(matString,"%s,%lf",matString,matrix->at<double>(i,j));
+					break;
+				default:
+					charCount = sprintf(matString,"%s,?-%lf-?",matString,matrix->at<double>(i,j));
+				}
+				charCount = sprintf(matString,"%s]\n",matString);
 			}
-			sprintf(string,"%s]",string);
-			std::string prefix = std::string("AmplifyR-");
-			__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s[:,%d]=%s",matDescription,i,string);
+			
 		}
+		std::string prefix = std::string("AmplifyR-");
+		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s=\n%s",matDescription,matString);
 	}
 }
 

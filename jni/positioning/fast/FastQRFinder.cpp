@@ -3,8 +3,25 @@
 FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 {
 	config = debugUI;
-	//config->AddNewParameter("NonMaxSuppress",1,1,0,1,"%1.f");
+	config->AddNewParameter("FlannRadius",25,1,3,300,"%3.0f",2);
+
+	
+	config->AddNewParameter("UseRadius",0,1,0,1,"%1.0f",2);
+	config->AddNewParameter("FlannIndexType",0,1,0,2,"%1.0f",2);
+
+	config->AddNewParameter("K-NN",6,1,1,12,"%2.0f",2);
+	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f",2);
+	config->AddNewParameter("FlannSearchParams",32,32,32,64,"%2.0f",2);
+		
+	config->AddNewParameter("FASTDebug",2,1,-2,4,"%2.0f",2);
+	
+	config->AddNewParameter("ScoreMaxDimension",2,1,0,25,"%2.0f",2);
+	config->AddNewParameter("ScoreMaxIterations",2,1,0,25,"%2.0f",2);
+
+//	config->AddNewParameter("DistanceMode",1,1,0,1,"%1.0f",1);
 	srand(time(NULL));
+
+	flannTime = 20;
 }
 
 //static bool getPointAtXLimit(Point2i & result, map<int,map<int,Point2i>*> & xKeyMap, int xLimit, Point2i approachDirection, int yRangeLower, int yRangeUpper=0)
@@ -84,25 +101,79 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 //
 //}
 
-static int FastDistance(int dx, int dy)
+#define AbsoluteMacro(x) (x >= 0) ? x : x
+
+
+//Faster? Less accurate for certain.
+
+
+int FastQRFinder::GetDistanceFast(int dx, int dy)
+{
+	dx = AbsoluteMacro(dx);
+	dy = AbsoluteMacro(dy);
+	int mn = MIN(dx,dy);
+	return(dx+dy-(mn>>1)-(mn>>2)+(mn>>4));
+} 
+
+//Faster? Less accurate for certain.
+int FastQRFinder::GetDistanceFast(Point2i pt0, Point2i pt1)
+{
+	int dx = (pt0.x-pt1.x);
+	int dy = (pt0.y-pt1.y);
+
+	dx = AbsoluteMacro(dx);
+	dy = AbsoluteMacro(dy);
+
+	int mn = MIN(dx,dy);
+	return(dx+dy-(mn>>1)-(mn>>2)+(mn>>4));
+} 
+
+int FastQRFinder::GetSquaredDistance(int dx, int dy)
 {
 	return ipow(dx,2) + ipow(dy,2);
-	//dx=abs(dx);
-	//dy=abs(dy);
-	//int mn = min(dx,dy);
+} 
 
-	//return(dx+dy-(mn>>1)-(mn>>2)+(mn>>4));
-} //End FastDistance
 
-static int FastDistance(Point2i pt0, Point2i pt1)
+int FastQRFinder::GetSquaredDistance(Point2i pt0, Point2i pt1)
 {
 	return ipow(pt0.x-pt1.x,2) + ipow(pt0.y-pt1.y,2);
-	//int dx=abs(pt0.x-pt1.x);
-	//int dy=abs(pt0.y-pt1.y);
-	//int mn = min(dx,dy);
+} 
 
-	//return(dx+dy-(mn>>1)-(mn>>2)+(mn>>4));
-} //End FastDistance
+//static bool isQuadrantEmpty(Point2i start, Point2i middle, Point2i end, 
+//	map<int,map<int,Point2i>*> & xSorted, map<int,map<int,Point2i>*> & ySorted)
+//	/*map<int,Point2i>::iterator & xStart,
+//								map<int,Point2i>::iterator & xEnd,
+//								map<int,Point2i>::iterator & yStart, 
+//								map<int,Point2i>::iterator & yEnd)*/
+//{
+//	map<int,Point2i>::iterator xStart = 
+//	map<int,Point2i>::iterator xEnd;
+//	map<int,Point2i>::iterator yStart; 
+//	map<int,Point2i>::iterator yEnd;
+//
+//
+//	if (xStart != xEnd && yStart != yEnd)
+//	{
+//		int xStartVal = (*xStart).second.x;
+//		int xEndVal = (*(--xEnd)).second.x);
+//		int xMiddle = xStartVal + (xEndVal-xStartVal)/2;
+//
+//		int yStartVal = (*yStart).second.y;
+//		int yEndVal = (*(--yEnd)).second.y);
+//		int yMiddle = yStartVal + (yEndVal-yStartVal)/2;
+//
+//
+//
+//		return;		
+//	}
+//
+//	return false;
+//}
+//
+//static void RecursiveQuadrantSearch(map<int,map<int,Point2i>*> & xSorted, map<int,map<int,Point2i>*> & ySorted)
+//{
+//
+//}
 
 static KeyPoint getBestKeypoint(KeyPoint startPoint, map<int,map<int,KeyPoint>*> & pointMap, Size2i range)
 {
@@ -164,104 +235,104 @@ static bool searchSetForPoint(Point2i pt, map<int,set<int> > & searchSetMap, Siz
 	return false;
 }
 
-static bool searchSetForPoint(Point2i pt, map<int,set<int> > & searchSetMap)
-{
-	map<int,set<int> >::iterator searchIterator;
-	searchIterator = searchSetMap.find( pt.x);
-	if (searchIterator != searchSetMap.end())
-	{
-		if ((*searchIterator).second.count(pt.y) != 0)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-static void getClosestByQuadrant(map<int,map<int,Point2i>*> & points, Point2i start, map<int,Point2i> & closest)
-{
-
-	for (int i=0;i<4;i++)
-	{
-		//0 = (1,1)
-		//1 = (1,-1)
-		//2 = (-1,1)
-		//3 = (-1,-1)
-
-		map<int,Point2i> closestPoints;
-
-		if (i == 2 || i == 3)
-		{
-			map<int,map<int,Point2i>*>::reverse_iterator xIterator(points.lower_bound(start.x));
-			for (; xIterator != points.rend();++xIterator)
-			{
-				if (i == 2)
-				{
-					map<int,Point2i>::iterator yIterator = (*xIterator).second->lower_bound(start.y);
-					for (; yIterator != (*xIterator).second->end(); yIterator++)
-					{
-						Point2i testPoint = (*yIterator).second;
-						int dist = FastDistance(start,testPoint);
-						if (dist > 0)
-						{
-							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
-						}
-					}
-				}
-				else
-				{					
-					map<int,Point2i>::reverse_iterator yIterator((*xIterator).second->lower_bound(start.y));
-					for (; yIterator != (*xIterator).second->rend();++yIterator)
-					{
-						Point2i testPoint = (*yIterator).second;
-						int dist = FastDistance(start,testPoint);
-						if (dist > 0)
-						{
-							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
-						}
-					}
-				}
-			}
-		} 
-		else 
-		{			
-
-			map<int,map<int,Point2i>*>::iterator xIterator = points.lower_bound(start.x);
-			for (; xIterator != points.end();xIterator++)
-			{				
-				if (i == 0)
-				{
-					map<int,Point2i>::iterator yIterator = (*xIterator).second->lower_bound(start.y);
-					for (; yIterator != (*xIterator).second->end(); yIterator++)
-					{
-						Point2i testPoint = (*yIterator).second;
-						int dist = FastDistance(start,testPoint);
-						if (dist > 0)
-						{
-							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
-						}
-					}
-				}
-				else
-				{					
-					map<int,Point2i>::reverse_iterator yIterator = map<int,Point2i>::reverse_iterator((*xIterator).second->lower_bound(start.y));
-					for (; yIterator != (*xIterator).second->rend();++yIterator)
-					{
-						Point2i testPoint = (*yIterator).second;
-						int dist = FastDistance(start,testPoint);
-						if (dist > 0)
-						{
-							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
-						}
-					}
-				}
-			}
-		}
-		closest.insert(pair<int,Point2i>(*closestPoints.begin()));
-	}
-
-
-}
+//static bool searchSetForPoint(Point2i pt, map<int,set<int> > & searchSetMap)
+//{
+//	map<int,set<int> >::iterator searchIterator;
+//	searchIterator = searchSetMap.find( pt.x);
+//	if (searchIterator != searchSetMap.end())
+//	{
+//		if ((*searchIterator).second.count(pt.y) != 0)
+//		{
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//static void getClosestByQuadrant(map<int,map<int,Point2i>*> & points, Point2i start, multimap<int,Point2i> & closest)
+//{
+//
+//	for (int i=0;i<4;i++)
+//	{
+//		//0 = (1,1)
+//		//1 = (1,-1)
+//		//2 = (-1,1)
+//		//3 = (-1,-1)
+//
+//		multimap<int,Point2i> closestPoints;
+//
+//		if (i == 2 || i == 3)
+//		{
+//			map<int,map<int,Point2i>*>::reverse_iterator xIterator(points.lower_bound(start.x));
+//			for (; xIterator != points.rend();++xIterator)
+//			{
+//				if (i == 2)
+//				{
+//					map<int,Point2i>::iterator yIterator = (*xIterator).second->lower_bound(start.y);
+//					for (; yIterator != (*xIterator).second->end(); yIterator++)
+//					{
+//						Point2i testPoint = (*yIterator).second;
+//						int dist = GetSquaredDistance(start,testPoint);
+//						if (dist > 0)
+//						{
+//							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
+//						}
+//					}
+//				}
+//				else
+//				{					
+//					map<int,Point2i>::reverse_iterator yIterator((*xIterator).second->lower_bound(start.y));
+//					for (; yIterator != (*xIterator).second->rend();++yIterator)
+//					{
+//						Point2i testPoint = (*yIterator).second;
+//						int dist = GetSquaredDistance(start,testPoint);
+//						if (dist > 0)
+//						{
+//							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
+//						}
+//					}
+//				}
+//			}
+//		} 
+//		else 
+//		{			
+//
+//			map<int,map<int,Point2i>*>::iterator xIterator = points.lower_bound(start.x);
+//			for (; xIterator != points.end();xIterator++)
+//			{				
+//				if (i == 0)
+//				{
+//					map<int,Point2i>::iterator yIterator = (*xIterator).second->lower_bound(start.y);
+//					for (; yIterator != (*xIterator).second->end(); yIterator++)
+//					{
+//						Point2i testPoint = (*yIterator).second;
+//						int dist = GetSquaredDistance(start,testPoint);
+//						if (dist > 0)
+//						{
+//							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
+//						}
+//					}
+//				}
+//				else
+//				{					
+//					map<int,Point2i>::reverse_iterator yIterator = map<int,Point2i>::reverse_iterator((*xIterator).second->lower_bound(start.y));
+//					for (; yIterator != (*xIterator).second->rend();++yIterator)
+//					{
+//						Point2i testPoint = (*yIterator).second;
+//						int dist = GetSquaredDistance(start,testPoint);
+//						if (dist > 0)
+//						{
+//							closestPoints.insert(pair<int,Point2i>(dist,testPoint));
+//						}
+//					}
+//				}
+//			}
+//		}
+//		closest.insert(pair<int,Point2i>(*closestPoints.begin()));
+//	}
+//
+//
+//}
 
 static void sortKPMap(const map<int,map<int,KeyPoint>*> & keyPointMap_Start, map<int,map<int,KeyPoint>*> & sortedMap_Out, int numIterations, Size2i regionSize)
 {
@@ -353,6 +424,10 @@ static void sortPointsByAngle(map<int,map<int,KeyPoint>*> & keyPointMap_Outer, m
 
 QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable*> & debugVector)
 {
+	struct timespec startTotal,endTotal;
+	SET_TIME(&startTotal);
+	int debugLevel = (int)config->GetParameter("FASTDebug");
+
 	vector<KeyPoint> keypoints;
 
 	struct timespec start,end;
@@ -377,10 +452,14 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	//Extract local maximums
 	LOGD(LOGTAG_QRFAST,"Filtering corners by threshold.");
 	map<int,map<int,KeyPoint>*> insideCornersMap;
+
+	int scoreSearchSize = config->GetParameter("ScoreMaxDimension");
+	int searchIterations = config->GetParameter("ScoreMaxIterations");
+
 	map<int,map<int,KeyPoint>*> outsideCornersMap;
 	SET_TIME(&start);
-	sortKPMap(insideCornersMap_Unsorted,insideCornersMap,3,Size2i(2,2));
-	sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,3,Size2i(2,2));
+	sortKPMap(insideCornersMap_Unsorted,insideCornersMap,searchIterations,Size2i(scoreSearchSize,scoreSearchSize));
+	sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,searchIterations,Size2i(scoreSearchSize,scoreSearchSize));
 	SET_TIME(&end);
 	LOG_TIME("Threshold filter",start,end);
 	LOGD(LOGTAG_QRFAST,"New inside = %d, new outside = %d",insideCornersMap.size(),outsideCornersMap.size());
@@ -388,11 +467,11 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	//Add points to vectors
 	vector<Point2i> insideCornerVector;
 	vector<Point2i> outsideCornersVector;
+	
 
+	SET_TIME(&start);
 	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = insideCornersMap.begin();xIterator != insideCornersMap.end(); xIterator++)
-	{
-		Point2i avgPoint;
-		int xCount=0, yCount=0;
+	{	
 		for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
 		{
 			Point2i point = Point2i((int)(*yIterator).second.pt.x,(int)(*yIterator).second.pt.y);
@@ -400,43 +479,174 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 		}
 	}
 
+	LOGV(LOGTAG_QRFAST,"Added inside corners, now adding outside");
+
 	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = outsideCornersMap.begin();xIterator != outsideCornersMap.end(); xIterator++)
 	{
 		for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
 		{
-			Point2i point = Point2i((int)(*yIterator).second.pt.x,(int)(*yIterator).second.pt.y);
+			KeyPoint kp = (*yIterator).second;
+			Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);
 			outsideCornersVector.push_back(point);
-			debugVector.push_back(new DebugCircle(point,4,Colors::Red));
+
+			if (debugLevel > 2)
+				debugVector.push_back(new DebugCircle(point,4,Colors::Red));
 		}
 	}
-	LOGD(LOGTAG_QRFAST,"InsideCorners=%d,OutsideCorners=%d",insideCornerVector.size(),outsideCornersVector.size());
 
-#define FIND_PATTERNS
-#ifdef FIND_PATTERNS
-	//Find interesting patterns
+	
+	
+	int numFeatures = outsideCornersVector.size();
+
+	Mat outsideCornerMat = Mat(numFeatures,2,CV_32F);// m_object.convertTo(obj_32f,CV_32FC2);
+	for (int i = 0;i < outsideCornersVector.size();i++)
+	{
+		outsideCornerMat.at<float>(i,0) = (float)outsideCornersVector.at(i).x;
+		outsideCornerMat.at<float>(i,1) = (float)outsideCornersVector.at(i).y;
+	}
+
+
+	SET_TIME(&end);
+	LOG_TIME("Vector conversion",start,end);
+	LOGD(LOGTAG_QRFAST,"InsideCorners=%d,OutsideCorners=%d,OCM=%d",insideCornerVector.size(),outsideCornersVector.size(),outsideCornerMat.size().area());
+
+	bool squareDistance = true;// config->GetParameter("DistanceMode")==1.0f;
+
+	int numTrees = (int)config->GetParameter("NumKDTrees");
+
 	SET_TIME(&start);
+	int flannIndexType = (int)config->GetParameter("FlannIndexType");
+
+	cv::flann::Index * flannPointIndex;
+	if (flannIndexType == 0)
+	{		
+		LOGD(LOGTAG_QRFAST,"Creating linear index");
+		flannPointIndex = new flann::Index(outsideCornerMat, cv::flann::LinearIndexParams());
+	}
+	else if (flannIndexType == 1)
+	{
+		LOGD(LOGTAG_QRFAST,"Creating KDTree Index with %d trees",numTrees);
+		flannPointIndex = new flann::Index(outsideCornerMat,cv::flann::KDTreeIndexParams(numTrees));  
+	}
+	else if (flannIndexType == 2)
+	{		
+		LOGD(LOGTAG_QRFAST,"Creating KMeans index");
+		flannPointIndex = new flann::Index(outsideCornerMat,cv::flann::KMeansIndexParams());  
+	}
+	else
+	{
+		LOGE("No index type defined!");
+		throw exception();
+	}
+	//else 
+	//{		
+	//	LOGD(LOGTAG_QRFAST,"Creating Autotuned index");
+	//	flannPointIndex = new flann::Index(outsideCornerMat,cv::flann::AutotunedIndexParams(0.7f,0.01f,0.0f,0.5f));  
+	//}
+	//
+
+	SET_TIME(&end);
+	LOG_TIME_PRECISE("Building FLANN index",start,end);
+	
+
+	double analyzeTime = 0;
+	double flannTime_local = 0;
+	
+	int searchSize = (int)(config->GetParameter("K-NN"));
+	double flannRadius = std::pow(config->GetParameter("FlannRadius"),2);
+	int searchParams = (int)config->GetParameter("FlannSearchParams");
+
+	bool useRadius = (config->GetParameter("UseRadius") == 1.0f);
+	
+
+	//Find interesting patterns
 	for (vector<Point2i>::iterator insideIt = insideCornerVector.begin(); insideIt != insideCornerVector.end(); insideIt++)
 	{
 		Point2i insideCornerPoint = *insideIt;
-		debugVector.push_back(new DebugCircle(insideCornerPoint,4,Colors::Gold));
-
+		if (debugLevel > 2)
+			debugVector.push_back(new DebugCircle(insideCornerPoint,4,Colors::Gold));
+	/*	
+		SET_TIME(&start);
 		multimap<int,Point2i> closestPoints;
-		//getClosestByQuadrant(outsideCorners,insideCornerPoint,closestPoints);
 		for (vector<Point2i>::iterator outsideIt = outsideCornersVector.begin(); outsideIt != outsideCornersVector.end(); outsideIt++)
 		{
 			Point2i outsideCornerPoint = *outsideIt;
 			int dx = outsideCornerPoint.x - insideCornerPoint.x;
 			int dy = outsideCornerPoint.y - insideCornerPoint.y;
-			int dist = FastDistance(dx,dy);
+			int dist;
+
+			if (squareDistance)
+				dist = GetSquaredDistance(dx,dy);
+			else
+				dist = GetDistanceFast(dx,dy);
+
 			if (dist > 0)
 			{
 				closestPoints.insert(pair<int,Point2i>(dist,outsideCornerPoint));
 			}
-		}
+			}
 
+			SET_TIME(&end);
+			LOG_TIME_PRECISE("Distance finding",start,end);*/
+
+
+		// find nearest neighbors using FLANN
+
+		//Output matrices
+		
+		Mat indexMatrix = Mat::zeros(1, searchSize, CV_32S);
+		Mat distanceMatrix = Mat::zeros(1, searchSize, CV_32F);
+
+		Mat objectPoints = Mat(1,2,CV_32F);
+		objectPoints.at<float>(0,0) = (float)insideCornerPoint.x;
+		objectPoints.at<float>(0,1) = (float)insideCornerPoint.y;
+
+		struct timespec innerStart,innerEnd;
+		SET_TIME(&innerStart);
+
+		int result = 0;
+		
+		if (useRadius)
+			result = flannPointIndex->radiusSearch(objectPoints, indexMatrix, distanceMatrix,flannRadius, searchSize , cv::flann::SearchParams(searchParams)); 
+		else
+		{
+			result = searchSize;
+			flannPointIndex->knnSearch(objectPoints, indexMatrix, distanceMatrix, searchSize, cv::flann::SearchParams(searchParams));
+		}
+		LOGV(LOGTAG_QRFAST,"RadiusMode=%d,Pt(%d,%d) - FLANN(%d < %lf) complete(%d).",useRadius,insideCornerPoint.x,insideCornerPoint.y,searchSize,flannRadius,result);
+		
+
+		SET_TIME(&innerEnd);
+		flannTime_local += calc_time_double(innerStart,innerEnd);
+
+		//LOGD_Mat(LOGTAG_QRFAST,"KNNIndex",&indexMatrix);
+
+		SET_TIME(&innerStart);
+		multimap<int,Point2i> closestPoints;
+		for (int i=0;i<indexMatrix.cols && i < result;i++)
+		{
+			int index = indexMatrix.at<int>(0,i);
+			if (index >= 0 && index < outsideCornerMat.rows)
+			{
+				LOGV(LOGTAG_QRFAST,"Accessing point at index=%d,i=%d",index,i);
+				Point2i objPoint = Point2i(outsideCornerMat.at<float>(index,0),outsideCornerMat.at<float>(index,1));
+				closestPoints.insert(pair<int,Point2i>(distanceMatrix.at<float>(i),objPoint));
+				LOGV(LOGTAG_QRFAST,"Point=(%d,%d),dist=%f",objPoint.x,objPoint.y,distanceMatrix.at<float>(i));
+			}
+			else
+				continue;
+		}
+		
 		if (closestPoints.size() < 2)
 		{
-			debugVector.push_back(new DebugCircle(insideCornerPoint,12,Colors::CornflowerBlue));
+			if (debugLevel > 0)
+			{
+				debugVector.push_back(new DebugCircle(insideCornerPoint,12,Colors::CornflowerBlue));
+				if (debugLevel > 1 && closestPoints.size() == 1)
+				{
+					debugVector.push_back(new DebugLine(insideCornerPoint,(*closestPoints.begin()).second,Colors::CornflowerBlue));
+				}
+			}
 			continue;
 		}
 
@@ -452,16 +662,19 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 		float lowestCosine = -0.3f;
 
 		Point2i bestPoint;
-
+		
 		for (; closePointsIt != closePointsEnd; closePointsIt++)
 		{
 			Point2i testPoint = (*closePointsIt).second;
-			if (FastDistance(firstPoint,testPoint) < closestDist)
+			if (GetSquaredDistance(firstPoint,testPoint) < closestDist)
 			{
-			//	debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::Blue));
+				
+				if (debugLevel > 1)
+					debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::Blue));
 				continue;
 			}
-			debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::PeachPuff,1));
+			if (debugLevel > 0)
+				debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::PeachPuff,1));
 
 			float cosine = FastTracking::angle(firstPoint,testPoint,insideCornerPoint);
 			if (cosine < lowestCosine)
@@ -473,77 +686,46 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 
 		//Validate slope
 		if (bestPoint.x == 0 && bestPoint.y==0)
-		{			
-			//debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Blue));
+		{		
+			if (debugLevel > 2)
+			{
+				debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Blue));
+			}
 			continue;
 		}
 		else if (lowestCosine >= MaxCosine)
 		{
-			/*char str[150];
-			sprintf(str,"Lowest Cosine=%f",lowestCosine);
-			debugVector.push_back(new DebugLabel(insideCornerPoint,str,Colors::Black,1.2f));*/
-		//	debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Aqua));
+			if (debugLevel > 1)
+			{
+				if (debugLevel > 3)
+				{
+					char str[150];
+					sprintf(str,"Lowest Cosine=%f",lowestCosine);
+					debugVector.push_back(new DebugLabel(insideCornerPoint,str,Colors::Black,1.2f));
+				}
+				debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Aqua));
+			}
 			continue;
-		}
+		}		
+		SET_TIME(&innerEnd);
+		analyzeTime += calc_time_double(innerStart,innerEnd);
 
-		debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Lime,2));
-		debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Lime,2));
-
-	}
-	SET_TIME(&end);
-	LOG_TIME("Classifying points",start,end);
-#endif
-
-#ifdef FASTQR_EDGE_TESTING
-	//Declaring iterators
-
-	map<int,multimap<int,Point2i>*>::iterator xIterator;
-	pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> yIteratorRange;
-	multimap<int,Point2i>::iterator yIterator;
-
-	for (xIterator = regionMap.begin(); xIterator != regionMap.end(); xIterator++)
-	{
-		multimap<int,Point2i> * yPointMap = (*xIterator).second;
-		yIterator = yPointMap->begin();
-		for (;yIterator != yPointMap->end(); yIterator++)
-		{			
-			Point2i pt0 = (*yIterator).second;
-			Point2i pt1 = (*++yIterator).second;
-			/*float edgeSize = getBestEdgeSize(3,binaryImage,Point2i(round(pt.x),round(pt.y)),4);
-			LOGD(LOGTAG_QRFAST,"Edgesize = %f",edgeSize);
-			debugVector.push_back(new DebugCircle(Point2i(round(pt.x),round(pt.y)),(edgeSize > 5) ? edgeSize : 5,Colors::Lime));	*/
-		}
-	}
-#endif	
-#ifdef USE_RANDOM_SEARCH
-	int regionDistance = 1;
-	//Get nearby points
-	for (int attempts = 0;attempts < 20; attempts++)
-	{
-		Point2i randPoint;
-		Point2i randPointKey;
-
-		//Choose a random starting point
-		LOGD(LOGTAG_QRFAST,"Finding random point");
-		GetRandomPoint(regionMap, randPoint, randPointKey);
-		//Init contour of desired type
-		IDetectableContour * square = new DetectableSquare();
-
-		//Add the starting point
-		square->AddNextPoint(randPoint);
-
-		//Look for the next point
-		FindPoint(randPointKey,square,regionMap);
-
-		if (square->IsComplete())
+		if (debugLevel > -1)
 		{
-			LOGD(LOGTAG_QRFAST,"Square found, drawing");
-			debugVector.push_back(square);
-			break;
+			debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Lime,2));
+			debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Lime,2));
 		}
 	}
-#endif
+
+	flannTime = (flannTime  + (flannTime_local/1000.0))/2.0;
+	config->SetFLANNTime(flannTime);
+
+	LOGD(LOGTAG_QRFAST,"Total analysis time = %6.2lf ms",analyzeTime/1000.0);
+	//LOGD(LOGTAG_QRFAST,"Total FLANN time = %6.2lf ms",flannTime/1000.0);
+	analyzeTime = 0;
+	flannTime = 0;
 	
+	delete flannPointIndex;
 	//Cleanup maps
 	LOGV(LOGTAG_QRFAST,"Cleaning up maps");
 	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap.begin(); deleteIt != insideCornersMap.end();deleteIt++)
@@ -565,372 +747,12 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	{
 		delete (*deleteIt).second;
 	}
-
-
-
+	
+	SET_TIME(&endTotal);
+	LOG_TIME("TotalFASTQR",startTotal,endTotal);
 	return NULL;
 }
 
-
-static bool IsEdgeBetweenPoints(Point2f pt0, Point2f pt1, Mat & img, bool & isBlack)
-{	
-	LOGD(LOGTAG_QRFAST,"Checking edge between (%f,%f) and (%f,%f)",pt0.x,pt0.y,pt1.x,pt1.y);
-	float xDif = pt0.x - pt1.x;
-	float yDif = pt0.y - pt1.y;
-
-	float xStep = 1,yStep = 1;
-
-
-	if (abs(xDif) >= abs(yDif))
-	{
-		yStep = yDif/xDif;
-	}
-	else
-	{
-		xStep = yDif/xDif;
-	}
-
-	int totalPx =0;
-	int numChanges = 0;
-	int blackCount =0 ;
-
-	unsigned char lastPx = 0;
-	for (float x=pt0.x, y = pt0.y; x < pt1.x && y < pt1.y && x < img.cols && y < img.rows; x+= xStep, y += yStep)
-	{
-		unsigned char px = img.at<unsigned char>((int)(round(x)),(int)round(y));
-		totalPx++;
-
-		if (px == 0)
-			blackCount++;		
-
-		if (lastPx != px && totalPx > 0)
-			numChanges++;		
-		lastPx = px;
-	}
-
-	if (totalPx / blackCount < 2)
-		isBlack = true;
-	else
-		isBlack = false;
-
-	return numChanges < 4;
-}
-
-static bool IsEdgeBetween(Point2i pt0, Point2i pt1, Mat & img)
-{
-	float spacing = 2;
-	float xDif = pt0.x - pt1.x;
-	float yDif = pt0.y - pt1.y;
-
-
-	if (abs(xDif) < 0.01)
-	{
-		bool color1 = 0, color2 = 0;
-		bool edge1 = IsEdgeBetweenPoints(Point2f(pt0.x  + spacing,pt0.y),Point2f(pt1.x + spacing,pt1.y), img, color1);
-		bool edge2 = edge1 && IsEdgeBetweenPoints(Point2f(pt0.x - spacing,pt0.y),Point2f(pt1.x - spacing,pt1.y), img, color2);
-
-
-		if (edge1 && edge2 && (color1 != color2))
-			return true;
-
-	}
-	else if (abs(yDif) < 0.01)
-	{		
-		bool color1 = 0, color2 = 0;
-		bool edge1 = IsEdgeBetweenPoints(Point2f(pt0.x,pt0.y  + spacing),Point2f(pt1.x,pt1.y  + spacing), img, color1);
-		bool edge2 = edge1 && IsEdgeBetweenPoints(Point2f(pt0.x,pt0.y - spacing),Point2f(pt1.x,pt1.y - spacing), img, color2);
-
-		if (edge1 && edge2 && (color1 != color2))
-			return true;
-	}
-	else
-	{		
-		float invSlope = -xDif/yDif;
-		float a1 = invSlope;
-
-		float a2 = sqrt(pow(spacing,2)/(1 + pow(invSlope,2)));
-		a1 = invSlope * a2;
-
-		Point2i offset ((int)round(a1),(int)round(a2));
-		bool color1 = 0, color2 = 0;
-		bool edge1 = IsEdgeBetweenPoints(pt0 + offset,pt1 + offset, img,color1);
-		bool edge2 = edge1 && IsEdgeBetweenPoints(pt0 - offset, pt1 - offset, img,color2);
-
-		if (edge1 && edge2 && (color1 != color2))
-			return true;
-	}
-
-	return false;
-}
-
-//True if majority of pixels are darker than center pixel
-int FastQRFinder::GetCornerType(Point2i imgPoint, unsigned char threshold, Mat & img)
-{
-	//const int detectorRadius = 2;
-	//const int totalPx = 21;
-	const unsigned char majority = 9;
-	int detectorX[] = {0,1,2,3,3,3,2,1,0,-1,-2,-3,-3,-3,-2,-1};
-	int detectorY[] = {3,3,2,1,0,-1,-2,-3,-3,-3,-2,-1,0,1,2,3};
-
-
-
-	/*for (int y = imgPoint.y - detectorRadius, i=0; y <= imgPoint.y + detectorRadius && y < img.rows && y > 0;y++,i++)
-	{		
-	const unsigned char* imgRow = img.ptr<unsigned char>(y);
-
-	for (int x = imgPoint.x - detectorWidth[i]; x <= imgPoint.x + detectorWidth[i] && x < img.cols && x > 0;x++)
-	{
-	if (centerPx > imgRow[x])
-	darkerCount++;
-	}
-	}*/
-	//LOGD(LOGTAG_QRFAST,"Checking point(%d,%d),thresh=%d",imgPoint.x,imgPoint.y,threshold);
-	int darkerCount= 0, brighterCount = 0;
-	unsigned char centerPx_lower = img.at<unsigned char>(imgPoint.x,imgPoint.y) - threshold;
-	unsigned char centerPx_upper = img.at<unsigned char>(imgPoint.x,imgPoint.y) + threshold;
-	//LOGD(LOGTAG_QRFAST,"CenterPX-thresh = %u",centerPx);
-	for (int i=0;i<16;i++)
-	{
-		unsigned char px = img.at<unsigned char>(detectorX[i] + imgPoint.x ,detectorY[i] + imgPoint.y);		
-		LOGD(LOGTAG_QRFAST,"Px[%d]=%u ",i,px);
-		if (centerPx_lower > px)
-		{
-			//LOGD(LOGTAG_QRFAST,"DarkerFound(%d,%d)+(%d,%d): %u > %u",imgPoint.x,imgPoint.y, detectorX[i] ,detectorY[i], centerPx_lower,px);
-			darkerCount++;
-		}
-		else if (centerPx_upper < px)
-		{			
-			brighterCount++;
-		}
-	}
-
-	if (darkerCount >= majority)
-	{
-		LOGD(LOGTAG_QRFAST,"DarkerFound(%d,%d),thresh=%d,center=%d,count=%d",imgPoint.x,imgPoint.y,threshold,centerPx_lower,darkerCount);
-		return -1;
-	}
-	else if (brighterCount >= majority)
-	{
-		LOGD(LOGTAG_QRFAST,"BrighterFound(%d,%d),thresh=%d,center=%d,count=%d",imgPoint.x,imgPoint.y,threshold,centerPx_upper,brighterCount);
-		return 1;
-	}
-	else
-		return 0;
-
-}
-
-void FastQRFinder::FindContours(Mat & img, Point2i start, vector<vector<Point2i> > & contourPoints, map<int,map<int,Point2i>*> & regionMap)
-{
-	int minDelta = 3;
-	//Point2i start(round(startFloat.x), round(startFloat.y));
-
-	//get range of points
-	map<int,map<int,Point2i>*>::iterator xIterator, xStart,xEnd;
-	map<int,Point2i>::iterator yIterator, yStart,yEnd;
-	LOGD(LOGTAG_QRFAST,"Starting at (%f,%f)",start.x,start.y);		
-
-	for (int delta = 20; delta < 80; delta += 20)
-	{
-		LOGD(LOGTAG_QRFAST,"Delta=%d,minDelta=%d",delta,minDelta);
-
-		xStart = regionMap.lower_bound(start.x - delta);
-		xEnd = regionMap.upper_bound(start.x + delta);
-
-		for (xIterator = xStart;xIterator != xEnd; xIterator++)
-		{
-			yStart = (*xIterator).second->lower_bound(start.y - delta);
-			yEnd = (*xIterator).second->upper_bound(start.y + delta);
-
-			for (yIterator = yStart; yIterator != yEnd; yIterator++)
-			{
-				Point2i pt = (*yIterator).second;
-				//	LOGD(LOGTAG_QRFAST,"Pt=(%f,%f)",pt.x,pt.y);
-				//Ensure points are far enough away
-				//	map<float, set<float> >::iterator fpIt = foundPoints.find(pt.x);
-				//	if (fpIt != foundPoints.end() && (*fpIt).second.find(pt.y) != (*fpIt).second.end())
-
-				//LOGD(LOGTAG_QRFAST,"Checking for existing points");
-				if (!contourPoints.empty())
-					for (int i=0;i<contourPoints.back().size();i++)
-					{
-						if (contourPoints.back()[i] == pt)
-						{
-							LOGD(LOGTAG_QRFAST,"Point already added: (%f,%f)",pt.x,pt.y);
-							continue;
-						}
-					}
-
-					if (abs(pt.x - start.x) < minDelta && abs(pt.y - start.y) < minDelta)
-					{
-						LOGD(LOGTAG_QRFAST,"Points too close: (%f,%f) and (%f,%f)",pt.x,pt.y,start.x,start.y);
-						continue;
-					}
-
-					//LOGD(LOGTAG_QRFAST,"Checking between (%f,%f) and (%f,%f)",pt.x,pt.y,start.x,start.y);				
-					if (IsEdgeBetween(start,pt, img))
-					{
-						LOGD(LOGTAG_QRFAST,"Found between (%f,%f) and (%f,%f)",pt.x,pt.y,start.x,start.y);
-						if (contourPoints.empty())
-						{
-							contourPoints.push_back(vector<Point2i>());
-							contourPoints.back().push_back(start);
-						}
-						else if (contourPoints.back().empty())
-						{
-							contourPoints.back().push_back(start);
-						}
-						//	foundPoints[pt.x].insert(pt.y);
-
-
-						contourPoints.back().push_back(pt);
-						if (contourPoints.back().size() == 4)
-						{
-							contourPoints.push_back(vector<Point2i>());
-							return;
-						}
-						else
-						{
-							FindContours(img,pt,contourPoints,regionMap);
-						}
-					}
-			}
-		}
-		minDelta = delta;
-	}
-
-
-
-
-
-	/*for (int y = start.y - delta; y <= start.y + delta;y++)
-	{
-	for (int x = start.x - delta; x <= start.x + delta; x++)
-	{
-	if ((x != start.x + delta && x != start.x - delta) && (y != start.y + delta && y != start.y - delta))
-	continue;
-
-
-	}
-	}*/
-}
-
-bool FastQRFinder::IsEdge(int detectorRadius, Mat & img, Point2i imgPoint, Point2i & exitPoint)
-{
-	int blackCount = 0;
-	int whiteCount = 0;
-	int xChanges = 0;
-	int yChanges = 0;
-	int totalPx = detectorRadius * detectorRadius * 4;
-	int linearity = 0;
-	//int contigousWhite = 0;
-
-
-	unsigned char lastPx = -1;
-	Point2i lastChangePos = Point2i(-1,-1);
-	const unsigned char* lastImgRow;
-	for (int y = imgPoint.y - detectorRadius; y < imgPoint.y + detectorRadius && y < img.rows && y > 0;y++)
-	{		
-		const unsigned char* imgRow = img.ptr<unsigned char>(y);
-
-		for (int x = imgPoint.x - detectorRadius; x < imgPoint.x + detectorRadius && x < img.cols && x > 0;x++)
-		{
-			unsigned char px = imgRow[x];
-			if (px == 0)
-				blackCount++;
-			else
-				whiteCount++;
-
-			lastPx = px;
-
-			if (x != imgPoint.x - detectorRadius && lastPx != px)
-			{
-				xChanges++;
-				if (lastChangePos.x >= 0)
-				{
-					if (abs(lastChangePos.x - x) < 3  && abs(lastChangePos.y - y) < 3)
-					{
-						linearity++;
-						lastChangePos = Point2i(x,y);
-						continue; //Dont want to increment or reset point for y
-					}
-				}
-				else
-					lastChangePos = Point2i(x,y);
-			}
-
-			if (y != imgPoint.y - detectorRadius && lastImgRow[x] != px)
-			{
-				yChanges++;
-				if (lastChangePos.x >= 0)
-				{
-					if (abs(lastChangePos.x - x) < 3  && abs(lastChangePos.y - y) < 3)
-					{
-						linearity++;
-						lastChangePos = Point2i(x,y);
-					}
-				}
-				else
-					lastChangePos = Point2i(x,y);
-			}
-		}
-		lastImgRow = imgRow;
-	}
-
-	LOGD(LOGTAG_QRFAST,"Whitecount=%d,Blackcount=%d,XYChanges=(%d,%d),TotalPx = %d, Linearity = %d",whiteCount,blackCount,xChanges,yChanges,totalPx,linearity);
-	totalPx = totalPx * 10;
-	exitPoint = lastChangePos;
-	return ((float)linearity > ((float)detectorRadius * 1.5f)) || ((totalPx / blackCount) > 15 && (totalPx / whiteCount) > 15 && (xChanges < detectorRadius * 2) && (yChanges < detectorRadius * 2));
-}
-
-float FastQRFinder::getBestEdgeSize(int detectorRadius, Mat & img, Point2i imgPoint, int recurseCount)
-{
-	if (recurseCount-- == 0)
-		return 0;
-
-	int delta = 1;
-	int edgeSize = 0;
-	for (int y = imgPoint.y - delta; y <= imgPoint.y + delta;y++)
-	{
-		for (int x = imgPoint.x - delta; x <= imgPoint.x + delta; x++)
-		{
-			if ((x != imgPoint.x + delta && x != imgPoint.x - delta) && (y != imgPoint.y + delta && y != imgPoint.y - delta))
-				continue;
-			Point2i endPoint;
-
-			if (IsEdge(detectorRadius,img,Point2i(x,y),endPoint))
-			{
-				return edgeSize = edgeSize + detectorRadius + getBestEdgeSize(detectorRadius, img, endPoint, recurseCount);				
-			}
-			else
-			{
-				return 0;
-			}
-		}
-	}
-}
-
-void FastQRFinder::SegmentByQuantity(map<int,multimap<int,Point2i>*> & regionMap, map<int,multimap<int,Point2i>*> & quantityMap)
-{
-	//Declaring iterators
-	map<int,multimap<int,Point2i>*>::iterator xIterator;
-	pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> yIteratorRange;
-	multimap<int,Point2i>::iterator yIterator;
-
-	xIterator = regionMap.begin();
-
-	for (xIterator = regionMap.begin(); xIterator != regionMap.end(); xIterator++)
-	{
-		multimap<int,Point2i> * yPointMap = (*xIterator).second;
-		yIterator = yPointMap->begin();
-		for (;yIterator != yPointMap->end(); yIterator++)
-		{
-
-		}
-	}
-
-
-
-}
 
 void FastQRFinder::GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2i & randPoint, Point2i & randPointKey)
 {
@@ -955,69 +777,3 @@ void FastQRFinder::GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2
 	LOGD(LOGTAG_QRFAST,"Starting at random point(%d,%d)->(%f,%f)",randPointKey.x,randPointKey.y,randPoint.x,randPoint.y);
 }
 
-void FastQRFinder::FindPoint(Point2i region, IDetectableContour * contour, map<int,multimap<int,Point2i>*> & regionMap)
-{
-	Size2i cellSize(20,20);
-	map<int,multimap<int,Point2i>*>::iterator xIterator;
-	pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> yIteratorRange;
-	multimap<int,Point2i>::iterator yIterator;
-	int regionDistance = 1;
-	LOGD(LOGTAG_QRFAST,"Looking for points, starting at region (%d,%d)",region.x,region.y);
-
-	for (int xIndex = region.x - regionDistance; xIndex < region.x + regionDistance; xIndex++)
-	{
-		xIterator = regionMap.find(xIndex);
-		if (xIterator != regionMap.end())
-		{
-			for (int yIndex = region.y - regionDistance; yIndex < region.y + regionDistance; yIndex++)
-			{
-				if (yIndex == region.y && xIndex == region.x) continue; //Skip start region
-
-				yIteratorRange = (*xIterator).second->equal_range(yIndex);
-				Point2i chosenPoint;
-				vector<Point2i> pointsToChoose; //(yIteratorRange.first,yIteratorRange.second);
-				for (yIterator = yIteratorRange.first; yIterator != yIteratorRange.second; yIterator++)
-				{
-					pointsToChoose.push_back((*yIterator).second);
-				}
-
-				if (pointsToChoose.empty())
-					continue;
-
-
-				float result = contour->ChooseNextPoint(pointsToChoose,chosenPoint, regionMap);						
-				if (contour->IsComplete())
-				{
-					break;
-				}
-				else if (result > 0)
-				{
-					LOGD(LOGTAG_QRFAST,"Point added to square.(%f,%f)",chosenPoint.x,chosenPoint.y);
-					FindPoint(GetRegion(chosenPoint,cellSize),contour,regionMap);
-					break;
-				}
-			}
-		}
-	}
-}
-
-Point2i FastQRFinder::GetRegion(Point2i point, Size2i regionSize)
-{
-	return Point2i((int)round(point.x/regionSize.width),(int)round(point.y/regionSize.height));
-}
-
-
-bool FastQRFinder::PointInRegion(Point2i point, Point2i cellPosition, Size2i regionSize)
-{
-	if (point.x < regionSize.width * cellPosition.x)
-		return false;
-	if (point.x > regionSize.width * (cellPosition.x+1))
-		return false;
-
-	if (point.y < (regionSize.height * cellPosition.y))
-		return false;
-	if (point.y > (regionSize.height * (cellPosition.y+1)))
-		return false;
-
-	return true;
-}

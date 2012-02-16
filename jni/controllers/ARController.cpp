@@ -6,7 +6,7 @@ int QRCode::instanceCount = 0;
 int FinderPattern::instanceCount = 0;
 
 ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
-{
+{	
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	double data2[] = DEFAULT_DISTORTION_MATRIX;
 
@@ -28,8 +28,6 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 	//Create QRFinder
 	qrFinder = new QRFinder();
-
-	frameCount = 0;
 
 	//Initialize image matrices
 	grayImage = new Mat();
@@ -54,6 +52,9 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 	QRCode::instanceCount = 0;
 	DebugCircle::instanceCount = 0;
 	DebugRectangle::instanceCount = 0;
+		
+	frameCount = 0;
+	fpsAverage = 0;
 
 	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
 }
@@ -214,14 +215,24 @@ void ARController::ProcessFrame(Engine * engine)
 		return;
 
 	frameCount++;
+	//Calc FPS
+	struct timespec currentTime;
+	SET_TIME(&currentTime);
+	double frameTimeMicrosec = calc_time_double(lastFrameTime,currentTime);
+	lastFrameTime = currentTime;
+	float frameFps = (float)(1000000.0/frameTimeMicrosec);
+	fpsAverage = (fpsAverage+frameFps)/2.0f;
+	debugUI->SetFPS(fpsAverage);
+
+
 
 	//This section is the default per-frame operations
 	FrameItem * item = frameList->next();
 	item->clearOldData();
 	//engine->getTime(&item->time);
 	
-	LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
-		frameCount,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
+	LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d, FPS=%f. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
+		frameCount,fpsAverage,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
 	getImages(engine);
 		
 	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
@@ -235,39 +246,23 @@ void ARController::ProcessFrame(Engine * engine)
 	//item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
 	
 	LOGD(LOGTAG_ARCONTROLLER,"Calling harris detection");
-
-
-	//LOGD(LOGTAG_ARCONTROLLER,"Calling fast tracking");
+	
 	fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
-
-	//DoFastDetection(*grayImage,debugVector,debugUI->FastThreshold);
-	//FastTracking::DoFastTracking(*grayImage,item->qrCode,debugVector);
-	//FastTracking::DoSquareTracking(*binaryImage,item->qrCode,debugVector);
-
-
-	//Mat dst, dst_norm, dst_norm_scaled;
-	//dst = Mat::zeros( grayImage->size(), CV_32FC1 );
-	//struct timespec startHarris,endHarris;
-	//SET_TIME(&startHarris);
-	//cv::cornerHarris(*grayImage,dst,2,3,0.4);
-	//dst.convertTo(*grayImage,CV_16UC1);
-	//SET_TIME(&endHarris);
-	//LOG_TIME("HARRISCORNER",startHarris,endHarris);
-	/// Drawing a circle around corners
-	//normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
-
-
-
+	
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	
 	/*if (item->qrCode != NULL)
 		item->qrCode->Draw(rgbImage);*/
+	struct timespec draw_start, draw_end;
+	SET_TIME(&draw_start);
 	while (!debugVector.empty())
 	{
 		debugVector.back()->Draw(rgbImage);
 		delete debugVector.back();
 		debugVector.pop_back();
 	}
+	SET_TIME(&draw_end);
+	LOG_TIME_PRECISE("DebugDrawing",draw_start,draw_end);
 	
 
 	//What happens past here depends on the state

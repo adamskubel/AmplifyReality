@@ -41,6 +41,8 @@ public:
 	void DrawmodeSelectionChanged(void * sender, SelectionChangedEventArgs args);
 
 	DrawModes::DrawMode currentDrawMode;
+	void SetFPS(float fps);
+	void SetFLANNTime(double time);
 
 
 private:
@@ -48,6 +50,7 @@ private:
 
 	DataDisplay * translationLabel;
 	DataDisplay * rotationLabel;
+	Label * fpsLabel, * flannTimeLabel;
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
 	map<std::string,float> parameterMap;

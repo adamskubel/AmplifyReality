@@ -4,7 +4,7 @@ Button::Button(std::string _label, cv::Scalar _FillColor, cv::Scalar _TextColor)
 {
 	buttonBoundaries = Rect(0,0,1,1);
 	FillColor = _FillColor;
-	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::Transparent);
+	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::White);
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
@@ -18,7 +18,7 @@ Button::Button(std::string _label, cv::Rect _buttonBoundaries, cv::Scalar _FillC
 	isPressed = false;
 	PressColor = Scalar(124,225,252,255);
 	clickDelegateVector = std::vector<ClickEventDelegate>();
-	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::Transparent);
+	buttonLabel = new Label(_label,Point2i(0,0),_TextColor,Colors::White);
 	buttonLabel->DoLayout(buttonBoundaries);
 	isEnabled = true;
 }

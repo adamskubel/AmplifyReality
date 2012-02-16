@@ -81,17 +81,25 @@ public:
 	QRCode * FindQRCodes(Mat & img, Mat & binaryImg, vector<Drawable*> & debugVector);
 
 private:
-	bool PointInRegion(Point2i point, Point2i cellPosition, Size2i regionSize);
 	void FindPoint(Point2i regionPoint, IDetectableContour * contour, map<int,multimap<int,Point2i>*> & regionMap);
-	void SegmentByQuantity(map<int,multimap<int,Point2i>*> & regionMap, map<int,multimap<int,Point2i>*> & quantityMap);
 	void GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2i & randomPoint, Point2i & randomPointKey);
 	float getBestEdgeSize(int detectorRadius, Mat & img, Point2i imgPoint, int recurseCount);
-	static Point2i GetRegion(Point2i point, Size2i regionSize);
-	bool IsEdge(int detectorRadius, Mat & img, Point2i imgPoint, Point2i & exitPoint);
 	ARControllerDebugUI * config;
-	int GetCornerType(Point2i point, unsigned char threshold, Mat & img);
+	double flannTime;
 
-	void FindContours(Mat & img, Point2i startPoint, vector<vector<Point2i> > & contourPoints, map<int,map<int,Point2i>*> & regionMap);//, map<float, set<float> > & foundPoints);
+	//Utility methods
+	static int GetSquaredDistance(int dx, int dy);
+	static int GetDistanceFast(int dx, int dy);
+	static int GetSquaredDistance(Point2i pt0, Point2i pt1);
+	static int GetDistanceFast(Point2i pt0, Point2i pt1);
+	
+	//Distance finding
+	//static vector<Point2i> shortest(vector<Point2i> ps);
+	//static vector<Point2i> mergePlanes(vector<Point2i> p1, vector<Point2i> p2);
+	//static vector<Point2i> findClosest(vector<Point2i> px);
+	//static vector<Point2i> CheckValidDistancePane(vector<Point2i> dots);
+	//static void CheckDistanceDACPane(vector<Point2i> dots);
+	//static void CheckDistanceDAC();
 };
 
 #endif 

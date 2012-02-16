@@ -397,6 +397,9 @@
     <ClCompile Include="..\jni\positioning\fast\DetectableSquare.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\positioning\fast\FastQRDAC.cpp">
+      <Filter>Header Files\positioning\fast</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">

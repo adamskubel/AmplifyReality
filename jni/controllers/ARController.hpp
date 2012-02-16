@@ -96,6 +96,8 @@ private:
 	CircularList<FrameItem*> * frameList;
 
 	int frameCount;
+	float fpsAverage;
+	struct timespec lastFrameTime;
 
 
 };

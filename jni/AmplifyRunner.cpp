@@ -44,22 +44,22 @@ void AmplifyRunner::Teardown(Engine * engine)
 
 void AmplifyRunner::ProcessFrame(Engine* engine)
 {
-	struct timespec start, end;
+	//struct timespec start, end;
 	LOGV("Main","Frame Start");		
 			
 	//Make sure current controller is initialized. Where should this be?
 	currentController->Initialize(engine);
 
-	SET_TIME(&start);
+	//SET_TIME(&start);
 	//The current controller does whatever it wants to here			
 	currentController->ProcessFrame(engine);
 
 	//Check if controller is done
 	CheckControllerExpiry(engine);
 
-	SET_TIME(&end);
-	LOG_TIME("Controller",start,end);
-	
+	//SET_TIME(&end);
+	//LOG_TIME("Controller",start,end);
+	//
 	//Update
 	LOGV(LOGTAG_MAIN,"Update Phase");
 		
