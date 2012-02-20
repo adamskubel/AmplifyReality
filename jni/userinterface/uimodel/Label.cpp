@@ -69,6 +69,9 @@ void Label::FitTextToBoundary(Size2f limits)
 
 void Label::SetText(std::string newText)
 {
+	if (newText.compare(Text) == 0)
+		return;
+
 	Size2i size = GetTextSize();
 	Text = newText;
 
@@ -89,15 +92,12 @@ cv::Size2i Label::GetTextSize()
 }
 
 void Label::Draw(Mat * rgbaImage)
-{	
-	//If FillColor has nonzero alpha, draw background outline 
+{		
 	if(FillColor[3] > 0)
 	{
-		//Size2i fontSize = GetTextSize();
-		//rectangle(*rgbaImage,Position,Point2i(Position.x + fontSize.width, Position.y - fontSize.height),FillColor,-1,CV_AA);
+		//If FillColor has nonzero alpha, draw background outline 
 		putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, FillColor, FontThickness*3, 8);
 	}
-
 	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	
 }
 

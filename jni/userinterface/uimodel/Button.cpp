@@ -89,20 +89,8 @@ void Button::Draw(Mat * rgbaImage)
 	cv::rectangle(*rgbaImage,buttonBoundaries,(isPressed) ? PressColor : FillColor,CV_FILLED);
 	//Draw border
 	cv::rectangle(*rgbaImage,buttonBoundaries,Scalar::all(0),2,CV_AA);
-
 	//Draw label
 	buttonLabel->Draw(rgbaImage);
-
-	////Draw button label
-	//int fontFace = FONT_HERSHEY_SIMPLEX;
-	//double fontScale = 1.2;
-	//int thickness = 2;
-	//int baseline = 0;
-	//Size textSize = getTextSize(label.c_str(), fontFace, fontScale, thickness, &baseline);
-
-	//Point2i textLocation = Point2i(buttonBoundaries.x + (buttonBoundaries.width - textSize.width)/2,
-	//	baseline + buttonBoundaries.y + (buttonBoundaries.height - textSize.height)/2);
-	//putText(*rgbaImage, label.c_str(), textLocation, fontFace, fontScale, Scalar::all(255), thickness, CV_AA);
 }
 
 void Button::SetEnabled(bool enabled)

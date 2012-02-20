@@ -54,5 +54,4 @@ void DataDisplay::SetData(Mat * matrix)
 			}
 		}
 	}
-
 }

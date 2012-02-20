@@ -400,6 +400,9 @@
     <ClCompile Include="..\jni\positioning\fast\FastQRDAC.cpp">
       <Filter>Header Files\positioning\fast</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\positioning\fast\Clustering.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -769,6 +772,12 @@
       <Filter>Header Files\positioning\fast</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\positioning\fast\FastTracking.hpp">
+      <Filter>Header Files\positioning\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\display\Colors.hpp">
+      <Filter>Header Files\display</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\fast\Clustering.hpp">
       <Filter>Header Files\positioning\fast</Filter>
     </ClInclude>
   </ItemGroup>

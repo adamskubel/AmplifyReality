@@ -49,6 +49,14 @@ class DebugCircle : public Drawable
 {
 public:
 	static int instanceCount;
+	DebugCircle(Point2i _center, int _radius, Scalar _color, int _thickness)
+	{
+		instanceCount++;
+		center = _center;
+		radius = _radius;
+		color = _color;
+		thickness = _thickness;
+	}
 
 	DebugCircle(Point2i _center, int _radius, Scalar _color = Colors::Red, bool fill = false)
 	{

@@ -4,7 +4,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/flann/flann.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
+
 #include <vector>
 #include "LogDefinitions.h"
 #include "positioning/qrcode/FindPattern.h"
@@ -17,6 +19,7 @@
 #include "FastTracking.hpp"
 #include <stdlib.h>
 #include <set>
+#include "display/Colors.hpp"
 
 using namespace cv;
 using namespace std;
@@ -72,9 +75,62 @@ private:
 
 };
 
+struct QRCorner
+{
+public:
+	Point2i Center;
+	Point2i Outer;
+	Point2i Inner;
+
+	int Size;
+
+	QRCorner()
+	{
+
+	}
+
+	QRCorner(Point2i _Center, Point2i _Outer, Point2i _Inner, int _Size)
+	{
+		Center = _Center;
+		Outer = _Outer;
+		Inner = _Inner;
+		Size = _Size;
+	}
+};
+
+namespace FastQR
+{
+	struct Node
+	{
+	public:
+		Node(KeyPoint kp)
+		{
+			nodePoint = Mat(1,2,CV_32F);
+			nodePoint.at<float>(0,0) = (int)kp.pt.x;
+			nodePoint.at<float>(0,1) = (int)kp.pt.y;
+			visited = false;
+			clusterIndex = -1;
+		}
+
+		Node(Point2f pt)
+		{
+			nodePoint = Mat(1,2,CV_32F);
+			nodePoint.at<float>(0,0) = (int)pt.x;
+			nodePoint.at<float>(0,1) = (int)pt.y;
+			visited = false;
+			clusterIndex = -1;
+		}
+
+		Mat nodePoint;
+		bool visited;
+		int clusterIndex;
+	};
+}
+
 
 class FastQRFinder
 {
+	
 
 public: 
 	FastQRFinder(ARControllerDebugUI * config);
@@ -85,8 +141,8 @@ private:
 	void GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2i & randomPoint, Point2i & randomPointKey);
 	float getBestEdgeSize(int detectorRadius, Mat & img, Point2i imgPoint, int recurseCount);
 	ARControllerDebugUI * config;
-	double flannTime, pointTime;
-	double patternTimes[4];
+	double flannTime, pointTime, avgPerPointTime, maxThreshTime, fastTime, clusterTime;
+	//double patternTimes[4];
 
 	//Utility methods
 	static int GetSquaredDistance(int dx, int dy);
@@ -94,6 +150,12 @@ private:
 	static int GetSquaredDistance(Point2i pt0, Point2i pt1);
 	static int GetDistanceFast(Point2i pt0, Point2i pt1);
 	
+	//Clustering
+	static bool GetNodesInRadius(FastQR::Node* pt, double dblRadius, int nMinPts, int maxPts, vector<FastQR::Node*>& rgpNodesFound, flann::Index * kdIndex, vector<FastQR::Node*> & vecNodes);
+	static void ExpandCluster(vector<FastQR::Node*>& rgp, int nCluster, double dblEpsilon, int nMinPts, int maxPts, flann::Index * kdIndex,vector<FastQR::Node*> & vecNodes);
+	static void ExpandCluster_Recursive(FastQR::Node* node, int nCluster, double dblEpsilon, int nMinPts, int maxPts, flann::Index * kdIndex,vector<FastQR::Node*> & vecNodes);
+	static int RunDBScan(vector<FastQR::Node*> & vecNodes, flann::Index * kdIndex, double flannRadius, int nMinPts,int maxPts);
+
 	//Distance finding
 	//static vector<Point2i> shortest(vector<Point2i> ps);
 	//static vector<Point2i> mergePlanes(vector<Point2i> p1, vector<Point2i> p2);

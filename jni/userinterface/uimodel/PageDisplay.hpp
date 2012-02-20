@@ -22,7 +22,6 @@ public:
 
 
 private:
-	static const float DefaultButtonSize = 150;
 	int currentPage;
 	Button * nextPage, * previousPage;
 

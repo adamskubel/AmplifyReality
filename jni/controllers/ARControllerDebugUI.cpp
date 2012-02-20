@@ -5,44 +5,34 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	int padding = 20;
 	GridDimensions = Size2i(3,2);
 	
-	GridLayout * empty = new GridLayout(Size2i(2,2));
+	GridLayout * firstPage = new GridLayout(Size2i(4,3));
 	
-	AddChild(empty);
+	AddChild(firstPage);
 	
-
-	//flannTimeLabel = new Label("[FLANN]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
-
-	GridLayout * myGrid = new GridLayout(Size2i(4,5));	
-	rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
-	translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
-	myGrid->AddChild(rotationLabel,Point2i(0,2));
-	myGrid->AddChild(translationLabel,Point2i(0,3));
-	//myGrid->AddChild(flannTimeLabel,Point2i(1,2));
-
-	//GridLayout * miniGrid = new GridLayout(Size2i(1,2));
-	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
+	
 	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
-	myGrid->AddChild(stateLabel,Point2i(0,1));
-	myGrid->AddChild(fpsLabel,Point2i(0,0));
+	firstPage->AddChild(fpsLabel,Point2i(0,0));
 
-	//myGrid->AddChild(miniGrid,Point2i(0,0));
+	GridLayout * myGrid = new GridLayout(Size2i(3,6));	
 
-	Mat oneMatrix = Mat::ones(1,3,CV_64F);	
-	Mat oneMatrix2 = Mat::zeros(1,3,CV_64F);
-		
-	rotationLabel->SetData(&oneMatrix);
-	translationLabel->SetData(&oneMatrix2);
+	//rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
+	//translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
+	//myGrid->AddChild(rotationLabel,Point2i(0,2));
+	//myGrid->AddChild(translationLabel,Point2i(0,3));
 
-	certaintyIndicator = new CertaintyIndicator(0);
-	myGrid->AddChild(certaintyIndicator,Point2i(3,2));
+
+	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
+	myGrid->AddChild(stateLabel,Point2i(0,0));
 	AddChild(myGrid);
-	
-	
-	AddNewParameter("FastThresh",10,5,1,400,"%3.0f",2);
-	AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f",2);
+		
 
-	AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",3);
-	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",3);
+	//certaintyIndicator = new CertaintyIndicator(0);
+	//myGrid->AddChild(certaintyIndicator,Point2i(3,2));
+	
+	
+
+	/*AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",3);
+	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",3);*/
 		
 	//Need to automate this..maybe
 	SelectBox * drawModeSelect = new SelectBox(3,Colors::MidnightBlue);
@@ -51,12 +41,12 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	drawModeSelect->AddItem(new SelectBoxItem("Binary"));
 	drawModeSelect->AddSelectionChangedDelegate(SelectionChangedEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::DrawmodeSelectionChanged>(this));
 	drawModeSelect->SetSelectedIndex(1);
-	AddInNextPosition(drawModeSelect,3);
+	//AddInNextPosition(drawModeSelect,3);
 
 	currentDrawMode = DrawModes::GrayImage;
 		
-	AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
-	AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
+	//AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
+	//AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
 	
 
 	SetPage(0);
@@ -67,17 +57,18 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 
 void ARControllerDebugUI::SetLabelValue(std::string labelName, float labelValue)
 {
-	map<std::string,Label*>::iterator labelIterator = labelMap.find(labelName);
+	map<std::string,pair<Label*,std::string> >::iterator labelIterator = labelMap.find(labelName);
 
 	if (labelIterator != labelMap.end())
 	{		
 		std::stringstream textStream;
 		textStream << labelName;
 		textStream << "=";
-		textStream.precision(4);
-		//textStream.setf(ios_base::scientific);
+		textStream.precision(3);
+		textStream.setf(ios_base::fixed);
 		textStream << labelValue;
-		(*labelIterator).second->SetText(textStream.str());
+		textStream << (*labelIterator).second.second;
+		(*labelIterator).second.first->SetText(textStream.str());
 	}
 	else
 	{
@@ -85,23 +76,28 @@ void ARControllerDebugUI::SetLabelValue(std::string labelName, float labelValue)
 	}
 }
 
-void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string defaultText, int desiredPage)
+void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string format, int desiredPage)
 {
-	Label * newLabel = new Label(defaultText,Point2i(0,0),Colors::Black,Colors::White);
+	Label * newLabel = new Label(format,Point2i(0,0),Colors::Black,Colors::White);
 
-	labelMap.insert(pair<std::string,Label*>(labelName,newLabel));
+	labelMap.insert(pair<std::string,pair<Label*,std::string> >(labelName,pair<Label*,std::string>(newLabel,format)));
 	AddInNextPosition(newLabel,desiredPage);
 }
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
+void ARControllerDebugUI::AddNewParameter(std::string paramName,  float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
 {
-	if (parameterMap.find(paramName) != parameterMap.end())	
+	AddNewParameter(paramName,paramName,defaultValue,step,minValue,maxValue,format,desiredPage);
+}
+
+void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string paramKey, float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
+{
+	if (parameterMap.find(paramKey) != parameterMap.end())	
 	{
 		LOGI(LOGTAG_INPUT,"Parameter already exists, deleting");
 		//Clean up last spinner
 		for (int i=0;i<Children.size();i++)
 		{
-			UIElement * element = ((GridLayout*)Children.at(i))->GetElementByName(paramName);
+			UIElement * element = ((GridLayout*)Children.at(i))->GetElementByName(paramKey);
 			if (element != NULL)
 			{
 				delete element;
@@ -112,12 +108,12 @@ void ARControllerDebugUI::AddNewParameter(std::string paramName, float defaultVa
 	}
 
 	NumberSpinner * newSpinner = new NumberSpinner(paramName,defaultValue,step,format);
-	newSpinner->Name = paramName;
+	newSpinner->Name = paramKey;
 	newSpinner->SetMinimum(minValue);
 	newSpinner->SetMaximum(maxValue);
 	newSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
 
-	parameterMap.insert(pair<std::string,float>(paramName,defaultValue));
+	parameterMap.insert(pair<std::string,float>(paramKey,defaultValue));
 	AddInNextPosition(newSpinner,desiredPage);
 }
 
@@ -177,20 +173,52 @@ void ARControllerDebugUI::NumberSpinnerValueChanged(void * sender, NumberSpinner
 	parameterMap[(((NumberSpinner*)sender)->Name)] = args.NewValue;
 }
 
-float ARControllerDebugUI::GetParameter(std::string paramName)
+float ARControllerDebugUI::GetParameter(std::string paramKey)
 {
-	map<string,float>::iterator paramMapIterator = parameterMap.find(paramName);
+	map<string,float>::iterator paramMapIterator = parameterMap.find(paramKey);
 	if (paramMapIterator != parameterMap.end())
 	{
 		return (*paramMapIterator).second;
 	}
 	else
 	{
-		LOGE("Parameter %s does not exit in map!",paramName.c_str());
+		LOGE("Parameter '%s' does not exit in map!",paramKey.c_str());
 		return MAXFLOAT;
 	}
 }
 
+float ARControllerDebugUI::GetFloatParameter(std::string paramKey)
+{
+	return GetParameter(paramKey);
+}
+
+bool ARControllerDebugUI::GetBooleanParameter(std::string paramKey)
+{
+	map<string,float>::iterator paramMapIterator = parameterMap.find(paramKey);
+	if (paramMapIterator != parameterMap.end())
+	{
+		return ((*paramMapIterator).second == 1.0f);
+	}
+	else
+	{
+		LOGW("Boolean parameter '%s' does not exit in map!",paramKey.c_str());
+		return false;
+	}
+}
+
+int ARControllerDebugUI::GetIntegerParameter(std::string paramKey)
+{
+	map<string,float>::iterator paramMapIterator = parameterMap.find(paramKey);
+	if (paramMapIterator != parameterMap.end())
+	{
+		return (int)(*paramMapIterator).second;
+	}
+	else
+	{
+		LOGE("Parameter '%s' does not exit in map!",paramKey.c_str());
+		return 0;
+	}
+}
 
 void ARControllerDebugUI::ToggleVisibility(void * sender, EventArgs args)
 {
@@ -227,14 +255,14 @@ void ARControllerDebugUI::SetStateDisplay(string stateDescription)
 
 void ARControllerDebugUI::SetRotation(Mat * mat)
 {
-	rotationLabel->SetData(mat);
+	//rotationLabel->SetData(mat);
 }
 void ARControllerDebugUI::SetTranslation(Mat * mat)
 {
-	translationLabel->SetData(mat);
+	//translationLabel->SetData(mat);
 }
 
 void ARControllerDebugUI::SetPositionCertainty(float certainty)
 {
-	certaintyIndicator->SetCertainty(certainty);
+	//certaintyIndicator->SetCertainty(certainty);
 }

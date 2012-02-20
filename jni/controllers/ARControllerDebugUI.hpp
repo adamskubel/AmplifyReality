@@ -33,11 +33,18 @@ public:
 	void SetDefaults();		
 	//void GlobalTouchEvent(void * sender, TouchEventArgs args);
 	
-	float GetParameter(std::string paramName);
+	float GetParameter(std::string paramKey);
+	float GetFloatParameter(std::string paramKey);
+	bool GetBooleanParameter(std::string paramKey);
+	int GetIntegerParameter(std::string paramKey);
+
+
 	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
+	void AddNewParameter(std::string paramName, std::string paramKey, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
 
 	void SetLabelValue(std::string labelName, float value);
-	void AddNewLabel(std::string labelName, std::string defaultText, int desiredPage = 0);
+	void AverageLabelValue(std::string labelName, float value);
+	void AddNewLabel(std::string labelName, std::string suffex, int desiredPage = 0);
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
@@ -56,7 +63,7 @@ private:
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
 	map<std::string,float> parameterMap;
-	map<std::string,Label*> labelMap;
+	map<std::string,pair<Label*,std::string> > labelMap;
 	Size2i GridDimensions;
 
 	void FindNextPosition(Point2i & page, int & pageNum, int desiredPage = 0, Size2i controlSize = Size2i(1,1));

@@ -81,6 +81,7 @@
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
+    <ClCompile Include="..\jni\positioning\fast\Clustering.cpp" />
     <ClCompile Include="..\jni\positioning\fast\DetectableSquare.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastQRDAC.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="..\jni\datacollection\SensorCollector.hpp" />
     <ClInclude Include="..\jni\datastructures\CircularList.hpp" />
     <ClInclude Include="..\jni\AmplifyRealityGlobals.hpp" />
+    <ClInclude Include="..\jni\display\Colors.hpp" />
     <ClInclude Include="..\jni\display\model\ARObject.hpp" />
     <ClInclude Include="..\jni\display\model\AugmentedView.hpp" />
     <ClInclude Include="..\jni\display\objloader\list.h" />
@@ -196,6 +198,7 @@
     <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />
     <ClInclude Include="..\jni\model\WorldLoader.hpp" />
+    <ClInclude Include="..\jni\positioning\fast\Clustering.hpp" />
     <ClInclude Include="..\jni\positioning\fast\FastQRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\fast\FastTracking.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />

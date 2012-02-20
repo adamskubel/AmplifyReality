@@ -3,6 +3,7 @@
 #include "OpenGLRenderData.hpp"
 #include <opencv2/core/core.hpp>
 #include "display/objloader/objLoader.h"
+#include "display/Colors.hpp"
 
 
 #ifndef GLOBJECT_HPP_

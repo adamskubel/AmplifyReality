@@ -20,6 +20,8 @@
 
 #include "display/opengl/QuadBackground.hpp"
 
+#include "display/Colors.hpp"
+
 #include "datastructures/CircularList.hpp"
 
 #include "ARControllerDebugUI.hpp"
@@ -53,6 +55,8 @@ public:
 	void Teardown(Engine * engine);
 	
 	void Render(OpenGL * openGL);
+
+	void HandleButtonPress(void * sender, PhysicalButtonEventArgs args);
 
 private:
 
@@ -98,7 +102,7 @@ private:
 	int frameCount;
 	float fpsAverage;
 	struct timespec lastFrameTime;
-
+	bool enableUIDrawing;
 
 };
 

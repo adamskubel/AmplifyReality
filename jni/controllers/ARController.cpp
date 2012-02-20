@@ -121,13 +121,24 @@ void ARController::Initialize(Engine * engine)
 
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
-
+	
 	//Initialize textured quad to render camera image
 	quadBackground = new QuadBackground(engine->ImageSize());
 	deletableObjects.push_back(quadBackground);
 
+	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<ARController,&ARController::HandleButtonPress>(this));
+
 	isInitialized = true;
+	enableUIDrawing = true;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");
+}
+
+void ARController::HandleButtonPress(void * sender, PhysicalButtonEventArgs args)
+{
+	if (args.ButtonCode == AKEYCODE_MENU)
+	{
+		enableUIDrawing = !enableUIDrawing;
+	}
 }
 
 void ARController::Teardown(Engine * engine)
@@ -235,8 +246,8 @@ void ARController::ProcessFrame(Engine * engine)
 		frameCount,fpsAverage,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
 	getImages(engine);
 		
-	AlignmentPatternHelper::MinimumAlignmentPatternScore = debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
-	FinderPatternHelper::MinimumFinderPatternScore = debugUI->GetParameter("MinFPScore");
+	AlignmentPatternHelper::MinimumAlignmentPatternScore = 190;// debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
+	FinderPatternHelper::MinimumFinderPatternScore = 180;// debugUI->GetParameter("MinFPScore");
 
 	vector<Drawable*> debugVector;
 
@@ -244,8 +255,6 @@ void ARController::ProcessFrame(Engine * engine)
 	LOGV(LOGTAG_ARCONTROLLER,"Decoding=%d",decode);
 
 	//item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
-	
-	LOGD(LOGTAG_ARCONTROLLER,"Calling harris detection");
 	
 	fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
 	
@@ -345,16 +354,22 @@ void ARController::ProcessFrame(Engine * engine)
 
 void ARController::Draw(Mat * rgbaImage)
 {
-	//Draw objects onto camera texture
-	for (int i=0;i<drawObjects.size();i++)
+	if (enableUIDrawing)
 	{
-		if (drawObjects.at(i)->IsVisible())
+		struct timespec start,end;
+		SET_TIME(&start);
+		//Draw objects onto camera texture
+		for (int i=0;i<drawObjects.size();i++)
 		{
-			LOGV(LOGTAG_ARCONTROLLER,"Drawing object %d",i);
-			drawObjects.at(i)->Draw(rgbaImage);
+			if (drawObjects.at(i)->IsVisible())
+			{
+				LOGV(LOGTAG_ARCONTROLLER,"Drawing object %d",i);
+				drawObjects.at(i)->Draw(rgbaImage);
+			}
 		}
+		SET_TIME(&end);
+		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
-
 	//Update textured quad 
 	quadBackground->SetImage(rgbaImage);
 }
@@ -393,19 +408,19 @@ void ARController::getImages(Engine * engine)
 		engine->imageCollector->newFrame();
 		engine->imageCollector->getGrayCameraImage(*grayImage);
 		SET_TIME(&end);
-		LOG_TIME("Image Capture", start, end);
+		LOG_TIME_PRECISE("Image Capture", start, end);
 
 		//Copy gray image to RGB image to be used by the following stages (rendering, debug overlay, etc)
 		SET_TIME(&start)
 		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
-		LOG_TIME("Gray->RGBA", start, end);
+		LOG_TIME_PRECISE("Gray->RGBA", start, end);
 	} 
 	
 	//if (USE_FEEDBACK_THRESH)
 	//	ImageProcessor::FeedbackBinarization(item);
 	//else
-	ImageProcessor::SimpleThreshold(grayImage, binaryImage);
+//	ImageProcessor::SimpleThreshold(grayImage, binaryImage);
 	
 	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{
@@ -414,7 +429,6 @@ void ARController::getImages(Engine * engine)
 		SET_TIME(&end);
 		LOG_TIME("Binary->RGBA", start, end);
 	}
-	SET_TIME(&end);
 }
 
 

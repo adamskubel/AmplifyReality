@@ -17,28 +17,29 @@ PageDisplay::~PageDisplay()
 
 void PageDisplay::DoLayout(Rect boundaryRectangle)
 {
+	const Size2i DefaultButtonSize(120,80);
 	LOGD(LOGTAG_INPUT,"Laying out PageDisplay, Rect=[%d,%d,%d,%d]",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
-	float buttonSize = DefaultButtonSize;
+	Size2i buttonSize = DefaultButtonSize;
 
-	if (buttonSize > boundaryRectangle.width/2.0f || buttonSize > boundaryRectangle.height /2.0f)
+	if (buttonSize.width > boundaryRectangle.width/2.0f || buttonSize.height > boundaryRectangle.height /2.0f)
 	{
-		buttonSize = round(min(boundaryRectangle.height /2.0f,boundaryRectangle.width/2.0f));
-		LOGD(LOGTAG_INPUT,"Setting page button size to %f",buttonSize);
+		buttonSize = Size2i(boundaryRectangle.height /2.0f,boundaryRectangle.width/2.0f);
+		LOGD(LOGTAG_INPUT,"Setting page button size to [%d,%d]",buttonSize.width,buttonSize.height);
 	}
 	
-	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize);
+	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height-buttonSize.height);
 	LOGD(LOGTAG_INPUT,"PageDisplay ContentRect=[%d,%d,%d,%d]",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 	
 	//Bottom right corner
 	Rect nextButtonBoundary = Rect(
-		(boundaryRectangle.width-buttonSize) + boundaryRectangle.x,
-		(boundaryRectangle.height-buttonSize) + boundaryRectangle.y,
-		buttonSize,buttonSize);
+		(boundaryRectangle.width-buttonSize.width) + boundaryRectangle.x,
+		(boundaryRectangle.height-buttonSize.height) + boundaryRectangle.y,
+		buttonSize.width,buttonSize.height);
 	
 	//Bottom left corner
 	Rect previousButtonBoundary = Rect(boundaryRectangle.x,
-		(boundaryRectangle.height-buttonSize) + boundaryRectangle.y,
-		buttonSize,buttonSize);
+		(boundaryRectangle.height-buttonSize.height) + boundaryRectangle.y,
+		buttonSize.width,buttonSize.height);
 
 	if (nextPage != NULL && previousPage != NULL)
 	{
@@ -152,7 +153,6 @@ void PageDisplay::Draw(Mat * rgbaImage)
 	if (!IsVisible() || !layoutDefined)
 		return;
 
-	//LOGD(LOGTAG_INPUT,"Drawing page display, pagenum=%d",currentPage);
 	if (nextPage != NULL && previousPage != NULL)
 	{
 		if (nextPage->IsVisible())

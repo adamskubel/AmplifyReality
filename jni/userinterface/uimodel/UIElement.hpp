@@ -4,6 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include "userinterface/events/EventArgs.hpp"
 #include "model/IDeletable.hpp"
+#include "display/Colors.hpp"
 
 
 #ifndef UIELEMENT_HPP_
