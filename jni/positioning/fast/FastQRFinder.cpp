@@ -470,7 +470,64 @@ static bool checkExclusionZone(Mat searchPoint, flann::Index *& searchExclusionI
 	return false;
 }
 
-QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable*> & debugVector)
+static void FastWindow(Mat & inputImg, vector<KeyPoint> & features, Rect window, int threshold, bool nonMax)
+{	
+	try
+	{	
+		int xOffset = window.x, yOffset = window.y;
+		int windowWidth = window.width, windowHeight = window.height;
+		
+			//Check that window is within boundaries
+		if (xOffset < 0 || xOffset >= inputImg.cols)
+		{	xOffset = 0;}
+		if (yOffset < 0 || yOffset >= inputImg.rows)
+		{	yOffset = 0; }
+		if (xOffset + windowWidth < 0 || xOffset + windowWidth > inputImg.cols)
+		{	windowWidth = inputImg.cols-xOffset;}
+		if (yOffset +  windowHeight < 0 || yOffset + windowHeight > inputImg.rows)
+		{	windowHeight = inputImg.rows-yOffset;}
+					
+		Mat tMat = Mat(windowHeight,windowWidth,inputImg.type());
+		for (int i=0; i < windowHeight;i++)
+		{
+			const unsigned char* Mi = inputImg.ptr<unsigned char>(i+yOffset);
+			Mi = Mi + xOffset*inputImg.step[1];
+
+			unsigned char * copyTo = tMat.ptr<unsigned char>(i);
+			memcpy(tMat.ptr<unsigned char>(i),Mi,windowWidth);
+		}
+		cv::FAST(tMat,features,threshold,nonMax);
+		for (int i=0;i<features.size();i++)
+		{
+			features.at(i).pt.x += xOffset;
+			features.at(i).pt.y += yOffset;
+		}
+	}
+	catch (std::exception &e)
+	{
+		LOGE("FastWindow exception: %s",e.what());
+	}
+}
+
+
+void FastQRFinder::EnhanceQRCodes(Mat & img, QRCode * code, vector<Drawable*> & debugVector)
+{
+	for (int i=0;i<code->finderPatterns.size();i++)
+	{
+		FinderPattern * fp = code->finderPatterns.at(i);
+		if (fp->size == 0)
+			continue;
+		
+		float windowSize = fp->size * 1.2f;  //Window a bit bigger.
+	
+		Rect window = Rect(fp->pt.x - windowSize/2.0f, fp->pt.y-windowSize/2.0f, windowSize,windowSize);
+		debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
+
+		LocateFPCorners(img, window,debugVector);
+	}
+}
+
+void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debugVector)
 {
 	struct timespec startTotal,endTotal;
 	SET_TIME(&startTotal);
@@ -483,13 +540,15 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	bool useRadius = config->GetBooleanParameter("DoRadiusSearch");
 	int flannIndexType = config->GetIntegerParameter("FlannIndexType");
 	int numTrees = config->GetIntegerParameter("NumKDTrees");
+	int threshold = config->GetParameter("FastThresh");
+	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
 
 	vector<KeyPoint> keypoints;
 
 	struct timespec start,end;
 	LOGD(LOGTAG_QRFAST,"Performing FAST detection");
 	SET_TIME(&start);
-	//	cv::FAST(img,keypoints,config->GetParameter("FastThresh"),config->GetBooleanParameter("NonMaxSuppress"));
+	FastWindow(img,keypoints,roi, threshold,nonMaxSuppress);
 	SET_TIME(&end);
 	double fastTime_local = calc_time_double(start,end);
 	fastTime = (fastTime + fastTime_local)/2.0;
@@ -504,7 +563,7 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 
 	//If didn't do nonmax during FAST, perform here using maps
 	//Otherwise, just add the points to vectors
-	if (!config->GetBooleanParameter("NonMaxSuppress"))
+	if (!nonMaxSuppress)
 	{
 		SET_TIME(&start);
 		map<int,map<int,KeyPoint>*> insideCornersMap_Unsorted;
@@ -560,13 +619,14 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 		for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap_Unsorted.begin(); deleteIt != outsideCornersMap_Unsorted.end();deleteIt++) delete (*deleteIt).second;
 	}
 	else
-	{		
+	{	
+#define DO_CLUSTERING false
+#if DO_CLUSTERING
+			
 		double clusterRadius = std::pow(config->GetParameter("ClusterRadius"),2.0);
 		int minClusterCount = config->GetIntegerParameter("MinClusterSize");
 		int maxClusterCount = config->GetIntegerParameter("ClusterK-NN");
 
-#define DO_CLUSTERING false
-#if DO_CLUSTERING
 		vector<FastQR::Node*> vecNodes;
 		Mat kpMat = Mat(keypoints.size(),2,CV_32F);	
 		int clusterPointMatCount = 0;
@@ -637,7 +697,7 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	//No features to track, so return NULL
 	if (outsideCornersVector.size() < 2 || insideCornerVector.size() < 2)
 	{
-		return NULL;
+		return;
 	}
 
 	
@@ -733,13 +793,13 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 
 		//If point is within a defined exclusion zone, don't check it
 		Point2i match(0,0);
-		if (checkExclusionZone(objectPoints,searchExclusionIndex,exclusionDistances,exclusionIndexMatrix,exclusionDistanceMatrix,match))
+		/*if (checkExclusionZone(objectPoints,searchExclusionIndex,exclusionDistances,exclusionIndexMatrix,exclusionDistanceMatrix,match))
 		{
 			if (debugLevel > 1)
 				debugVector.push_back(new DebugLine(insideCornerPoint,match,Colors::OrangeRed,2));
 			continue;
 		}
-
+*/
 
 
 		struct timespec innerStart,innerEnd;
@@ -796,7 +856,6 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 			continue;
 		}
 
-		/*	multimap<int,Point2i>::iterator closePointsIt, closePointsEnd;*/
 		vector<pair<int,Point2i> >::iterator closePointsIt, closePointsEnd;
 
 		closePointsIt = closePointsVector.begin();
@@ -804,7 +863,7 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 				
 		Point2i firstPoint =  (*closePointsIt).second;
 		closePointsIt++;
-		closePointsEnd = closePointsVector.end();//closestPoints.upper_bound(closestDist * 4);
+		closePointsEnd = closePointsVector.end();
 
 		float MaxCosine = -0.8f;
 		float lowestCosine = -0.3f;
@@ -881,38 +940,6 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	config->SetLabelValue("TotalTime",pointTime/1000.0);
 	config->SetLabelValue("NumPoints",(float)insideCornerVector.size());
 	config->SetLabelValue("AvgPointTime",avgPerPointTime);
-
-	//struct timespec resolution, currentTime;
-	//clock_getres(CLOCK_MONOTONIC_HR,&resolution);
-	//clock_gettime(CLOCK_MONOTONIC_HR,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"MonoHRRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"MonoHRTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_REALTIME_HR,&resolution);
-	//clock_gettime(CLOCK_REALTIME_HR,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"RealHRRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"RealHRTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_MONOTONIC,&resolution);
-	//clock_gettime(CLOCK_MONOTONIC,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"MonoRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"MonoTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_REALTIME,&resolution);
-	//clock_gettime(CLOCK_REALTIME,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"RealRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"RealTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_THREAD_CPUTIME_ID,&resolution);
-	//clock_gettime(CLOCK_THREAD_CPUTIME_ID,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"ThreadRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"ThreadTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_PROCESS_CPUTIME_ID,&resolution);
-	//clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"ProcessRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"ProcessTime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//clock_getres(CLOCK_SGI_CYCLE,&resolution);
-	//clock_gettime(CLOCK_SGI_CYCLE,&currentTime);
-	//LOGD(LOGTAG_QRFAST,"SGIRes=%ld,%ld",resolution.tv_sec,resolution.tv_nsec);
-	//LOGD(LOGTAG_QRFAST,"SGITime=%ld,%ld",currentTime.tv_sec,currentTime.tv_nsec);
-	//
-	//
 	
 	
 	delete flannPointIndex;
@@ -921,7 +948,7 @@ QRCode * FastQRFinder::FindQRCodes(Mat & img, Mat & binaryImage, vector<Drawable
 	
 	SET_TIME(&endTotal);
 	LOG_TIME("TotalFASTQR",startTotal,endTotal);
-	return NULL;
+	return;
 }
 
 

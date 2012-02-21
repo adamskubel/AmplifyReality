@@ -37,7 +37,7 @@ private:
 	void DoFastDetection(Mat & img, vector<Drawable*> & debugVector);
 	static bool CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
 	static bool CheckRatios2(int bw[], int bw2[]);
-	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector);
+	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int debugLevel);
 	static int FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[], int yDelta = 0);
 	static bool GetEdges(const Mat& image, Point2i start, int xDir, int yDir, int * Q);
 	//static int SkipHeuristic(FinderPattern_vector * fpv);

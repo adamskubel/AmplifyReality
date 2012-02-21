@@ -134,7 +134,8 @@ class FastQRFinder
 
 public: 
 	FastQRFinder(ARControllerDebugUI * config);
-	QRCode * FindQRCodes(Mat & img, Mat & binaryImg, vector<Drawable*> & debugVector);
+	void LocateFPCorners(Mat & img, Rect fpRect, vector<Drawable*> & debugVector);
+	void EnhanceQRCodes(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
 
 private:
 	void FindPoint(Point2i regionPoint, IDetectableContour * contour, map<int,multimap<int,Point2i>*> & regionMap);

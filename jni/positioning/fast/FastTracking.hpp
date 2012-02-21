@@ -16,9 +16,10 @@ public:
 	static void DoSquareTracking(Mat & image, QRCode * qrCode, vector<Drawable*> & debugVector);
 	static void DoFastTracking(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
 	static float angle(Point2i p1, Point2i p2, Point2i p0);
+	static void FastWindow(Mat & img, vector<KeyPoint> & features, Rect window);
+
 private:
 	static void findSquares( const Mat& image, vector<vector<Point> >& squares );
-	static void FastWindow(Mat & img, vector<KeyPoint> & features, Rect window);
 	static float GetPointDistance(Point2f p1, Point2f p2);
 	static float getPolyArea(Point2f a, Point2f b, Point2f c);
 	static float getArea(vector<Point2f> & testPoints);

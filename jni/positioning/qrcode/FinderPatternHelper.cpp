@@ -154,9 +154,9 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 			{
 				if (transition < 0) /* Light->dark transistion */
 				{
-					if (FP_DEBUG_ENABLED && debugLevel > 4)
+					if (FP_DEBUG_ENABLED && debugLevel > 3)
 					{
-						debugVector.push_back(new DebugCircle(Point2i(x,y),3,Colors::OrangeRed,true));
+						debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::OrangeRed,true));
 					}	
 					k++;
 				}
@@ -167,9 +167,9 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 				{
 					if (transition > 0) //dark to light
 					{
-						if (FP_DEBUG_ENABLED && debugLevel > 4)
+						if (FP_DEBUG_ENABLED && debugLevel > 3)
 						{
-							debugVector.push_back(new DebugCircle(Point2i(x,y),3,Colors::Blue,true));
+							debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Blue,true));
 						}						
 						++k;
 					}
@@ -178,9 +178,9 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 				{
 					if (transition < 0) //light to dark
 					{
-						if (FP_DEBUG_ENABLED && debugLevel > 4)
+						if (FP_DEBUG_ENABLED && debugLevel > 3)
 						{
-							debugVector.push_back(new DebugCircle(Point2i(x,y),3,Colors::Lime,true));
+							debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Lime,true));
 						}					
 						++k;
 					}
@@ -189,13 +189,13 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 
 			if (k > 0) ++bw[k-1];
 
-			if (FP_DEBUG_ENABLED && debugLevel > 4)
+			/*if (FP_DEBUG_ENABLED && debugLevel > 4)
 			{
 				if (transition < 0)
 					debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Red,true));
 				else if (transition > 0)
 					debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Gold,true));
-			}	
+			}	*/
 
 
 			if (k == 6)
@@ -216,9 +216,9 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 					int tempXCenter = (x - bw[4] - bw[3]) - (bw[2] / 2); 
 					
 					//y coordinate of center. If check fails, returns 0.
-					int tempYCenter = FindCenterVertical(M, tempXCenter, y, bw, debugVector);
+					int tempYCenter = FindCenterVertical(M, tempXCenter, y, bw, debugVector, debugLevel);
 
-					if (tempYCenter != 0)
+					if (tempYCenter > 0)
 					{
 						int tempXCenter_2 = FindCenterHorizontal(M, tempXCenter, tempYCenter, bw); /* Calculate it again. */
 
@@ -262,21 +262,29 @@ void QRFinder::FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & finderPat
 						{
 							//Vertical check succeeded, but horizontal re-check failed
 							if (FP_DEBUG_ENABLED && debugLevel > 1)
-								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),14, Colors::OrangeRed,2));
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),12, Colors::OrangeRed,1));
 						}
 
 					} else
 					{
 						//Ratios were correct but vertical check failed
 						if (FP_DEBUG_ENABLED && debugLevel > 2)
-							debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),12,Colors::Aqua,2));
+						{
+							if (tempYCenter == 0) //ratio fail
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Aqua,1));
+							else if (tempYCenter == -1)	//topcheck fail				
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Orange,1));
+							else if (tempYCenter == -2)	//bottomcheck fail							
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Lime,1));
+						}
 					}
 				}
 				else
 				{
 					//Found correct number of transitions, but ratios were incorrect
-					if (FP_DEBUG_ENABLED && debugLevel > 3)
-						debugVector.push_back(new DebugCircle(Point2i(x,y),10,Colors::LemonChiffon,2));
+					if (FP_DEBUG_ENABLED && debugLevel > 4)									
+						debugVector.push_back(new DebugCircle(Point2i(x,y),3,Colors::Yellow,1));
+					
 				}
 
 				k = 4;
@@ -483,7 +491,7 @@ int QRFinder::FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[], i
 	}
 }
 
-int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector)
+int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int debugLevel)
 {
 	int threshold =10;
 	int bw[5] = { 0 };
@@ -498,7 +506,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[2];
 			if (transition > 0) //dark to light
 			{	
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::Aquamarine,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::Aquamarine,true));
 				k++;
 			}
 		}
@@ -507,7 +516,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[3];
 			if (transition < 0) //dark to light
 			{
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::SeaGreen,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::SeaGreen,true));
 				++k;
 			}
 		}
@@ -516,7 +526,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[4];
 			if (transition > 0) //dark to light - end of pattern
 			{
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::Purple,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::Purple,true));
 				k++;
 				break; //Found last edge, break loop
 			}
@@ -526,7 +537,7 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 	if (k != 3) //Exit because we didn't find enough edges
 	{
 		//LOGV(LOGTAG_QR,"Only found %d edges for top",k);
-		return 0;
+		return -1;
 	}
 	//Check bottom
 	k = 0;
@@ -539,7 +550,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[2];
 			if (transition > 0) /* Light->dark transistion */
 			{				
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::Orange,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::Orange,true));
 				k++;
 			}
 		}
@@ -548,7 +560,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[1];
 			if (transition < 0) //dark to light
 			{
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::Crimson,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::Crimson,true));
 				++k;
 			}
 		}
@@ -557,7 +570,8 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 			++bw[0];
 			if (transition > 0) //light to dark
 			{
-				//debugVector.push_back(new DebugCircle(Point2i(x,i),4,Colors::Olive,true));
+				if (FP_DEBUG_ENABLED && debugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),1,Colors::Olive,true));
 				k++;
 				break; //Found last edge, break loop
 			}
@@ -567,7 +581,7 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 	if (k != 3) //Exit because we didn't find enough edges
 	{
 		//LOGV(LOGTAG_QR,"Only found %d edges for bottom",k);
-		return 0;
+		return -2;
 	}
 
 	

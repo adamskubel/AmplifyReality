@@ -119,7 +119,7 @@ void ARController::Initialize(Engine * engine)
 	worldLoader = new WorldLoader();
 
 	//FastQRFinder
-	fastQRFinder = NULL; //new FastQRFinder(debugUI);
+	fastQRFinder = new FastQRFinder(debugUI);
 
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
@@ -195,33 +195,6 @@ void ARController::SetState(ControllerStates::ControllerState newState)
 }
 
 
-static void DoFastDetection(Mat & img, vector<Drawable*> & debugVector, int fastThreshold)
-{
-	vector<KeyPoint> kpVec;
-	bool suppress = (fastThreshold > 12);
-	if (suppress)
-	{
-		fastThreshold -=3;
-	}
-
-	LOGD(LOGTAG_QR,"Calling FAST, thresh = %d, supress = %d",fastThreshold,suppress);
-	struct timespec start,end;
-	SET_TIME(&start);
-	cv::FAST(img,kpVec,fastThreshold,true);
-	SET_TIME(&end);
-	LOG_TIME("FAST", start, end);
-	if (kpVec.size() > 0)
-	{
-		KeyPoint first = kpVec.at(0);
-		LOGD(LOGTAG_QR,"Keypoint #1: angle=%f,octave=%d,size=%f,response=%f,classid=%d",first.angle,first.octave,first.size,first.response,first.class_id);
-	}
-	for (int i=0;i<kpVec.size();i++)
-	{
-		debugVector.push_back(new DebugCircle(Point2i(kpVec.at(i).pt.x,kpVec.at(i).pt.y),5,Colors::Lime,false));
-	}
-}
-
-
 void ARController::ProcessFrame(Engine * engine)
 {
 	if (!isInitialized)
@@ -258,7 +231,7 @@ void ARController::ProcessFrame(Engine * engine)
 
 	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector,decode);
 	
-	//fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
+	fastQRFinder->EnhanceQRCodes(*grayImage, item->qrCode, debugVector);
 	
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	
