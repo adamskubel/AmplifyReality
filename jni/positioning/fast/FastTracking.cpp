@@ -14,13 +14,13 @@
 //6. Choose most square, mark corners
 void FastTracking::DoFastTracking(Mat & img, QRCode * code, vector<Drawable*> & debugVector)
 {
-	if (code == NULL || code->finderPatterns == NULL)
+	if (code == NULL)
 		return;
 
-//	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns->size());
-	for (int i=0;i<code->finderPatterns->size();i++)
+//	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns.size());
+	for (int i=0;i<code->finderPatterns.size();i++)
 	{
-		FinderPattern * fp = code->finderPatterns->at(i);
+		FinderPattern * fp = code->finderPatterns.at(i);
 		if (fp->size == 0)
 			continue;
 		
@@ -277,10 +277,10 @@ void FastTracking::DoSquareTracking(Mat & img, QRCode * code, vector<Drawable*> 
 	if (code == NULL || code->finderPatterns == NULL)
 		return;
 
-	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns->size());
-	for (int i=0;i<code->finderPatterns->size();i++)
+	LOGD(LOGTAG_QRFAST,"Starting fast tracking. %d patterns found.",code->finderPatterns.size());
+	for (int i=0;i<code->finderPatterns.size();i++)
 	{
-		FinderPattern * fp = code->finderPatterns->at(i);
+		FinderPattern * fp = code->finderPatterns.at(i);
 		
 		float size = fp->size;
 		size *= 1.2f; //Window a bit bigger.

@@ -8,7 +8,7 @@ int AlignmentPatternHelper::MinimumAlignmentPatternScore = 180;
 void AlignmentPatternHelper::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Drawable*>& debugVector)
 {
 	Point2i searchCenter = newCode->alignmentPattern;
-	float finderPatternSize = newCode->finderPatterns->at(0)->size;
+	float finderPatternSize = newCode->finderPatterns.at(0)->size;
 	
 	int startX = searchCenter.x - finderPatternSize, endX = searchCenter.x + finderPatternSize;
 	if (startX < 0)

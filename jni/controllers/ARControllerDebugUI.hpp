@@ -37,6 +37,10 @@ public:
 	float GetFloatParameter(std::string paramKey);
 	bool GetBooleanParameter(std::string paramKey);
 	int GetIntegerParameter(std::string paramKey);
+	
+	//float GetFloatParameter(std::string paramKey, float defaultValue = 0);
+	//bool GetBooleanParameter(std::string paramKey, bool defaultValue = false);
+	//int GetIntegerParameter(std::string paramKey, int defaultValue = 0);
 
 
 	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);

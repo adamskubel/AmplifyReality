@@ -133,38 +133,13 @@ void OpenGL::DrawGLObject(GLObject *object)
 }
 
 void OpenGL::EndFrame()
-{	
-	
-	//float * params = new float[16];
-	//glGetUniformfv(uiProgramObject,renderData.modelMatrixLocation,params);
-
-	//for (int i=0;i<16;i++)
-	//{
-	//	LOGD(LOGTAG_OPENGL,"Model[%d]=%f",i,params[i]);
-	//}
-
-	//delete params;
-
-	//params = new float[16];
-	//glGetUniformfv(uiProgramObject,renderData.projectionMatrixLocation,params);
-
-	//for (int i=0;i<16;i++)
-	//{
-	//	LOGD(LOGTAG_OPENGL,"Project[%d]=%f",i,params[i]);
-	//}
-	//
-	//delete params;
-	//
-	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	//glFlush();
+{		
 	eglSwapBuffers( eglDisplay, eglSurface);
 }
 
 
 void OpenGL::InitializeShaders()
 {
-	//GLuint  ui32Vbo = 0; // Vertex buffer object handle 
-
 	LOGI(LOGTAG_OPENGL,"Initializing shaders");	
 	const char * g_strVSProgram =
 		"\
@@ -285,27 +260,6 @@ void OpenGL::InitializeShaders()
 		renderData.projectionMatrixLocation,renderData.modelMatrixLocation,renderData.vertexArrayLocation,
 		renderData.colorArrayLocation);
 	LOGI(LOGTAG_OPENGL,"Complete. That's it, so...shader initialization complete!");
-
-	//float pfIdentity[] = 
-	//{ 11.0f, 0.0f, 0.0f, 0.0f, 
- //     0.0f, 11.0f, 0.0f, 0.0f, 
- //     0.0f, 0.0f, 11.0f, 0.0f, 
- //     0.0f, 0.0f, 0.0f, 11.0f }; 
-	//
-	//
-	//LOGD(LOGTAG_OPENGL,"Projection matrix location=%d",renderData.projectionMatrixLocation);
-	//glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_TRUE,pfIdentity);
-
-	//
-	//float * params = new float[16];
-	//glGetUniformfv(uiProgramObject,renderData.projectionMatrixLocation,params);
-
-	//for (int i=0;i<16;i++)
-	//{
-	//	LOGD(LOGTAG_OPENGL,"InitCamera[%d]=%f",i,params[i]);
-	//}
-
-	//delete params;
 
 }
 

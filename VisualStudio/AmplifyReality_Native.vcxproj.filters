@@ -403,6 +403,9 @@
     <ClCompile Include="..\jni\positioning\fast\Clustering.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\QRCode.cpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -601,12 +604,6 @@
       <Filter>Header Files\zxing\qrcode\decoder</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp">
-      <Filter>Header Files\positioning\qrcode</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper.hpp">
-      <Filter>Header Files\positioning\qrcode</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\FindPattern.h">

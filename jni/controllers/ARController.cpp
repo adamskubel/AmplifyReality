@@ -26,8 +26,6 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 	
 	//Create locator object
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
-	//Create QRFinder
-	qrFinder = new QRFinder();
 
 	//Initialize image matrices
 	grayImage = new Mat();
@@ -90,6 +88,10 @@ void ARController::initializeUI(Engine * engine)
 	collection->AddChild(debugUI);
 	drawObjects.push_back(debugUI);
 	deletableObjects.push_back(debugUI);
+
+	
+	//Create QRFinder
+	qrFinder = new QRFinder(debugUI);
 			
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
 		
@@ -117,7 +119,7 @@ void ARController::Initialize(Engine * engine)
 	worldLoader = new WorldLoader();
 
 	//FastQRFinder
-	fastQRFinder = new FastQRFinder(debugUI);
+	fastQRFinder = NULL; //new FastQRFinder(debugUI);
 
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
@@ -247,16 +249,16 @@ void ARController::ProcessFrame(Engine * engine)
 	getImages(engine);
 		
 	AlignmentPatternHelper::MinimumAlignmentPatternScore = 190;// debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
-	FinderPatternHelper::MinimumFinderPatternScore = 180;// debugUI->GetParameter("MinFPScore");
+	QRFinder::MinimumFinderPatternScore = 180;// debugUI->GetParameter("MinFPScore");
 
 	vector<Drawable*> debugVector;
 
 	bool decode = (controllerState == ControllerStates::Loading && (worldLoader != NULL && worldLoader->GetState() == WorldStates::LookingForCode));
 	LOGV(LOGTAG_ARCONTROLLER,"Decoding=%d",decode);
 
-	//item->qrCode = qrFinder->LocateQRCodes(*binaryImage, debugVector,decode);
+	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector,decode);
 	
-	fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
+	//fastQRFinder->FindQRCodes(*grayImage, *binaryImage, debugVector);
 	
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	

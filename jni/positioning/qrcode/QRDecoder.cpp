@@ -16,9 +16,9 @@ QRDecoder::~QRDecoder()
 void QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable*> & debugVector)
 {
 	float moduleSize = 0;
-	for (int i=0;i<qrCode->finderPatterns->size();i++)
+	for (int i=0;i<qrCode->finderPatterns.size();i++)
 	{
-		moduleSize += qrCode->finderPatterns->at(i)->size;
+		moduleSize += qrCode->finderPatterns.at(i)->size;
 	}
 	moduleSize /= 21.0f;
 
@@ -32,10 +32,10 @@ void QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 	Point2i bottomRight_Alignment = Point2i((int)round((numModulesPerSide-7.5f)*moduleSize), (int)round((numModulesPerSide-7.5f)*moduleSize));
 	Point2i bottomLeft = Point2i(topLeft.x, (int)round(topLeft.y + (numModulesPerSide-7.0f)*moduleSize));
 
-	Point2i imageTopLeft = qrCode->finderPatterns->at(0)->pt;
-	Point2i imageTopRight = qrCode->finderPatterns->at(1)->pt;
+	Point2i imageTopLeft = qrCode->finderPatterns.at(0)->pt;
+	Point2i imageTopRight = qrCode->finderPatterns.at(1)->pt;
 	Point2i imageBottomRight_Alignment = qrCode->alignmentPattern;
-	Point2i imageBottomLeft = qrCode->finderPatterns->at(2)->pt;
+	Point2i imageBottomLeft = qrCode->finderPatterns.at(2)->pt;
 
 #ifdef QR_DECODE_DEBUGGING
 	LOGV(LOGTAG_QR,"Creating perspective transform");
