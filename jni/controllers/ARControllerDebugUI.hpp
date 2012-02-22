@@ -63,7 +63,6 @@ private:
 
 	DataDisplay * translationLabel;
 	DataDisplay * rotationLabel;
-	Label * fpsLabel;
 	CertaintyIndicator * certaintyIndicator;
 	Label * stateLabel;
 	map<std::string,float> parameterMap;

@@ -83,6 +83,7 @@ private:
 
 	//UI objects
 	ARControllerDebugUI * debugUI;
+	Label * fpsLabel;//FPS is special, so store label here
 
 	//Return a rectangle that centered on the centroid of the given points, with a length and width given by borderSize
 	Rect createWindow(Point_<int> * points, int borderSize);
@@ -102,7 +103,9 @@ private:
 	int frameCount;
 	float fpsAverage;
 	struct timespec lastFrameTime;
-	bool enableUIDrawing;
+	int drawingLevel;
+
+	bool paused;
 
 };
 

@@ -16,6 +16,7 @@
 #include "AlignmentPatternHelper.hpp"
 #include "positioning/fast/FastTracking.hpp"
 #include "controllers/ARControllerDebugUI.hpp"
+#include <map>
 
 
 using namespace cv;
@@ -32,20 +33,28 @@ public:
 	static int MinimumFinderPatternScore;
 
 private:
-	//void FindFinderPatterns(cv::Mat& M, FinderPattern_vector * fpv, vector<Drawable*> & debugVector);
-	void FindFinderPatterns(cv::Mat& M, vector<FinderPattern*> & fpv, vector<Drawable*> & debugVector);
-	void DoFastDetection(Mat & img, vector<Drawable*> & debugVector);
-	static bool CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
-	static bool CheckRatios2(int bw[], int bw2[]);
-	static int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int debugLevel);
-	static int FindCenterHorizontal(const Mat& image, int x, int y, int fpbw[], int yDelta = 0);
+	void FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fpv, vector<Drawable*> & debugVector);
+
+	bool CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
+
+	int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector);
+	int FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], vector<Drawable*> & debugVector);
 	static bool GetEdges(const Mat& image, Point2i start, int xDir, int yDir, int * Q);
+
+	void FindEdgesVerticalClosed(const Mat & inputImg, int xPosition);
+
 	//static int SkipHeuristic(FinderPattern_vector * fpv);
 
-	double finderPatternTime;
+	double finderPatternTime, edgeTime;
 	ARControllerDebugUI * config;
 	QRDecoder * qrDecoder;	
-	
+	Size2i imgSize;
+	Mat edgeArray;
+	Mat verticalEdgeArray;
+	map<int,bool> calculatedEdges;
+
+	int debugLevel, edgeThreshold, detectorSize, minimumFinderPatternScore;
+	bool nonMaxEnabled;
 };
 
 #endif 

@@ -11,13 +11,26 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
 	config = _debugUI;
 
 	finderPatternTime = 0;
+	edgeTime = 0;
+	debugLevel = 1;
+	nonMaxEnabled = true;
+	edgeThreshold = 10;
+	detectorSize = 2;
+	minimumFinderPatternScore = 180;
 
-	config->AddNewParameter("EdgeThreshold",10,1,0,255,"%3.0f",2);
-	config->AddNewParameter("DebugLevel",1,1,-1,5,"%3.0f",2);
+	config->AddNewParameter("EdgeThreshold",edgeThreshold,1,0,255,"%3.0f",2);
+	config->AddNewParameter("MinimumFPScore",minimumFinderPatternScore,10,0,400,"%3.0f",2);
+	config->AddNewParameter("DetectorSize",detectorSize,1,1,5,"%1.0f",2);
+	config->AddNewParameter("DebugLevel",debugLevel,1,-3,5,"%3.0f",2);
 	config->AddNewParameter("YResolution",2,1,1,50,"%2.0f",2);
+	config->AddNewParameter("EdgeNonMax",(float)nonMaxEnabled,1,0,1,"%1.0f",2);
 	
 	config->AddNewLabel("FinderPatternTime"," ms",1);
+	config->AddNewLabel("EdgeTime"," ms",1);
 	//config->AddNewParameter("LogDebugLvl",0,1,0,3,"%3.0f",2);
+
+	//Initialize matrix size variables
+	imgSize = Size2i(0,0);
 }
 
 QRFinder::~QRFinder()

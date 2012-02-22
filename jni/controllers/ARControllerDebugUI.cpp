@@ -9,9 +9,7 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	
 	AddChild(firstPage);
 	
-	
-	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
-	firstPage->AddChild(fpsLabel,Point2i(0,0));
+	/*firstPage->AddChild(fpsLabel,Point2i(0,0));*/
 
 	GridLayout * myGrid = new GridLayout(Size2i(3,6));	
 
@@ -242,9 +240,9 @@ void ARControllerDebugUI::DrawmodeSelectionChanged(void * sender, SelectionChang
 
 void ARControllerDebugUI::SetFPS(float fps)
 {
-	char fpsString[100];
+	/*char fpsString[100];
 	sprintf(fpsString,"FPS=%3.1f",fps);
-	fpsLabel->SetText(fpsString);
+	fpsLabel->SetText(fpsString);*/
 }
 
 

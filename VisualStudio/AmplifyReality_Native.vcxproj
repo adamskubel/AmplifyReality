@@ -67,6 +67,7 @@
     <ClCompile Include="..\jni\datacollection\ImageProcessor.cpp" />
     <ClCompile Include="..\jni\datacollection\SensorCollector.cpp" />
     <ClCompile Include="..\jni\datastructures\CircularList.cpp" />
+    <ClCompile Include="..\jni\display\DebugDrawing.cpp" />
     <ClCompile Include="..\jni\display\model\ARObject.cpp" />
     <ClCompile Include="..\jni\display\model\AugmentedView.cpp" />
     <ClCompile Include="..\jni\display\objloader\list.cpp" />

@@ -82,10 +82,7 @@ public:
 	}
 
 
-	void Draw(Mat * rgbaImage)
-	{		
-		circle(*rgbaImage,center,radius,color,thickness);
-	}
+	void Draw(Mat * rgbaImage);
 
 private:
 	Point2i center;
@@ -151,6 +148,9 @@ public:
 		fillColor = _color;
 		thickness = _thickness;
 	}
+	
+	DebugLine(Point2i center, int width, Scalar _color, int _thickness = 1);
+	DebugLine(Point2i center, Size2i size, Scalar _color, int _thickness = 1);
 	
 	~DebugLine()
 	{

@@ -406,6 +406,9 @@
     <ClCompile Include="..\jni\positioning\qrcode\QRCode.cpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\display\DebugDrawing.cpp">
+      <Filter>Header Files\display</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -618,9 +621,6 @@
     <ClInclude Include="..\jni\positioning\qrcode\QRDecoder.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\qrcode\QRFinder.hpp">
-      <Filter>Header Files\positioning\qrcode</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\QRLocator.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
@@ -776,6 +776,9 @@
     </ClInclude>
     <ClInclude Include="..\jni\positioning\fast\Clustering.hpp">
       <Filter>Header Files\positioning\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\QRFinder.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

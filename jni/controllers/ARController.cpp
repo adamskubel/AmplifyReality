@@ -53,7 +53,7 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 		
 	frameCount = 0;
 	fpsAverage = 0;
-
+	paused = false;
 	LOGI(LOGTAG_ARCONTROLLER,"ARController Instantiation Complete");
 }
 
@@ -96,7 +96,11 @@ void ARController::initializeUI(Engine * engine)
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
-	
+		
+	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
+	fpsLabel->DoLayout(Rect(10,10,30,15));
+
+
 	deletableObjects.push_back(collection);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(debugUI);
@@ -131,15 +135,20 @@ void ARController::Initialize(Engine * engine)
 	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<ARController,&ARController::HandleButtonPress>(this));
 
 	isInitialized = true;
-	enableUIDrawing = true;
+	drawingLevel = 3;
 	LOGD(LOGTAG_ARCONTROLLER,"Initialization complete");
 }
 
 void ARController::HandleButtonPress(void * sender, PhysicalButtonEventArgs args)
 {
-	if (args.ButtonCode == AKEYCODE_MENU)
+	if (args.ButtonCode == AKEYCODE_SEARCH)
 	{
-		enableUIDrawing = !enableUIDrawing;
+		drawingLevel++;
+		drawingLevel = drawingLevel % 4; //0 = no drawing, 1 = debug draw only, 2 = UI only, 3 = all drawings
+	}
+	else if (args.ButtonCode == AKEYCODE_MENU)
+	{
+		paused = !paused;
 	}
 }
 
@@ -148,6 +157,7 @@ void ARController::Teardown(Engine * engine)
 	if (!isInitialized)
 		return;
 
+	delete fpsLabel;
 	LOGI(LOGTAG_ARCONTROLLER,"Teardown complete");
 }
 
@@ -208,8 +218,9 @@ void ARController::ProcessFrame(Engine * engine)
 	lastFrameTime = currentTime;
 	float frameFps = (float)(1000000.0/frameTimeMicrosec);
 	fpsAverage = (fpsAverage+frameFps)/2.0f;
-	debugUI->SetFPS(fpsAverage);
-
+	char fpsString[10];
+	sprintf(fpsString,"%3.1f",fpsAverage);
+	fpsLabel->SetText(fpsString);
 
 
 	//This section is the default per-frame operations
@@ -217,9 +228,17 @@ void ARController::ProcessFrame(Engine * engine)
 	item->clearOldData();
 	//engine->getTime(&item->time);
 	
-	LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d, FPS=%f. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
-		frameCount,fpsAverage,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
-	getImages(engine);
+	//LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d, FPS=%f. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
+		//frameCount,fpsAverage,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
+
+	//If paused, keep reusing image until unpaused
+	if (!paused)
+		getImages(engine);
+	else
+	{
+		//Need to refresh the RGB image
+		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
+	}
 		
 	AlignmentPatternHelper::MinimumAlignmentPatternScore = 190;// debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
 	QRFinder::MinimumFinderPatternScore = 180;// debugUI->GetParameter("MinFPScore");
@@ -235,19 +254,33 @@ void ARController::ProcessFrame(Engine * engine)
 	
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	
-	/*if (item->qrCode != NULL)
-		item->qrCode->Draw(rgbImage);*/
-	struct timespec draw_start, draw_end;
-	SET_TIME(&draw_start);
-	while (!debugVector.empty())
+	if (drawingLevel == 1 || drawingLevel == 3)
 	{
-		debugVector.back()->Draw(rgbImage);
-		delete debugVector.back();
-		debugVector.pop_back();
+		/*if (item->qrCode != NULL)
+			item->qrCode->Draw(rgbImage);*/
+		struct timespec draw_start, draw_end;
+		SET_TIME(&draw_start);
+		while (!debugVector.empty())
+		{
+			debugVector.back()->Draw(rgbImage);
+			delete debugVector.back();
+			debugVector.pop_back();
+		}
+		SET_TIME(&draw_end);
+		LOG_TIME_PRECISE("DebugDrawing",draw_start,draw_end);
 	}
-	SET_TIME(&draw_end);
-	LOG_TIME_PRECISE("DebugDrawing",draw_start,draw_end);
-	
+	else //Still need to clean up debug vector!!!!
+	{
+		struct timespec draw_start, draw_end;
+		SET_TIME(&draw_start);
+		while (!debugVector.empty())
+		{
+			delete debugVector.back();
+			debugVector.pop_back();
+		}
+		SET_TIME(&draw_end);
+		LOG_TIME_PRECISE("DebugCleanup",draw_start,draw_end);
+	}
 
 	//What happens past here depends on the state
 	if (controllerState == ControllerStates::Loading)
@@ -329,7 +362,8 @@ void ARController::ProcessFrame(Engine * engine)
 
 void ARController::Draw(Mat * rgbaImage)
 {
-	if (enableUIDrawing)
+	fpsLabel->Draw(rgbaImage);
+	if (drawingLevel == 2 || drawingLevel == 3)
 	{
 		struct timespec start,end;
 		SET_TIME(&start);

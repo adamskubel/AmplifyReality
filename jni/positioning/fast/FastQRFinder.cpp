@@ -33,7 +33,7 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f",2);
 	config->AddNewParameter("FlannSearchParams",32,32,32,64,"%2.0f",2);
 		
-	config->AddNewParameter("FAST Debug Level","FASTDebug",3,1,-2,4,"%2.0f",2);
+	config->AddNewParameter("FAST Debug Level","FASTDebug",0,1,-2,4,"%2.0f",2);
 	
 	config->AddNewParameter("Post-NonMaxSupress Size","MaxThreshSize",2,1,0,25,"%2.0f",2);
 	config->AddNewParameter("Post-NonMaxSupress Count","MaxThreshCount",2,1,0,25,"%2.0f",2);
@@ -512,16 +512,18 @@ static void FastWindow(Mat & inputImg, vector<KeyPoint> & features, Rect window,
 
 void FastQRFinder::EnhanceQRCodes(Mat & img, QRCode * code, vector<Drawable*> & debugVector)
 {
+	int debugLevel = (int)config->GetParameter("FASTDebug");
 	for (int i=0;i<code->finderPatterns.size();i++)
 	{
 		FinderPattern * fp = code->finderPatterns.at(i);
 		if (fp->size == 0)
 			continue;
 		
-		float windowSize = fp->size * 1.2f;  //Window a bit bigger.
+		float windowSize = fp->size * 1.4f;  //Window needs to be bigger to account for diagonals
 	
 		Rect window = Rect(fp->pt.x - windowSize/2.0f, fp->pt.y-windowSize/2.0f, windowSize,windowSize);
-		debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
+		if (debugLevel > 0)
+			debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
 
 		LocateFPCorners(img, window,debugVector);
 	}
