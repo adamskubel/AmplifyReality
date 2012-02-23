@@ -240,9 +240,6 @@ void ARController::ProcessFrame(Engine * engine)
 		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
 	}
 		
-	AlignmentPatternHelper::MinimumAlignmentPatternScore = 190;// debugUI->GetParameter("MinAlignScore");//lol static. THIS IS BAD!
-	QRFinder::MinimumFinderPatternScore = 180;// debugUI->GetParameter("MinFPScore");
-
 	vector<Drawable*> debugVector;
 
 	bool decode = (controllerState == ControllerStates::Loading && (worldLoader != NULL && worldLoader->GetState() == WorldStates::LookingForCode));

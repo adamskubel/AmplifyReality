@@ -1,246 +1,378 @@
-#include "AlignmentPatternHelper.hpp"
+#include "QRFinder.hpp"
 
 
-int AlignmentPatternHelper::MinimumAlignmentPatternScore = 180;
+#define AP_DEBUG_ENABLED true
 
-//#define DRAW_AP_DEBUG_LAYER
 
-void AlignmentPatternHelper::FindAlignmentPattern(Mat & M, QRCode * newCode, vector<Drawable*>& debugVector)
+void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Drawable*>& debugVector)
 {
 	Point2i searchCenter = newCode->alignmentPattern;
 	float finderPatternSize = newCode->finderPatterns.at(0)->size;
-	
+
+	minimumAlignmentPatternScore = config->GetIntegerParameter("MinimumAPScore");
+	alignDebugLevel = config->GetIntegerParameter("AlignDebug");
+	int verticalResolution = config->GetIntegerParameter("YResolution");
+
 	int startX = searchCenter.x - finderPatternSize, endX = searchCenter.x + finderPatternSize;
 	if (startX < 0)
 		startX = 0;
-	if (endX >= M.cols)
-		endX = M.cols -1;
+	if (endX >= edgeArray.cols)
+		endX = edgeArray.cols -1;
 
 	int startY = searchCenter.y- finderPatternSize, endY = searchCenter.y + finderPatternSize;
-	if (startY < 0)
-		startY = 0;
-	if (endY >= M.rows)
-		endY = M.rows -1;
-#ifdef DRAW_AP_DEBUG_LAYER
-	debugVector.push_back(new DebugRectangle(Rect(Point2i(startX,startY),Point2i(endX,endY)),Colors::CornflowerBlue));
-#endif
-	for (int y = startY;y<endY;y+=2)
+	if (startY < 0) startY = 0;
+	if (endY >= edgeArray.rows) endY = edgeArray.rows -1;
+
+	Rect searchRegion = Rect(Point2i(startX,startY),Point2i(endX,endY));
+
+
+	if (alignDebugLevel > 0)
+		debugVector.push_back(new DebugRectangle(Rect(Point2i(startX,startY),Point2i(endX,endY)),Colors::GreenYellow,1));
+
+	for (int y = startY;y < endY; y += verticalResolution)
 	{
-		int bw[3] = { 0 };
+		int patternWidths[4] = { 0 };
 		int k = 0;
-		bw[0] = bw[1] = bw[2] = 0;
-		const unsigned char * rowPointer = M.ptr<unsigned char>(y);
+		patternWidths[0] = patternWidths[1] = patternWidths[2] = patternWidths[3] = 0;
+		const short * rowPointer = edgeArray.ptr<short>(y);
+
 		for (int x = startX;x<endX;x++)
 		{
-			unsigned char px = rowPointer[x];
+			short transition = rowPointer[x];
 
-			if (px != 0) /* White Pixel found*/
+			if (k == 0) //Haven't found edge yet
 			{
-				++bw[k];
-				if (k == 1) /* Were counting black pixels, change state to count white pixels. */
-				{
+				if (transition > 0) //Pattern starts on dark->light
+				{					
+					k++;
+				}
+			}
+			else if (k == 1) 
+			{
+				if (transition < 0) //Center of pattern starts
+				{					
 					++k;
 				}
 			}
-			else if (bw[0] != 0) /* Black Pixel found. Ensure white pixel was first */
+			else if (k == 2) 
 			{
-				++bw[k];
-				if (k != 1) /* Were counting white pixels, change state to count black pixels. */
-				{
+				if (transition > 0) //Rightmost white pattern area
+				{					
+					++k;
+				}
+			}
+			else if (k == 3) 
+			{
+				if (transition < 0) //End of pattern
+				{					
 					++k;
 				}
 			}
 
-			if (k == 3)
+			//Increment once pattern is found
+			if (k > 0)
 			{
-				if (CheckAlignmentRatios(bw,finderPatternSize))
-				{
-					int tx = (x - bw[2]) - (bw[1] / 2); /* Calculate temporary horizontal center from end of pattern. */
-					int verticalBw[3] = {0,0,0};
-					int ty = FindAlignmentCenterVertical(M, tx, y,finderPatternSize,verticalBw,bw);
+				++patternWidths[k-1];
+			}
 
-					if (ty != 0)
+			if (k == 4)
+			{
+				if (CheckAlignmentRatios(patternWidths,finderPatternSize))
+				{
+					//Center based on initial detection
+					int tempXCenter = (x - patternWidths[2]) - (patternWidths[1] / 2);
+					int verticalPatternWidths[3] = {0,0,0};
+
+					//Vertical center
+					int tempYCenter = FindAlignmentCenterVertical(inputImg,searchRegion, tempXCenter, y,finderPatternSize,verticalPatternWidths,patternWidths, debugVector);
+
+					if (tempYCenter > 0)
 					{
-						int horizontalBw[3] = {0,0,0};
-						int t = FindAlignmentCenterHorizontal(M, tx, ty, finderPatternSize, verticalBw, horizontalBw); /* Calculate it again. */
+						int horizontalPatternWidths[3] = {0,0,0};
+						int xCenterTest = FindAlignmentCenterHorizontal(searchRegion, tempXCenter, tempYCenter, finderPatternSize, verticalPatternWidths, horizontalPatternWidths, debugVector); 
 
-						if (t!= 0)
+						if (xCenterTest > 0)
 						{								
-							tx = t;					
-							if (CheckAlignmentDiagonals(M,Point2i(tx,ty),verticalBw,horizontalBw,debugVector))
+							tempXCenter = xCenterTest;					
+							if (CheckAlignmentDiagonals(inputImg,Point2i(tempXCenter,tempYCenter),verticalPatternWidths,horizontalPatternWidths,debugVector))
 							{									
-								int aPSize =  horizontalBw[2] + horizontalBw[1] + horizontalBw[0];
-#ifdef DRAW_AP_DEBUG_LAYER
-								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::Lime));
-#endif
-								newCode->alignmentPattern = Point2i(tx,ty);
+								int apXSize =  horizontalPatternWidths[2] + horizontalPatternWidths[1] + horizontalPatternWidths[0];
+								int apYSize =  verticalPatternWidths[2] + verticalPatternWidths[1] + verticalPatternWidths[0];
+
+								int alignPatternSize = MAX(apXSize,apYSize);
+
+								if (alignDebugLevel > 0)
+									debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),((float)alignPatternSize/2.0f), Colors::Lime));
+
+								newCode->alignmentPattern = Point2i(tempXCenter,tempYCenter);
 								return;
 							}	
 							else
 							{			
-#ifdef DRAW_AP_DEBUG_LAYER
-								debugVector.push_back(new DebugCircle(Point2i(tx,ty),20, Colors::PeachPuff));
-#endif		
+								if (alignDebugLevel > 1)
+									debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),12, Colors::BlueViolet,1));
+
 							}
 						}
 						else
 						{
-#ifdef DRAW_AP_DEBUG_LAYER
-							debugVector.push_back(new DebugCircle(Point2i(tx,ty),10, Colors::Gold));
-#endif		
+							if (alignDebugLevel > 2)
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),12, Colors::OrangeRed,1));
+
 						}
 					}
 					else
 					{
-#ifdef DRAW_AP_DEBUG_LAYER
-						debugVector.push_back(new DebugCircle(Point2i(tx,y),3,Colors::Red,-1));
-#endif					
+						if (alignDebugLevel > 3)
+						{
+							if (tempYCenter == 0) //ratio fail
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Aqua,1));
+							else if (tempYCenter == -1)	//topcheck fail				
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Orange,1));
+							else if (tempYCenter == -2)	//bottomcheck fail							
+								debugVector.push_back(new DebugCircle(Point2i(tempXCenter,y),10,Colors::Lime,1));
+						}
 					}
 
 				}
-				k = 1;
-				bw[0] = bw[2];
-				bw[1] = 0;
-				bw[2] = 0;
+				else
+				{
+					if (alignDebugLevel > 4)
+						debugVector.push_back(new DebugCircle(Point2i(x,y),4,Colors::Maroon,1));
+				}
+				k = 2;
+				patternWidths[0] = patternWidths[2];
+				patternWidths[1] = patternWidths[3];
+				patternWidths[2] = 0;
+				patternWidths[3] = 0;
 			}
 		}
 	}
 }
 
-int AlignmentPatternHelper::FindAlignmentCenterVertical(const Mat& image, int x, int y, int finderPatternSize, int * bw, int * horizontalBw)
+int QRFinder::FindAlignmentCenterVertical(const Mat & image, Rect searchRegion, int x, int y, int finderPatternSize, 
+	int * verticalWidths, int * horizontalWidths, vector<Drawable*> & debugVector)
 {
-	//LOGD("FindCenterVertical_Start");
-	//int bw[3] = { 0 };
+	int debugCircleSize = 3;
+	int debugThickness = 1;
 
+	int k = 0;
 	int i = y;
+	verticalWidths[0] = verticalWidths[1] = verticalWidths[2] = 0;
 
-	/* Calculate vertical finder pattern up from the center. */
-	for (; i > 0 && image.at<unsigned char>(i, x) == 0 && bw[1] < finderPatternSize; ++bw[1], --i)
-		;
+	FindEdgesVerticalClosed(image,x);
+	const short * rowPtr = verticalEdgeArray.ptr<short>(x);
 
-	if (i == 0 || bw[1] >= finderPatternSize)
-	{
-		return 0;
+	for (; i >= searchRegion.y; i --)
+	{		
+		int transition = -rowPtr[i]; //invert because we are moving up
+
+		if (k == 0) //Haven't found edge yet
+		{
+			++verticalWidths[1];
+			if (transition > 0) //dark to light
+			{	
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),debugCircleSize,Colors::Aquamarine,1));
+				k++;
+			}
+		}
+		else if (k == 1) 
+		{
+			++verticalWidths[0];
+			if (transition < 0) //light->dark, end of pattern
+			{
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),debugCircleSize,Colors::SeaGreen,1));
+				++k;
+				break;
+			}
+		}
 	}
 
-	for (; i > 0 && image.at<unsigned char>(i, x) != 0 && bw[0] < finderPatternSize; ++bw[0], --i)
-		;
-
-	if (i == 0 || bw[0] >= finderPatternSize)
+	if (k != 2)
 	{
-		return 0;
+		return -1;
 	}
 
-	/* Calculate vertical finder pattern down from the center. */
-	i = y + 1;
-	for (; i < image.rows && image.at<unsigned char>(i, x) == 0 && bw[1] < finderPatternSize; ++bw[1], ++i)
-		;
+	i = y;
+	k = 0;
+	for (; i < (searchRegion.y + searchRegion.height); i++)
+	{		
+		int transition = rowPtr[i];
 
-	if (i == image.rows || bw[1] >= finderPatternSize)
-	{
-		return 0;
+		if (k == 0) //Haven't found edge yet
+		{
+			++verticalWidths[1];
+			if (transition > 0) //dark to light
+			{	
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),debugCircleSize,Colors::Yellow,1));
+				k++;
+			}
+		}
+		else if (k == 1) 
+		{
+			++verticalWidths[2];
+			if (transition < 0) //light to dark, pattern end
+			{
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(x,i),debugCircleSize,Colors::Orange,1));
+				++k;
+				break;
+			}
+		}
 	}
 
-	for (; i < image.rows && image.at<unsigned char>(i, x) != 0 && bw[2] < finderPatternSize; ++bw[2], ++i)
-		;
-	if (i == image.rows || bw[2] >= finderPatternSize)
+	if (k != 2)
 	{
-		return 0;
+		return -2;
 	}
+	--verticalWidths[1];
 
-
-	if (CheckAlignmentRatios(bw, horizontalBw) == false)
+	if (CheckAlignmentRatios(verticalWidths, horizontalWidths) == false)
 	{
-		//LOGV(LOGTAG_QR,"FindAlignmentCenterVertical F: BW= %d,%d,%d",bw[0],bw[1],bw[2]);
+		//LOGV(LOGTAG_QR,"FindAlignmentCenterVertical F: verticalWidths= %d,%d,%d",verticalWidths[0],verticalWidths[1],verticalWidths[2]);
 		//LOGV(LOGTAG_QR,"Failed ratio check for finding vertical center, FPSize=%d",finderPatternSize);
 		return 0;
 	}
 
-	return (i - bw[2]) - (bw[1] / 2);
+	return (i - verticalWidths[2]) - (verticalWidths[1] / 2);
 }
 
-bool AlignmentPatternHelper::CheckAlignmentDiagonals(const Mat& image, Point2i center, int * verticalBw, int * horizontalBw, vector<Drawable*> & debugVector)
+bool QRFinder::CheckAlignmentDiagonals(const Mat& image, Point2i center, int * verticalWidths, int * horizontalBw, vector<Drawable*> & debugVector)
 {
 	int xMin = center.x - (horizontalBw[0] + horizontalBw[1])/2;
 
 	int xMax = center.x + (horizontalBw[2] + horizontalBw[1])/2;
-	
 
-	int  yMin = center.y - (verticalBw[0] + verticalBw[1])/2;
-	int  yMax = center.y + (verticalBw[2] + verticalBw[1])/2;
-#ifdef DRAW_AP_DEBUG_LAYER
-	debugVector.push_back(new DebugRectangle(Rect(Point2i(xMin,yMin), Point2i(xMax,yMax)),Colors::Red));
-#endif
+
+	int  yMin = center.y - (verticalWidths[0] + verticalWidths[1])/2;
+	int  yMax = center.y + (verticalWidths[2] + verticalWidths[1])/2;
+		
+	//Check upper Y
+	short * rowPtr = edgeArray.ptr<short>(yMin);
 	int j = xMin;
-	for (; j < xMax && image.at<unsigned char>(yMin,j) != 0; j++)
-		;
-
+	
+	for (; j < xMax && rowPtr[j] == 0; j++);
 	if (j < xMax)
+	{
+		if (AP_DEBUG_ENABLED && alignDebugLevel > 1)
+		{
+			debugVector.push_back(new DebugLine(Point2i(xMin,yMin), Point2i(xMax,yMin),Colors::Red));		
+		}
 		return false;
+	}
 
+	if (AP_DEBUG_ENABLED && alignDebugLevel > 1)
+		debugVector.push_back(new DebugLine(Point2i(xMin,yMin), Point2i(xMax,yMin),Colors::DeepSkyBlue));
+
+	//Check lower Y
+	rowPtr = edgeArray.ptr<short>(yMax);
 	j = xMin;
-	for (; j < xMax && image.at<unsigned char>(yMax,j) != 0; j++)
-		;
 
+	for (; j < xMax && rowPtr[j] == 0; j++);
 	if (j < xMax)
+	{
+		if (AP_DEBUG_ENABLED && alignDebugLevel > 1)
+			debugVector.push_back(new DebugRectangle(Rect(Point2i(xMin,yMax), Point2i(xMax,yMax)),Colors::DeepPink));
 		return false;
+	}
+	
+	if (AP_DEBUG_ENABLED && alignDebugLevel > 1)
+		debugVector.push_back(new DebugRectangle(Rect(Point2i(xMin,yMax), Point2i(xMax,yMax)),Colors::DeepSkyBlue));
 
 	return true;
 }
 
-int AlignmentPatternHelper::FindAlignmentCenterHorizontal(const Mat& image, int x, int y, int finderPatternSize, int * verticalBw, int * bw)
+int QRFinder::FindAlignmentCenterHorizontal(Rect searchRegion, int x, int y, int finderPatternSize, int * verticalWidths, int * horizontalWidths, vector<Drawable*> & debugVector)
 {
+	int debugCircleSize = 3;
+	int debugThickness = 1;
+
+	int k = 0;
 	int j = x;
 	
-	/* Calculate horizontal finder pattern left from the center. */
-	for (; j > 0 && image.at<unsigned char>(y, j) == 0 && bw[1] < finderPatternSize; ++bw[1], --j)
-		;
+	const short * rowPtr = edgeArray.ptr<short>(y);
 
-	if (j == 0 || bw[1] >= finderPatternSize)
+	for (; j >= searchRegion.x; j --)
+	{		
+		int transition = -rowPtr[j]; //invert because we are moving up
+
+		if (k == 0) //Haven't found edge yet
+		{
+			++horizontalWidths[1];
+			if (transition > 0) //dark to light
+			{	
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(j,y),debugCircleSize,Colors::Aquamarine,1));
+				k++;
+			}
+		}
+		else if (k == 1) 
+		{
+			++horizontalWidths[0];
+			if (transition < 0) //light->dark, end of pattern
+			{
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(j,y),debugCircleSize,Colors::SeaGreen,1));
+				++k;
+				break;
+			}
+		}
+	}
+
+	if (k != 2)
 	{
-		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :0 - j=%d",j);
 		return 0;
 	}
 
-	for (; j > 0 && image.at<unsigned char>(y, j) != 0 && bw[0] < finderPatternSize; ++bw[0], --j)
-		;
+	j = x;
+	k = 0;
 
-	if (j == 0 || bw[0] >= finderPatternSize)
+	for (; j < (searchRegion.x + searchRegion.width); j++)
+	{		
+		int transition = rowPtr[j];
+
+		if (k == 0) //Haven't found edge yet
+		{
+			++horizontalWidths[1];
+			if (transition > 0) //dark to light
+			{	
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(j,y),debugCircleSize,Colors::Yellow,1));
+				k++;
+			}
+		}
+		else if (k == 1) 
+		{
+			++horizontalWidths[2];
+			if (transition < 0) //light to dark, pattern end
+			{
+				if (AP_DEBUG_ENABLED && alignDebugLevel > 2)
+					debugVector.push_back(new DebugCircle(Point2i(j,y),debugCircleSize,Colors::Orange,1));
+				++k;
+				break;
+			}
+		}
+	}
+
+	if (k != 2)
 	{
-		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :1 - j=%d",j);
 		return 0;
 	}
 
-	/* Calculate horizontal finder pattern right from the center. */
-	j = x + 1;
-	for (; j < image.cols && image.at<unsigned char>(y, j) == 0 && bw[1] < finderPatternSize; ++bw[1], ++j)
-		;
-
-	if (j == image.cols || bw[1] >= finderPatternSize)
+	if (CheckAlignmentRatios(horizontalWidths, verticalWidths) == false)
 	{
-		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :2 - j=%d",j);
+		//LOGV(LOGTAG_QR,"FindAlignmentCenterVertical F: verticalWidths= %d,%d,%d",verticalWidths[0],verticalWidths[1],verticalWidths[2]);
+		//LOGV(LOGTAG_QR,"Failed ratio check for finding vertical center, FPSize=%d",finderPatternSize);
 		return 0;
 	}
 
-	for (; j < image.cols && image.at<unsigned char>(y, j) != 0 && bw[2] < finderPatternSize; ++bw[2], ++j)
-		;
-	if (j == image.cols || bw[2] >= finderPatternSize)
-	{
-		//LOGD(LOGTAG_QR,"Pattern exceed boundaries :3 - j=%d",j);
-		return 0;
-	}
-
-
-	if (CheckAlignmentRatios(bw,verticalBw,false) == false)
-	{
-		//LOGD(LOGTAG_QR,"AlignmentPattern Ratio Check Failed. Fpsize=%d, Bw=%d,%d,%d", finderPatternSize, bw[0],bw[1],bw[2]);
-		return 0;
-	}
-		
-	return (j - bw[2]) - (bw[1] / 2);
+	return (j - horizontalWidths[2]) - (horizontalWidths[1] / 2);
 }
 
-bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int finderPatternSize)
+bool QRFinder::CheckAlignmentRatios(int * newBw, int finderPatternSize)
 {
 	int alignmentPatternSum = 0;
 	float moduleUnitSize = finderPatternSize/7.0f;
@@ -252,13 +384,13 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int finderPattern
 		}
 		alignmentPatternSum += newBw[i];	
 	}
-		
+
 	if (alignmentPatternSum < 3)
 	{
 		return false; 
 	}
 	int alignmentPatternSize = (int)round((float)alignmentPatternSum / 3.0f);
-	
+
 
 	int variance	= alignmentPatternSize >> 2;
 	int variance2	= alignmentPatternSize >> 1;
@@ -268,34 +400,34 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int finderPattern
 	int symmetryScore = (abs(a - c) < variance2) * 100;
 
 	int sizeScore = 		
-			(abs(alignmentPatternSize - a) < variance2)*22 + 
-			(abs(alignmentPatternSize - b) < variance2)*22 + 
-			(abs(alignmentPatternSize - c) < variance2)*22; 
+		(abs(alignmentPatternSize - a) < variance2)*22 + 
+		(abs(alignmentPatternSize - b) < variance2)*22 + 
+		(abs(alignmentPatternSize - c) < variance2)*22; 
 
 	int oldNewCompareScore = 50 * (abs(alignmentPatternSum - 3*moduleUnitSize) < (finderPatternSize >> 2));
 
 
 	int score = (sizeScore + symmetryScore + oldNewCompareScore);	
-	
-	if (score > MinimumAlignmentPatternScore)
+
+	if (score > minimumAlignmentPatternScore)
 	{				
 		//LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
-		//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::MinimumAlignmentPatternScore);
+		//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::minimumAlignmentPatternScore);
 		return true;
 	}
 	else
 	{
 		//LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
-		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::MinimumAlignmentPatternScore);
+		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::minimumAlignmentPatternScore);
 		return false;
 	}
 
 }
 
-bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
+bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
 {
 	int alignmentPatternSum = 0, horizontalSum = 0;
-	
+
 	for (int i = 0; i < 3; ++i)
 	{
 		if (newBw[i] == 0)
@@ -310,7 +442,7 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int * previousBw,
 
 		horizontalSum += previousBw[i];	
 	}
-		
+
 	if (alignmentPatternSum < 3)
 	{
 		if (log)
@@ -320,7 +452,7 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int * previousBw,
 		return false; 
 	}
 	int alignmentPatternSize = (int)round((float)alignmentPatternSum / 3.0f);
-	
+
 
 	int variance	= alignmentPatternSize >> 2;
 	int variance2	= alignmentPatternSize >> 1;
@@ -330,21 +462,21 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int * previousBw,
 	int symmetryScore = (abs(a - c) < variance2) * 100;
 
 	int sizeScore = 		
-			(abs(alignmentPatternSize - a) < variance2)*33 + 
-			(abs(alignmentPatternSize - b) < variance2)*22 + 
-			(abs(alignmentPatternSize - c) < variance2)*33; 
+		(abs(alignmentPatternSize - a) < variance2)*33 + 
+		(abs(alignmentPatternSize - b) < variance2)*22 + 
+		(abs(alignmentPatternSize - c) < variance2)*33; 
 
 	int oldNewCompareScore = 60 * (abs(alignmentPatternSum - horizontalSum) < (horizontalSum >> 2)) + 40*(abs(newBw[1] - previousBw[1]) < variance2);
 
 
 	int score = (sizeScore + symmetryScore + oldNewCompareScore);	
-	
-	if (score > MinimumAlignmentPatternScore)
+
+	if (score > minimumAlignmentPatternScore)
 	{		
 		if (log)
 		{
 			LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
-			LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,MinimumAlignmentPatternScore);
+			LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
 		}
 		return true;
 	}
@@ -353,7 +485,7 @@ bool AlignmentPatternHelper::CheckAlignmentRatios(int * newBw, int * previousBw,
 		if (log)
 		{
 			LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
-			LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,MinimumAlignmentPatternScore);
+			LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
 		}
 		return false;
 	}

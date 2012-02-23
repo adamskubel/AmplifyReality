@@ -29,31 +29,42 @@ public:
 	QRFinder(ARControllerDebugUI * debugUI);
 	~QRFinder();
 	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector, bool decode);
-	int MinimumAlignmentPatternScore;
-	static int MinimumFinderPatternScore;
 
 private:
+	//Finder patterns
 	void FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fpv, vector<Drawable*> & debugVector);
-
-	bool CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
-
-	int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector);
-	int FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], vector<Drawable*> & debugVector);
-	static bool GetEdges(const Mat& image, Point2i start, int xDir, int yDir, int * Q);
-
+	int CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
+	int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int * verticalPatternSize = NULL);
+	int FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector);
 	void FindEdgesVerticalClosed(const Mat & inputImg, int xPosition);
-
-	//static int SkipHeuristic(FinderPattern_vector * fpv);
-
-	double finderPatternTime, edgeTime;
+	bool validatePattern(FinderPattern * newPattern, vector<FinderPattern*> patternVector);
+	//int SkipHeuristic(vector<FinderPattern*> & patternVector);
+		
+	//Alignment pattern
+	void FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Drawable*>& debugVector);
+	bool CheckAlignmentRatios(int * bw, int finderPatternSize);
+	bool CheckAlignmentRatios(int * bw, int * previousBw, bool log = false);
+	int FindAlignmentCenterVertical(const Mat & image, Rect searchRegion, int x, int y, int finderPatternSize, int * verticalWidths, int * horizontalBw, vector<Drawable*> & debugVector);
+	int FindAlignmentCenterHorizontal(Rect searchRegion, int x, int y, int maxSize, int * verticalBw, int * horizontalBw, vector<Drawable*>& debugVector);
+	bool CheckPoint(Mat & M, Point2i searchCenter, Size2i searchRange, int moduleSize);
+	bool CheckAlignmentDiagonals(const Mat& image, Point2i center, int * verticalBw, int * horizontalBw, vector<Drawable*> & debugVector);
+	
+	//Fields
 	ARControllerDebugUI * config;
 	QRDecoder * qrDecoder;	
+
+	//Stateful image values
 	Size2i imgSize;
 	Mat edgeArray;
 	Mat verticalEdgeArray;
 	map<int,bool> calculatedEdges;
 
-	int debugLevel, edgeThreshold, detectorSize, minimumFinderPatternScore;
+	//Statistics
+	double finderPatternTime, edgeTime;
+	int numVerticalCalc;
+
+	//Parameters
+	int debugLevel, edgeThreshold, detectorSize, minimumFinderPatternScore, minimumAlignmentPatternScore, alignDebugLevel;
 	bool nonMaxEnabled;
 };
 

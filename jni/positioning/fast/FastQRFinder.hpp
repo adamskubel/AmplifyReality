@@ -125,6 +125,24 @@ namespace FastQR
 		bool visited;
 		int clusterIndex;
 	};
+
+	struct ThreePointLine
+	{
+	public:
+		ThreePointLine(Point2i _pt0, Point2i _pt1, Point2i _pt2, int _length, float _cosine)
+		{
+			pt0 = _pt0;
+			pt1 = _pt1;
+			pt2 = _pt2;
+			length = _length;
+			cosine = _cosine;
+		}
+
+		Point2i pt0,pt1,pt2;
+		int length;
+		float cosine;
+
+	};
 }
 
 
@@ -134,7 +152,7 @@ class FastQRFinder
 
 public: 
 	FastQRFinder(ARControllerDebugUI * config);
-	void LocateFPCorners(Mat & img, Rect fpRect, vector<Drawable*> & debugVector);
+	void LocateFPCorners(Mat & img, Rect fpRect, vector<Point2i> & corners, vector<Drawable*> & debugVector);
 	void EnhanceQRCodes(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
 
 private:

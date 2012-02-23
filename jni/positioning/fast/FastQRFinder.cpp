@@ -15,6 +15,49 @@ class PointCompare
       Point2i center;
 };
 
+class ThreePointLineCompare
+{
+public:      
+	ThreePointLineCompare()
+	{
+		//maxVariance = _maxVariance;
+	}
+
+	bool operator()(const multimap<float,FastQR::ThreePointLine> & pt0, const multimap<float,FastQR::ThreePointLine> & pt1)
+	{
+		float totalVariance0 = 0;
+		int count0 = 0;
+		for (multimap<float,FastQR::ThreePointLine>::const_iterator it = pt0.begin(); it != pt0.end();it++)
+		{
+			totalVariance0 += (*it).first;
+			count0++;
+		}
+		if (count0 == 0)
+			totalVariance0 = MAXFLOAT;
+		else
+			totalVariance0 /= (float)count0;
+
+		float totalVariance1 = 0;
+		int count1 = 0;
+		for (multimap<float,FastQR::ThreePointLine>::const_iterator it = pt1.begin(); it != pt1.end();it++)
+		{
+			totalVariance1 += (*it).first;
+			count1++;
+		}
+		if (count1 == 0)
+			totalVariance1 = MAXFLOAT;
+		else
+			totalVariance1 /= (float)count1;
+
+		return totalVariance0 > totalVariance1;
+	}
+//private:
+	//float maxVariance;
+};
+
+
+
+
 FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 {
 	config = debugUI;
@@ -39,7 +82,7 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("Post-NonMaxSupress Count","MaxThreshCount",2,1,0,25,"%2.0f",2);
 			
 	config->AddNewParameter("FAST Threshold","FastThresh",10,5,1,400,"%3.0f",2);
-	config->AddNewParameter("NonMaxSuppress",1,1,0,1,"%1.0f",2);
+	config->AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f",2);
 
 	flannTime = 10;
 	pointTime = 0;
@@ -57,89 +100,10 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewLabel("Cluster Time"," ms ", 1);
 }
 
-//static bool getPointAtXLimit(Point2i & result, map<int,map<int,Point2i>*> & xKeyMap, int xLimit, Point2i approachDirection, int yRangeLower, int yRangeUpper=0)
-//{
-//	map<int,map<int,Point2i>*>::iterator xIterator;
-//
-//	xIterator = xKeyMap.lower_bound(xLimit);
-//	if (xIterator == xKeyMap.end())
-//		return false;
-//
-//	if (approachDirection.x < 0)
-//	{
-//		//If approaching X from negative side, decrement as we want the value that is right before the limit
-//		xIterator--;
-//		if (xIterator == xKeyMap.end())
-//			return false;
-//	}
-//	else
-//	{
-//		;//If positive side, we just take the value right after the limit
-//	}
-//	
-//	map<int,Point2i>::iterator yIterator = (*xIterator).second->lower_bound(yRangeUpper);
-//
-//	if (yIterator == (*xIterator).second->end())
-//		return false;
-//
-//	if (approachDirection.y < 0)
-//	{
-//		//If approaching Y from negative side, decrement as we want the value that is right before the limit
-//		yIterator--;
-//		if (yIterator == (*xIterator).second->end())
-//			return false;
-//	}
-//	else
-//	{
-//		;//If positive side, we just take the value right after the limit
-//	}
-//
-//	result = (*yIterator).second;
-//	return true;
-//
-//}
-//
-////static Point2i SearchRegion(map<int,map<int,Point2i>*> & pointMapX, map<int,map<int,Point2i>*> & pointMapY, int limit, Point2i yPoint, bool xMode)
-////{
-////	if (xMode)
-////	{
-////	}
-////	else
-////	{
-////		Point2i result;
-////		getPointAtXLimit(result,pointMapY,limit,Point2i(1,-1),yPoint.x)
-////	}
-////}
-//
-//static Point2i FindClosestPoints(map<int,map<int,Point2i>*> & pointMapX, map<int,map<int,Point2i>*> & pointMapY, Point2i searchPoint)
-//{
-//	////map<int,map<int,Point2i>*>::iterator xIterator
-//
-//	//Point2i startX;
-//	//bool result = getPointAtXLimit(startX,pointMapX,searchPoint.x,Point2i(1,1),searchPoint.y);
-//
-//	//Point2i startY;
-//	//result = result && getPointAtXLimit(startY,pointMapY,searchPoint.y,Point2i(1,1),searchPoint.x);
-//
-//	//if (startX == startY) //I wish!
-//	//	return startX;
-//
-//	//int nextY = startY.y + (startX.y - startY.y)/2;
-//	//SearchRegion(pointMapX,pointMapY,nextY,false);
-//
-//
-//	//result = result && getPointAtXLimit(startY,pointMapY,searchPoint.y,Point2i(1,1),searchPoint.x);
-//
-//
-//
-//}
-
 #define AbsoluteMacro(x) (x >= 0) ? x : x
 
 
 //Faster? Less accurate for certain.
-
-
 int FastQRFinder::GetDistanceFast(int dx, int dy)
 {
 	dx = AbsoluteMacro(dx);
@@ -147,8 +111,6 @@ int FastQRFinder::GetDistanceFast(int dx, int dy)
 	int mn = MIN(dx,dy);
 	return(dx+dy-(mn>>1)-(mn>>2)+(mn>>4));
 } 
-
-//Faster? Less accurate for certain.
 int FastQRFinder::GetDistanceFast(Point2i pt0, Point2i pt1)
 {
 	int dx = (pt0.x-pt1.x);
@@ -165,8 +127,6 @@ int FastQRFinder::GetSquaredDistance(int dx, int dy)
 {
 	return ipow(dx,2) + ipow(dy,2);
 } 
-
-
 int FastQRFinder::GetSquaredDistance(Point2i pt0, Point2i pt1)
 {
 	return ipow(pt0.x-pt1.x,2) + ipow(pt0.y-pt1.y,2);
@@ -510,6 +470,88 @@ static void FastWindow(Mat & inputImg, vector<KeyPoint> & features, Rect window,
 }
 
 
+static void sortResults(vector<FastQR::ThreePointLine> & resultVector, vector<FastQR::ThreePointLine> & sortedLines, vector<Drawable*> & debugVector, int debugLevel)
+{
+	Point2i centroid = Point2i(0,0);
+	int avgSize = 0;
+	for (int i=0;i<resultVector.size();i++)
+	{
+		FastQR::ThreePointLine line = resultVector[i];
+		centroid += line.pt0;
+		centroid += line.pt1;
+		centroid += line.pt2;
+		avgSize += line.length;
+	}
+	//avgSize = (int)round((float)avgSize / (float)resultVector.size());
+	
+	//max 50% variance
+	/*int variance = avgSize >> 1;*/
+	float maxVariance = 0.7f;
+
+	float divisor = resultVector.size() * 3.0f;
+	centroid = Point2i((int)round(centroid.x/divisor),(int)round(centroid.y/divisor));
+
+	if (debugLevel > 0)
+	{
+		debugVector.push_back(new DebugCircle(centroid,1,Colors::Azure,-1));
+		debugVector.push_back(new DebugCircle(centroid,10,Colors::Azure,1));
+	}
+
+	vector<multimap<float,FastQR::ThreePointLine> > pointsByVariance;
+
+	for (int i=0;i<resultVector.size();i++)
+	{
+		multimap<float,FastQR::ThreePointLine> varianceMap;
+		for (int j=0;j<resultVector.size();j++)
+		{
+			if (i == j) continue;
+			float variance = abs((float)resultVector[j].length/(float)resultVector[i].length);
+			varianceMap.insert(pair<float,FastQR::ThreePointLine>(variance,resultVector[j]));
+		}
+		pointsByVariance.push_back(varianceMap);
+	}
+
+
+	//Sort vector by average variance in each map
+	std::sort(pointsByVariance.begin(),pointsByVariance.end(),ThreePointLineCompare());
+
+	//First value in vector should contain most similar variant lines
+	for (int i=0;i<pointsByVariance.size();i++)
+	{
+		if (pointsByVariance[i].size() >= 4)
+		{
+			int count = 0;
+			for (multimap<float,FastQR::ThreePointLine>::iterator it = pointsByVariance[i].begin(); it != pointsByVariance[i].end(); it++)
+			{
+				if (count++ >= 4)
+					break;
+
+				FastQR::ThreePointLine line = (*it).second;
+
+				int d1 = GetSquaredDistance(line.pt0,centroid);
+				int d2 = GetSquaredDistance(line.pt2,centroid);
+
+				if (d2 > d1)
+				{
+					Point2i tmp = line.pt2;
+					line.pt2 = line.pt0;
+					line.pt0 = tmp;
+				}
+								
+				if (debugLevel > 0),
+				{
+					debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Lime,2));
+					debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Lime,2));
+				}	
+
+				sortedLines.push_back(line);
+			}
+			break;
+		}
+	}
+
+}
+
 void FastQRFinder::EnhanceQRCodes(Mat & img, QRCode * code, vector<Drawable*> & debugVector)
 {
 	int debugLevel = (int)config->GetParameter("FASTDebug");
@@ -522,14 +564,30 @@ void FastQRFinder::EnhanceQRCodes(Mat & img, QRCode * code, vector<Drawable*> & 
 		float windowSize = fp->size * 1.4f;  //Window needs to be bigger to account for diagonals
 	
 		Rect window = Rect(fp->pt.x - windowSize/2.0f, fp->pt.y-windowSize/2.0f, windowSize,windowSize);
-		if (debugLevel > 0)
-			debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
+		
+		
+		vector<Point2i> corners;
+		LocateFPCorners(img, window,corners,debugVector);
 
-		LocateFPCorners(img, window,debugVector);
+		for (int j=0;j<corners.size();j++)
+		{
+			if (debugLevel > -1)
+			{
+				debugVector.push_back(new DebugCircle(corners.at(j),12,Colors::MediumVioletRed,2));
+			}		
+		}
+
+		if (debugLevel > 0)
+		{
+			if (corners.size() == 0)
+				debugVector.push_back(new DebugRectangle(window,Colors::Aqua));
+			else
+				debugVector.push_back(new DebugRectangle(window,Colors::DodgerBlue));
+		}
 	}
 }
 
-void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debugVector)
+void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corners, vector<Drawable*> & debugVector)
 {
 	struct timespec startTotal,endTotal;
 	SET_TIME(&startTotal);
@@ -763,7 +821,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 		
 
 	//Results
-	vector<QRCorner> resultVector;
+	vector<FastQR::ThreePointLine> resultVector;
 	
 	//Loop variable declarations
 	Mat indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
@@ -847,7 +905,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 		
 		if (closePointsVector.size() < 2)
 		{
-			if (debugLevel > 0)
+			if (debugLevel > 2)
 			{
 				debugVector.push_back(new DebugCircle(insideCornerPoint,12,Colors::CornflowerBlue));
 				if (debugLevel > 1 && closePointsVector.size() == 1)
@@ -879,11 +937,11 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 			Point2i testPoint = (*closePointsIt).second;
 			if (GetSquaredDistance(firstPoint,testPoint) < closestDist)
 			{				
-				if (debugLevel > 1)
+				if (debugLevel > 2)
 					debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::Blue));
 				continue;
 			}
-			if (debugLevel > 0)
+			if (debugLevel > 2)
 				debugVector.push_back(new DebugLine(insideCornerPoint,testPoint,Colors::PeachPuff,1));
 
 			float cosine = FastTracking::angle(firstPoint,testPoint,insideCornerPoint);
@@ -895,8 +953,6 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 			}
 		}
 		
-		
-		
 		//Validate slope
 		if (bestPoint.x == 0 && bestPoint.y==0)
 		{		
@@ -905,13 +961,19 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 				debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Aqua));
 			}
 			continue;
-		}
-			
-
+		}			
 
 		//LOGV(LOGTAG_QRFAST,"Adding point to exclusion zone. Pt=(%d,%d),Radius=%d",bestPoint.x,bestPoint.y,bestPointDistance);
 		addExclusionZone(bestPoint,bestPointDistance,searchExclusionIndex,exclusionDistances);
-		resultVector.push_back(QRCorner(insideCornerPoint,bestPoint,firstPoint,10));
+
+		FastQR::ThreePointLine line = FastQR::ThreePointLine(firstPoint,insideCornerPoint,bestPoint,bestPointDistance,0);
+		resultVector.push_back(line);
+
+		if (debugLevel > 0)
+		{
+			debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Green,1));
+			debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Green,1));
+		}	
 
 		if (debugLevel > 3)
 		{
@@ -919,16 +981,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 			sprintf(str,"#%d",resultVector.size());
 			debugVector.push_back(new DebugLabel(insideCornerPoint,str,Colors::Black,1.0f));
 		}
-
-		if (debugLevel > -1)
-		{
-			debugVector.push_back(new DebugLine(insideCornerPoint,firstPoint,Colors::Lime,2));
-			debugVector.push_back(new DebugLine(insideCornerPoint,bestPoint,Colors::Lime,2));
-		}
-		
 		indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
-
-	
 	}
 	SET_TIME(&pointEnd);
 	double pointTime_local = calc_time_double(pointStart,pointEnd);
@@ -943,9 +996,16 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Drawable*> & debu
 	config->SetLabelValue("NumPoints",(float)insideCornerVector.size());
 	config->SetLabelValue("AvgPointTime",avgPerPointTime);
 	
-	
+	//Clean up FLANN index
 	delete flannPointIndex;
 
+	vector<FastQR::ThreePointLine> sortedVector;
+	sortResults(resultVector,sortedVector,debugVector,debugLevel);
+
+	for (int i=0;i<4 && i < sortedVector.size();i++)
+	{
+		corners.push_back(sortedVector[i].pt0);
+	}
 	
 	
 	SET_TIME(&endTotal);

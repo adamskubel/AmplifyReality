@@ -17,17 +17,22 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
 	edgeThreshold = 10;
 	detectorSize = 2;
 	minimumFinderPatternScore = 180;
+	minimumAlignmentPatternScore = 180;
+	alignDebugLevel = 0;
 
 	config->AddNewParameter("EdgeThreshold",edgeThreshold,1,0,255,"%3.0f",2);
 	config->AddNewParameter("MinimumFPScore",minimumFinderPatternScore,10,0,400,"%3.0f",2);
+	config->AddNewParameter("MinimumAPScore",minimumAlignmentPatternScore,10,0,400,"%3.0f",2);
 	config->AddNewParameter("DetectorSize",detectorSize,1,1,5,"%1.0f",2);
 	config->AddNewParameter("DebugLevel",debugLevel,1,-3,5,"%3.0f",2);
+	config->AddNewParameter("AlignDebug",debugLevel,1,-3,5,"%3.0f",2);
 	config->AddNewParameter("YResolution",2,1,1,50,"%2.0f",2);
 	config->AddNewParameter("EdgeNonMax",(float)nonMaxEnabled,1,0,1,"%1.0f",2);
 	
 	config->AddNewLabel("FinderPatternTime"," ms",1);
 	config->AddNewLabel("EdgeTime"," ms",1);
-	//config->AddNewParameter("LogDebugLvl",0,1,0,3,"%3.0f",2);
+	config->AddNewLabel("NumVerticalCalc","",1);
+
 
 	//Initialize matrix size variables
 	imgSize = Size2i(0,0);
@@ -54,14 +59,13 @@ QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector, boo
 		LOGD(LOGTAG_QR,"Creating new code.");
 		QRCode * newCode = QRCode::CreateFromFinderPatterns(finderPatterns);
 		SET_TIME(&end);
-		LOG_TIME("QR Search(Found)", start, end);
-		
+		LOG_TIME("QR Search(Found)", start, end);		
 		
 		//Determine alignment pattern position
-		/*SET_TIME(&start);		
-		AlignmentPatternHelper::FindAlignmentPattern(M, newCode,debugVector);				
+		SET_TIME(&start);		
+		FindAlignmentPattern(M, newCode,debugVector);				
 		SET_TIME(&end);
-		LOG_TIME("Alignment Search", start, end);*/
+		LOG_TIME("Alignment Search", start, end);
 
 		//Decode the QRCode
 		if (false && decode)
