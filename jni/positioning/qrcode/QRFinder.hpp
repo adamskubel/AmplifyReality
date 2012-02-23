@@ -17,6 +17,9 @@
 #include "positioning/fast/FastTracking.hpp"
 #include "controllers/ARControllerDebugUI.hpp"
 #include <map>
+#include "positioning/fast/FastQRFinder.hpp"
+#include "LogDefinitions.h"
+#include "QRCode.hpp"
 
 
 using namespace cv;
@@ -26,7 +29,7 @@ using namespace std;
 class QRFinder
 {
 public:
-	QRFinder(ARControllerDebugUI * debugUI);
+	QRFinder(ARControllerDebugUI * debugUI, FastQRFinder * fastQR);
 	~QRFinder();
 	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector, bool decode);
 
@@ -52,6 +55,7 @@ private:
 	//Fields
 	ARControllerDebugUI * config;
 	QRDecoder * qrDecoder;	
+	FastQRFinder * qrFinder;
 
 	//Stateful image values
 	Size2i imgSize;

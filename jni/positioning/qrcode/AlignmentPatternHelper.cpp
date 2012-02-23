@@ -96,15 +96,35 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 							tempXCenter = xCenterTest;					
 							if (CheckAlignmentDiagonals(inputImg,Point2i(tempXCenter,tempYCenter),verticalPatternWidths,horizontalPatternWidths,debugVector))
 							{									
-								int apXSize =  horizontalPatternWidths[2] + horizontalPatternWidths[1] + horizontalPatternWidths[0];
-								int apYSize =  verticalPatternWidths[2] + verticalPatternWidths[1] + verticalPatternWidths[0];
+								float apXSize =  horizontalPatternWidths[2] + horizontalPatternWidths[1] + horizontalPatternWidths[0];
+								float apYSize =  verticalPatternWidths[2] + verticalPatternWidths[1] + verticalPatternWidths[0];
 
 								int alignPatternSize = MAX(apXSize,apYSize);
 
-								if (alignDebugLevel > 0)
-									debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),((float)alignPatternSize/2.0f), Colors::Lime));
+									//debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),((float)alignPatternSize/2.0f), Colors::Lime));
 
-								newCode->alignmentPattern = Point2i(tempXCenter,tempYCenter);
+								apXSize *= 1.4f;
+								apYSize *= 1.4f;
+
+								Rect fastRect = Rect(tempXCenter-apXSize/2.0f,tempYCenter-apYSize/2.0f,apXSize,apYSize);
+
+								if (alignDebugLevel > 0)
+									debugVector.push_back(new DebugRectangle(fastRect,Colors::LawnGreen,1));
+
+								vector<Point2i> patternPoints;
+								qrFinder->CheckAlignmentPattern(inputImg,fastRect,Point2i(tempXCenter,tempYCenter),patternPoints,debugVector);
+
+								for (int i=0;i<patternPoints.size();i++)
+								{
+									if (alignDebugLevel > 0)
+										debugVector.push_back(new DebugCircle(patternPoints.at(i),10,Colors::SlateBlue,2));
+								}
+
+								if (patternPoints.size() == 4)
+								{
+									newCode->alignmentPattern = Point2i(tempXCenter,tempYCenter);
+									
+								}
 								return;
 							}	
 							else

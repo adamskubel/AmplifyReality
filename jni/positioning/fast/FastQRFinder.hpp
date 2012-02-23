@@ -154,6 +154,7 @@ public:
 	FastQRFinder(ARControllerDebugUI * config);
 	void LocateFPCorners(Mat & img, Rect fpRect, vector<Point2i> & corners, vector<Drawable*> & debugVector);
 	void EnhanceQRCodes(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
+	void CheckAlignmentPattern(Mat & img, Rect searchRegion, Point2i center, vector<Point2i> & patternPoints, vector<Drawable*> & debugVector);
 
 private:
 	void FindPoint(Point2i regionPoint, IDetectableContour * contour, map<int,multimap<int,Point2i>*> & regionMap);
@@ -174,14 +175,6 @@ private:
 	static void ExpandCluster(vector<FastQR::Node*>& rgp, int nCluster, double dblEpsilon, int nMinPts, int maxPts, flann::Index * kdIndex,vector<FastQR::Node*> & vecNodes);
 	static void ExpandCluster_Recursive(FastQR::Node* node, int nCluster, double dblEpsilon, int nMinPts, int maxPts, flann::Index * kdIndex,vector<FastQR::Node*> & vecNodes);
 	static int RunDBScan(vector<FastQR::Node*> & vecNodes, flann::Index * kdIndex, double flannRadius, int nMinPts,int maxPts);
-
-	//Distance finding
-	//static vector<Point2i> shortest(vector<Point2i> ps);
-	//static vector<Point2i> mergePlanes(vector<Point2i> p1, vector<Point2i> p2);
-	//static vector<Point2i> findClosest(vector<Point2i> px);
-	//static vector<Point2i> CheckValidDistancePane(vector<Point2i> dots);
-	//static void CheckDistanceDACPane(vector<Point2i> dots);
-	//static void CheckDistanceDAC();
 };
 
 #endif 

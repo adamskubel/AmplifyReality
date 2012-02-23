@@ -90,8 +90,6 @@ void ARController::initializeUI(Engine * engine)
 	deletableObjects.push_back(debugUI);
 
 	
-	//Create QRFinder
-	qrFinder = new QRFinder(debugUI);
 			
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
 		
@@ -123,7 +121,9 @@ void ARController::Initialize(Engine * engine)
 	worldLoader = new WorldLoader();
 
 	//FastQRFinder
-	fastQRFinder = new FastQRFinder(debugUI);
+	fastQRFinder = new FastQRFinder(debugUI);	
+	//Create QRFinder
+	qrFinder = new QRFinder(debugUI,fastQRFinder);
 
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	

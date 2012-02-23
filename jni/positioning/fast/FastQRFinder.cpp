@@ -538,7 +538,7 @@ static void sortResults(vector<FastQR::ThreePointLine> & resultVector, vector<Fa
 					line.pt0 = tmp;
 				}
 								
-				if (debugLevel > 0),
+				if (debugLevel > 0)
 				{
 					debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Lime,2));
 					debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Lime,2));
@@ -587,214 +587,66 @@ void FastQRFinder::EnhanceQRCodes(Mat & img, QRCode * code, vector<Drawable*> & 
 	}
 }
 
-void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corners, vector<Drawable*> & debugVector)
+static void MapBasedSuppression(vector<KeyPoint> & keypoints, vector<Point2i> & outsideCornersVector, vector<Point2i> & insideCornersVector, Size2i searchSize, int iterations)
 {
-	struct timespec startTotal,endTotal;
-	SET_TIME(&startTotal);
-
-	//Get parameters from UI. Need to store as local variables because they are accessed many times per frame.
-	int debugLevel = (int)config->GetParameter("FASTDebug");
-	int searchSize = config->GetIntegerParameter("K-NN");
-	double flannRadius = std::pow(config->GetParameter("FLANNRadius"),2.0);
-	int searchParams = config->GetIntegerParameter("FlannSearchParams");
-	bool useRadius = config->GetBooleanParameter("DoRadiusSearch");
-	int flannIndexType = config->GetIntegerParameter("FlannIndexType");
-	int numTrees = config->GetIntegerParameter("NumKDTrees");
-	int threshold = config->GetParameter("FastThresh");
-	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
-
-	vector<KeyPoint> keypoints;
-
-	struct timespec start,end;
-	LOGD(LOGTAG_QRFAST,"Performing FAST detection");
-	SET_TIME(&start);
-	FastWindow(img,keypoints,roi, threshold,nonMaxSuppress);
-	SET_TIME(&end);
-	double fastTime_local = calc_time_double(start,end);
-	fastTime = (fastTime + fastTime_local)/2.0;
-	config->SetLabelValue("FAST time",(float)fastTime/1000.0f);
-
-	LOGD(LOGTAG_QRFAST,"FAST complete. %d points found.",keypoints.size());
-
+	map<int,map<int,KeyPoint>*> insideCornersMap_Unsorted;
+	map<int,map<int,KeyPoint>*> outsideCornersMap_Unsorted;
+	sortPointsByAngle(outsideCornersMap_Unsorted,insideCornersMap_Unsorted,keypoints);
 	
-	
-	vector<Point2i> insideCornerVector, outsideCornersVector;
-	Point2i centroid(0,0);
+	map<int,map<int,KeyPoint>*> insideCornersMap;	
+	map<int,map<int,KeyPoint>*> outsideCornersMap;
 
-	//If didn't do nonmax during FAST, perform here using maps
-	//Otherwise, just add the points to vectors
-	if (!nonMaxSuppress)
-	{
-		SET_TIME(&start);
-		map<int,map<int,KeyPoint>*> insideCornersMap_Unsorted;
-		map<int,map<int,KeyPoint>*> outsideCornersMap_Unsorted;
-		sortPointsByAngle(outsideCornersMap_Unsorted,insideCornersMap_Unsorted,keypoints);
-		SET_TIME(&end);
-		LOG_TIME_PRECISE("Sign sorting",start,end);
+	//Extract local maximums	
+	LOGD(LOGTAG_QRFAST,"Filtering corners by threshold.");
+	//SET_TIME(&start);
+	sortKPMap(insideCornersMap_Unsorted,insideCornersMap,iterations,searchSize);
+	sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,iterations,searchSize);
+	//SET_TIME(&end);
+	//double maxThreshTime_local = calc_time_double(start,end);
+	//maxThreshTime = (maxThreshTime + maxThreshTime_local)/2.0;
+	//config->SetLabelValue("MaxPt Time", (float)maxThreshTime/1000.0f);
 
-		//Extract local maximums	
-		LOGD(LOGTAG_QRFAST,"Filtering corners by threshold.");
-		map<int,map<int,KeyPoint>*> insideCornersMap;
-
-		int scoreSearchSize = config->GetParameter("MaxThreshSize");
-		int searchIterations = config->GetParameter("MaxThreshCount");
-
-		map<int,map<int,KeyPoint>*> outsideCornersMap;
-		SET_TIME(&start);
-		sortKPMap(insideCornersMap_Unsorted,insideCornersMap,searchIterations,Size2i(scoreSearchSize,scoreSearchSize));
-		sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,searchIterations,Size2i(scoreSearchSize,scoreSearchSize));
-		SET_TIME(&end);
-		double maxThreshTime_local = calc_time_double(start,end);
-		maxThreshTime = (maxThreshTime + maxThreshTime_local)/2.0;
-		config->SetLabelValue("MaxPt Time", (float)maxThreshTime/1000.0f);
-
-		//Add points to vectors
-		for (map<int,map<int,KeyPoint>*>::iterator  xIterator = insideCornersMap.begin();xIterator != insideCornersMap.end(); xIterator++)
-		{	
-			for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
-			{
-				Point2i point = Point2i((int)(*yIterator).second.pt.x,(int)(*yIterator).second.pt.y);
-				insideCornerVector.push_back(point);
-				centroid += point;
-			}
-		}
-		for (map<int,map<int,KeyPoint>*>::iterator  xIterator = outsideCornersMap.begin();xIterator != outsideCornersMap.end(); xIterator++)
-		{
-			for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
-			{
-				KeyPoint kp = (*yIterator).second;
-				Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);
-				outsideCornersVector.push_back(point);
-
-				if (debugLevel > 2)
-					debugVector.push_back(new DebugCircle(point,4,Colors::Red));
-			}
-		}
-
-		//Cleanup maps
-		LOGV(LOGTAG_QRFAST,"Cleaning up maps");
-		for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap.begin(); deleteIt != insideCornersMap.end();deleteIt++) delete (*deleteIt).second;
-		for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap.begin(); deleteIt != outsideCornersMap.end();deleteIt++) delete (*deleteIt).second;
-		for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap_Unsorted.begin(); deleteIt != insideCornersMap_Unsorted.end();deleteIt++) delete (*deleteIt).second;
-		for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap_Unsorted.begin(); deleteIt != outsideCornersMap_Unsorted.end();deleteIt++) delete (*deleteIt).second;
-	}
-	else
+	//Add points to vectors
+	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = insideCornersMap.begin();xIterator != insideCornersMap.end(); xIterator++)
 	{	
-#define DO_CLUSTERING false
-#if DO_CLUSTERING
-			
-		double clusterRadius = std::pow(config->GetParameter("ClusterRadius"),2.0);
-		int minClusterCount = config->GetIntegerParameter("MinClusterSize");
-		int maxClusterCount = config->GetIntegerParameter("ClusterK-NN");
-
-		vector<FastQR::Node*> vecNodes;
-		Mat kpMat = Mat(keypoints.size(),2,CV_32F);	
-		int clusterPointMatCount = 0;
-		for (vector<KeyPoint>::iterator kpIt = keypoints.begin(); kpIt != keypoints.end(); kpIt++, clusterPointMatCount++)
+		for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
 		{
-			kpMat.at<float>(clusterPointMatCount,0) = (*kpIt).pt.x;
-			kpMat.at<float>(clusterPointMatCount,1) = (*kpIt).pt.y;
-			vecNodes.push_back(new FastQR::Node(*kpIt));
+			Point2i point = Point2i((int)(*yIterator).second.pt.x,(int)(*yIterator).second.pt.y);
+			insideCornersVector.push_back(point);
 		}
-
-		LOGD(LOGTAG_QRFAST,"Added %d nodes to vector, doing clustering",vecNodes.size());
-
-		flann::Index * kdIndex = new flann::Index(kpMat,flann::KDTreeIndexParams(1));
-
-		SET_TIME(&start);
-		int numClusters = RunDBScan(vecNodes,kdIndex,clusterRadius,minClusterCount, maxClusterCount);	
-		SET_TIME(&end);
-		double clusterTime_local = calc_time_double(start,end);
-		clusterTime = (clusterTime + clusterTime_local)/2.0;
-		config->SetLabelValue("Cluster Time",(float)clusterTime);
-		
-		if (kdIndex != NULL)
-			delete kdIndex;
-
-		LOGD(LOGTAG_QRFAST,"Found %d clusters. VecNodeSize=%d",numClusters,vecNodes.size());
-		Scalar clusterColors[] = {Colors::Fuchsia, Colors::DeepSkyBlue, Colors::Yellow, Colors::Green, Colors::PowderBlue};
-		for (vector<FastQR::Node*>::iterator kpIt = vecNodes.begin(); kpIt != vecNodes.end(); kpIt++)
-		{
-			Point2i point = Point2i((*kpIt)->nodePoint.at<float>(0,0),(*kpIt)->nodePoint.at<float>(0,1));
-			int clusterIndex = (*kpIt)->clusterIndex;
-			if (clusterIndex >= 0)
-				debugVector.push_back(new DebugCircle(point,15,clusterColors[clusterIndex % 5],2));
-			else
-				debugVector.push_back(new DebugCircle(point,15,Colors::Gray,2));
-
-		}
-
-		while (!vecNodes.empty())
-		{
-			delete vecNodes.back();
-			vecNodes.pop_back();
-		}
-#endif
-
-		SET_TIME(&start);
-		//Sort points by angle and add to vectors
-		for (int i=0;i<keypoints.size();i++)
-		{
-			KeyPoint kp = keypoints[i];
-			Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);	
-			if (kp.angle > 180)
-			{
-				insideCornerVector.push_back(point);
-				centroid += point;
-			}
-			else
-			{	
-				if (debugLevel > 2)
-					debugVector.push_back(new DebugCircle(point,4,Colors::Red));
-				outsideCornersVector.push_back(point);
-			}
-		}	
-		SET_TIME(&end);
-		double maxThreshTime_local = calc_time_double(start,end);
-		maxThreshTime = (maxThreshTime + maxThreshTime_local)/2.0;
 	}
-
-	//No features to track, so return NULL
-	if (outsideCornersVector.size() < 2 || insideCornerVector.size() < 2)
+	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = outsideCornersMap.begin();xIterator != outsideCornersMap.end(); xIterator++)
 	{
-		return;
+		for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
+		{
+			KeyPoint kp = (*yIterator).second;
+			Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);
+			outsideCornersVector.push_back(point);
+		}
 	}
 
-	
-	
+	//Cleanup maps
+	LOGV(LOGTAG_QRFAST,"Cleaning up maps");
+	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap.begin(); deleteIt != insideCornersMap.end();deleteIt++) delete (*deleteIt).second;
+	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap.begin(); deleteIt != outsideCornersMap.end();deleteIt++) delete (*deleteIt).second;
+	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap_Unsorted.begin(); deleteIt != insideCornersMap_Unsorted.end();deleteIt++) delete (*deleteIt).second;
+	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap_Unsorted.begin(); deleteIt != outsideCornersMap_Unsorted.end();deleteIt++) delete (*deleteIt).second;
+}
 
-	
-	centroid = Point2i((int)round(((float)centroid.x)/((float)insideCornerVector.size())), 
-		(int)round(((float)centroid.y)/((float)insideCornerVector.size())));
-
-	SET_TIME(&start);
-	LOGD(LOGTAG_QRFAST,"Sorting inside points according to distance from (%d,%d)",centroid.x,centroid.y);
-	sort(insideCornerVector.begin(),insideCornerVector.end(),PointCompare(centroid));
-	SET_TIME(&end);
-	LOG_TIME_PRECISE("Sorting by distance",start,end);
-
-	/*debugVector.push_back(new DebugCircle(insideCornerVector[0],15,Colors::DeepSkyBlue,2));	
-	debugVector.push_back(new DebugCircle(insideCornerVector[insideCornerVector.size()-1],15,Colors::Fuchsia,2));*/
-	
-	int numFeatures = outsideCornersVector.size();	
-
-
-	Mat outsideCornerMat = Mat(numFeatures,2,CV_32F);
-	for (int i = 0;i < outsideCornersVector.size();i++)
+static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, vector<Point2i> & features,	Mat & outsideCornerMat, int flannIndexType = 1)
+{
+	int numFeatures = features.size();
+	outsideCornerMat = Mat(numFeatures,2,CV_32F);
+	for (int i = 0;i < features.size();i++)
 	{
-		outsideCornerMat.at<float>(i,0) = (float)outsideCornersVector.at(i).x;
-		outsideCornerMat.at<float>(i,1) = (float)outsideCornersVector.at(i).y;
+		outsideCornerMat.at<float>(i,0) = (float)features.at(i).x;
+		outsideCornerMat.at<float>(i,1) = (float)features.at(i).y;
 	}
-	
-	LOGD(LOGTAG_QRFAST,"InsideCorners=%d,OutsideCorners=%d,OCM=%d",insideCornerVector.size(),outsideCornersVector.size(),outsideCornerMat.size().area());
-		
-	
-	
 
-	
+
 	//Build the FLANN index
+	struct timespec start,end;
 	SET_TIME(&start);	
-	cv::flann::Index * flannPointIndex;
 	if (flannIndexType == 0)
 	{		
 		LOGD(LOGTAG_QRFAST,"Creating linear index");
@@ -818,8 +670,140 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corner
 
 	SET_TIME(&end);
 	LOG_TIME_PRECISE("Building FLANN index",start,end);
-		
+}
 
+void FastQRFinder::CheckAlignmentPattern(Mat & img, Rect searchRegion, Point2i center, vector<Point2i> & patternPoints, vector<Drawable*> & debugVector)
+{
+	
+	int threshold = config->GetParameter("FastThresh");
+	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
+
+	vector<KeyPoint> keypoints;
+	FastWindow(img,keypoints,searchRegion, threshold,nonMaxSuppress);
+
+	int scoreSearchSize = config->GetParameter("MaxThreshSize");
+	int searchIterations = config->GetParameter("MaxThreshCount");
+	
+	vector<Point2i> insideCornerVector, outsideCornersVector;
+	MapBasedSuppression(keypoints,outsideCornersVector,insideCornerVector,Size2i(scoreSearchSize,scoreSearchSize),searchIterations);
+		
+	std::sort(insideCornerVector.begin(),insideCornerVector.end(),PointCompare(center));
+
+	int count = 0;
+	for (vector<Point2i>::iterator it = insideCornerVector.begin(); it != insideCornerVector.end(); it++)
+	{
+		count++;
+		if (count >= 4)
+			break;
+		patternPoints.push_back((*it));
+	}
+
+}
+
+void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corners, vector<Drawable*> & debugVector)
+{
+	struct timespec startTotal,endTotal;
+	SET_TIME(&startTotal);
+
+	//Get parameters from UI. Need to store as local variables because they are accessed many times per frame.
+	int debugLevel = (int)config->GetParameter("FASTDebug");
+	int searchSize = config->GetIntegerParameter("K-NN");
+	double flannRadius = std::pow(config->GetParameter("FLANNRadius"),2.0);
+	int searchParams = config->GetIntegerParameter("FlannSearchParams");
+	bool useRadius = config->GetBooleanParameter("DoRadiusSearch");
+	int flannIndexType = config->GetIntegerParameter("FlannIndexType");
+	int numTrees = config->GetIntegerParameter("NumKDTrees");
+	int threshold = config->GetParameter("FastThresh");
+	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
+
+
+	//FAST corner detection
+	vector<KeyPoint> keypoints;
+
+	struct timespec start,end;
+	LOGD(LOGTAG_QRFAST,"Performing FAST detection");
+
+	SET_TIME(&start);
+	FastWindow(img,keypoints,roi, threshold,nonMaxSuppress);
+	SET_TIME(&end);
+
+	double fastTime_local = calc_time_double(start,end);
+	fastTime = (fastTime + fastTime_local)/2.0;
+	config->SetLabelValue("FAST time",(float)fastTime/1000.0f);
+	LOGD(LOGTAG_QRFAST,"FAST complete. %d points found.",keypoints.size());
+
+	
+	
+	vector<Point2i> insideCornerVector, outsideCornersVector;
+
+	//If didn't do nonmax during FAST, perform here using maps
+	if (!nonMaxSuppress)
+	{		
+		int scoreSearchSize = config->GetParameter("MaxThreshSize");
+		int searchIterations = config->GetParameter("MaxThreshCount");
+		MapBasedSuppression(keypoints,outsideCornersVector,insideCornerVector,Size2i(scoreSearchSize,scoreSearchSize),searchIterations);
+	}
+	//Otherwise, just add the points to vectors
+	else
+	{	
+		SET_TIME(&start);
+		//Sort points by angle and add to vectors
+		for (int i=0;i<keypoints.size();i++)
+		{
+			KeyPoint kp = keypoints[i];
+			Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);	
+			if (kp.angle > 180)
+			{
+				insideCornerVector.push_back(point);
+			}
+			else
+			{	
+				if (debugLevel > 2)
+					debugVector.push_back(new DebugCircle(point,4,Colors::Red));
+				outsideCornersVector.push_back(point);
+			}
+		}	
+		SET_TIME(&end);
+		double maxThreshTime_local = calc_time_double(start,end);
+		maxThreshTime = (maxThreshTime + maxThreshTime_local)/2.0;
+	}
+
+	//No features to track, so return NULL
+	if (outsideCornersVector.size() < 2 || insideCornerVector.size() < 2)
+	{
+		return;
+	}
+
+	for (int i=0;i<outsideCornersVector.size();i++)
+	{
+		if (debugLevel > 2)
+			debugVector.push_back(new DebugCircle(outsideCornersVector[i],4,Colors::Red));
+	}
+	//Calculate centroid of inner points
+	Point2i centroid(0,0);
+	for (int i=0;i<insideCornerVector.size();i++)
+	{	
+		if (debugLevel > 2)
+		{
+			debugVector.push_back(new DebugCircle(insideCornerVector[i],4,Colors::Gold));
+		}
+		centroid += insideCornerVector.at(i);
+	}
+
+	centroid = Point2i((int)round(((float)centroid.x)/((float)insideCornerVector.size())), 
+		(int)round(((float)centroid.y)/((float)insideCornerVector.size())));
+
+	//Sort points according to distance from centroid
+	SET_TIME(&start);
+	LOGD(LOGTAG_QRFAST,"Sorting inside points according to distance from (%d,%d)",centroid.x,centroid.y);
+	sort(insideCornerVector.begin(),insideCornerVector.end(),PointCompare(centroid));
+	SET_TIME(&end);
+	LOG_TIME_PRECISE("Sorting by distance",start,end);
+	
+	Mat outsideCornerMat;
+	cv::flann::Index * flannPointIndex;
+	BuildFLANNIndex(flannPointIndex, numTrees, outsideCornersVector,outsideCornerMat,flannIndexType);
+	
 	//Results
 	vector<FastQR::ThreePointLine> resultVector;
 	
@@ -845,8 +829,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corner
 	for (vector<Point2i>::iterator insideIt = insideCornerVector.begin(); insideIt != insideCornerVector.end(); insideIt++)
 	{
 		Point2i insideCornerPoint = *insideIt;
-		if (debugLevel > 2)
-			debugVector.push_back(new DebugCircle(insideCornerPoint,4,Colors::Gold));
+	
 
 		objectPoints.at<float>(0,0) = (float)insideCornerPoint.x;
 		objectPoints.at<float>(0,1) = (float)insideCornerPoint.y;
@@ -860,26 +843,21 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corner
 			continue;
 		}
 */
-
-
 		struct timespec innerStart,innerEnd;
 		SET_TIME(&innerStart);
 
-		int result = searchSize;
-
+		int result;
 		if (useRadius)
 		{
 			int radiusSearchResult = flannPointIndex->radiusSearch(objectPoints, indexMatrix, distanceMatrix,flannRadius, searchSize , cv::flann::SearchParams(searchParams)); 
-			if (radiusSearchResult < searchSize)
-				result = radiusSearchResult;
+			result = MIN(radiusSearchResult,searchSize);
 		}
 		else
 		{
 			flannPointIndex->knnSearch(objectPoints, indexMatrix, distanceMatrix, searchSize, cv::flann::SearchParams(searchParams));
+			result = MIN(searchSize,outsideCornerMat.rows);
 		}
 		//LOGV(LOGTAG_QRFAST,"RadiusMode=%d,Pt(%d,%d) - FLANN(%d < %lf) complete(%d).",useRadius,insideCornerPoint.x,insideCornerPoint.y,searchSize,flannRadius,result);
-		
-
 		SET_TIME(&innerEnd);
 		flannTime_local += calc_time_double(innerStart,innerEnd);
 
@@ -887,7 +865,9 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corner
 		//Clear results from last point
 		closePointsVector.clear();
 		if (result != searchSize)
+		{
 			closePointsVector.resize(result);
+		}
 		
 		//Put results into a vector for processing
 		int * indexPtr = indexMatrix.ptr<int>(0);
@@ -973,14 +953,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, Rect roi, vector<Point2i> & corner
 		{
 			debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Green,1));
 			debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Green,1));
-		}	
-
-		if (debugLevel > 3)
-		{
-			char str[50];
-			sprintf(str,"#%d",resultVector.size());
-			debugVector.push_back(new DebugLabel(insideCornerPoint,str,Colors::Black,1.0f));
-		}
+		}		
 		indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
 	}
 	SET_TIME(&pointEnd);

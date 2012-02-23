@@ -1,14 +1,12 @@
 #include "QRFinder.hpp"
-#include "LogDefinitions.h"
-#include "QRCode.hpp"
 
 
-
-QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
+QRFinder::QRFinder(ARControllerDebugUI * _debugUI, FastQRFinder * _qrFinder)
 {
 	LOGD(LOGTAG_QR,"QRFinder initialized");
 	qrDecoder = new QRDecoder();
 	config = _debugUI;
+	qrFinder = _qrFinder;
 
 	finderPatternTime = 0;
 	edgeTime = 0;
