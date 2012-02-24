@@ -269,7 +269,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 
 	//Get parameters from config
 	edgeThreshold = config->GetIntegerParameter("EdgeThreshold");
-	debugLevel = config->GetIntegerParameter("DebugLevel");
+	debugLevel = config->GetIntegerParameter("QR Debug Level");
 	int verticalResolution = config->GetIntegerParameter("YResolution");
 	nonMaxEnabled = config->GetBooleanParameter("EdgeNonMax");
 	minimumFinderPatternScore = config->GetIntegerParameter("MinimumFPScore");
@@ -340,11 +340,6 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 				{
 					debugVector.push_back(new DebugCircle(Point2i(x,y),0,Colors::Cyan,true));
 				}
-
-				//if (abs(transition) == 2)
-				//{
-				//	debugVector.push_back(new DebugCircle(Point2i(x,y),3,Colors::OrangeRed,1));
-				//}
 			}
 		}	
 	}
@@ -522,6 +517,8 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 									FinderPattern * newPattern = new FinderPattern(finderPatternCenter,finderPatternSize);
 									if (validatePattern(newPattern,finderPatterns))
 									{
+										vector<Point2i> corners;
+										qrFinder->LocateFPCorners(inputImg,newPattern,corners,debugVector);
 										fpVector.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
 										finderPatterns.push_back(newPattern);
 										if (FP_DEBUG_ENABLED && debugLevel > 0)
@@ -829,6 +826,7 @@ int QRFinder::FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[
 
 bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*> patternVector)
 {
+	//Quick size comparison against existing patterns
 	if (patternVector.size() > 1)
 	{
 		float avgSize = 0;
@@ -844,22 +842,25 @@ bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*
 		{
 			return false;
 		}		
-	} else if (patternVector.size() > 0)
-	{
-		float avgSize = 0;
-		for (int i= 0;i<patternVector.size();i++)
-		{
-			avgSize += patternVector.at(i)->size;
-		}
-		avgSize = avgSize / (float)patternVector.size();
-		
-		float variance = avgSize / 2.0f;
-
-		if (abs(newPattern->size - avgSize) > variance)
-		{
-			return false;
-		}		
 	}
+	//else if (patternVector.size() > 0)
+	//{
+	//	float avgSize = 0;
+	//	for (int i= 0;i<patternVector.size();i++)
+	//	{
+	//		avgSize += patternVector.at(i)->size;
+	//	}
+	//	avgSize = avgSize / (float)patternVector.size();
+	//	
+	//	float variance = avgSize / 2.0f;
+
+	//	if (abs(newPattern->size - avgSize) > variance)
+	//	{
+	//		return false;
+	//	}		
+	//}
+
+
 	return true;
 }
 

@@ -18,7 +18,7 @@ SelectBox::SelectBox(int itemsToDisplay, cv::Scalar _foregroundColor, cv::Scalar
 void SelectBox::AddItem(SelectBoxItem * newItem)
 {
 	newItem->AddClickDelegate(ClickEventDelegate::from_method<SelectBox,&SelectBox::ItemSelected>(this));
-	newItem->FillColor = backgroundColor;
+	newItem->SetFillColor(backgroundColor);
 	
 	int childCount = Children.size();
 	if (gridSize.height <= childCount)
@@ -43,12 +43,12 @@ void SelectBox::SetSelectedIndex(int index)
 void SelectBox::SetSelected(SelectBoxItem * item)
 {
 	if (selected != NULL)
-		selected->FillColor = backgroundColor;
+		selected->SetFillColor(backgroundColor);
 
 	selected = item;
 	
 	if (selected != NULL)
-		selected->FillColor = Colors::CornflowerBlue;
+		selected->SetFillColor(Colors::CornflowerBlue);
 }
 
 void SelectBox::ItemSelected(void * sender, EventArgs args)
@@ -64,10 +64,10 @@ void SelectBox::ItemSelected(void * sender, EventArgs args)
 
 		//Selected might be null if this is first selection
 		if (selected != NULL)
-			selected->FillColor = backgroundColor;
+			selected->SetFillColor(backgroundColor);
 		
 		selected = item;
-		selected->FillColor = Colors::CornflowerBlue;
+		selected->SetFillColor(Colors::CornflowerBlue);
 	}
 }
 

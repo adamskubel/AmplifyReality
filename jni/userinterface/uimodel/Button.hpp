@@ -5,6 +5,7 @@
 #include <opencv2/core/core.hpp>
 #include "GridLayout.hpp"
 #include "GraphicalUIElement.hpp"
+#include "AmplifyRealityGlobals.hpp"
 #include "Label.hpp"
 
 
@@ -25,9 +26,13 @@ public:
 	void DoLayout(Rect boundaries);
 	cv::Scalar FillColor, TextColor;
 
+	void SetFillColor(Scalar color);
+	
 	void SetText(string text);
 	void SetEnabled(bool enabled);
 	bool IsEnabled();
+	int BorderThickness;
+	float Alpha;
 
 private:
 	cv::Rect buttonBoundaries;
@@ -35,6 +40,8 @@ private:
 	std::vector<ClickEventDelegate> clickDelegateVector;
 	Label * buttonLabel;
 	bool isPressed, isEnabled;
+	bool buttonChanged;
+	Mat alphaBuffer;
 
 };
 

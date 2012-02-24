@@ -10,6 +10,7 @@
 #include "userinterface/uimodel/NumberSpinner.hpp"
 #include "userinterface/uimodel/DataDisplay.hpp"
 #include "userinterface/uimodel/PageDisplay.hpp"
+#include "userinterface/uimodel/TabDisplay.hpp"
 
 namespace DrawModes
 {
@@ -20,7 +21,7 @@ namespace DrawModes
 }
 
 
-class ARControllerDebugUI : public PageDisplay
+class ARControllerDebugUI : public TabDisplay
 {
 public:
 	ARControllerDebugUI(Engine * engine, Point2i position);
@@ -43,12 +44,12 @@ public:
 	//int GetIntegerParameter(std::string paramKey, int defaultValue = 0);
 
 
-	void AddNewParameter(std::string paramName, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
-	void AddNewParameter(std::string paramName, std::string paramKey, float startValue, float step = 1.0f, float minValue = 0.0f, float maxValue = MAXFLOAT, std::string format = "%f", int desiredPage = 0);
+	void AddNewParameter(std::string paramName, std::string paramKey, float startValue, float step, float minValue, float maxValue, std::string format,string category);
+	void AddNewParameter(std::string paramName, float startValue, float step, float minValue, float maxValue, std::string format, string category);
 
 	void SetLabelValue(std::string labelName, float value);
 	void AverageLabelValue(std::string labelName, float value);
-	void AddNewLabel(std::string labelName, std::string suffex, int desiredPage = 0);
+	void AddNewLabel(std::string labelName, std::string suffex, string category = "Data");
 
 	void ToggleVisibility(void * sender, EventArgs args);
 
@@ -69,8 +70,8 @@ private:
 	map<std::string,pair<Label*,std::string> > labelMap;
 	Size2i GridDimensions;
 
-	void FindNextPosition(Point2i & page, int & pageNum, int desiredPage = 0, Size2i controlSize = Size2i(1,1));
-	void AddInNextPosition(GraphicalUIElement * newControl, int desiredPage = 0);
+	void FindNextPosition(PageDisplay * pageObject, Point2i & page, int & pageNum, int desiredPage = 0, Size2i controlSize = Size2i(1,1));
+	void AddInNextPosition(GraphicalUIElement * newControl, string tabName, int desiredPage = 0);
 
 
 

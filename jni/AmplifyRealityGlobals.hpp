@@ -15,9 +15,17 @@
 	#define MAX_CALIBRATION_SAMPLES 16
 	#define USE_CALCULATED_CAMERA_MATRIX false
 
+	#define UI_BUTTON_COLOR Colors::LightSteelBlue
+	#define UI_SPECIAL_BUTTON_COLOR Colors::DarkGray
+	#define UI_BUTTON_SIZE	Size2i(140,70)
+	#define UI_BUTTON_ALT_STATE_COLOR Colors::LightSeaGreen
+	#define UI_BUTTON_PRESSED_COLOR Colors::DeepSkyBlue
+	#define UI_BORDER_THICKNESS 2
+	#define UI_BORDER_COLOR Colors::Transparent
+	
+	#define UI_ALPHA_ENABLED false
 
-	#define VERSION_STRING "0.01";
-
+	#define VERSION_STRING "0.47";
 	#define NO_ICONV true //Required for compiling zxing..doesn't work here though
 
 	//#define IS_NEXUS_S  //<--- UNCOMMENT THIS LINE FOR NEXUS S AND COMMENT FOR HTC SENSATION

@@ -251,7 +251,7 @@ void CalibrationController::ProcessFrame(Engine* engine)
 	else if (state == CalibrationControllerStates::Calculating1)
 	{
 		calculateButton->SetText("Calculating...");
-		calculateButton->FillColor = Colors::Gold;
+		calculateButton->SetFillColor(Colors::Gold);
 		state = CalibrationControllerStates::Calculating2;
 	}
 	else if (state == CalibrationControllerStates::Calculating2)
@@ -309,7 +309,7 @@ void CalibrationController::CalculateMatrices()
 	distortionMatDisplay->SetData(distortionMatrix);
 
 	calculateButton->SetText("Accept");
-	calculateButton->FillColor = Colors::MediumSeaGreen;
+	calculateButton->SetFillColor(Colors::MediumSeaGreen);
 	captureButton->SetText("Redo");
 
 }

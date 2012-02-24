@@ -97,13 +97,14 @@ void DebugLabel::Draw(Mat * rgbaImage)
 
 //Circle
 
-DebugCircle::DebugCircle(Point2i _center, int _radius, Scalar _color, int _thickness)
+DebugCircle::DebugCircle(Point2i _center, int _radius, Scalar _color, int _thickness, bool _dotCenter)
 {
 	instanceCount++;
 	center = _center;
 	radius = _radius;
 	color = _color;
 	thickness = _thickness;
+	dotCenter = _dotCenter;
 }
 
 DebugCircle::DebugCircle(Point2i _center, int _radius, Scalar _color, bool fill)
@@ -133,7 +134,11 @@ DebugCircle::~DebugCircle()
 void DebugCircle::Draw(Mat * rgbaImage)
 {
 	if (radius > 0)
+	{
 		circle(*rgbaImage,center,radius,color,thickness);
+		if (dotCenter)
+			circle(*rgbaImage,center,1,color,1);
+	}
 	else
 		rgbaImage->at<int32_t>(center.y,center.x) = ((unsigned char)color[3] << 24) + ((unsigned char)color[2] << 16) + ((unsigned char)color[1] << 8)  + ((unsigned char)color[0]);
 }

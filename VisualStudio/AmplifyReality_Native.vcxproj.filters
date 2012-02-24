@@ -409,6 +409,9 @@
     <ClCompile Include="..\jni\display\DebugDrawing.cpp">
       <Filter>Header Files\display</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\TabDisplay.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -779,6 +782,9 @@
     </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\QRFinder.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\TabDisplay.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

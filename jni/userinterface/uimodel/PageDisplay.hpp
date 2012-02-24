@@ -19,7 +19,8 @@ public:
 
 	void PreviousPage(void * sender, EventArgs args);
 	void NextPage(void * sender, EventArgs args);
-
+	
+	vector<GraphicalUIElement*> Children;
 
 private:
 	int currentPage;
@@ -29,8 +30,6 @@ private:
 	
 	void AdjustButtons();
 
-protected:	
-	vector<GraphicalUIElement*> Children;
 
 };
 

@@ -27,13 +27,14 @@ class DebugCircle : public Drawable
 {
 public:
 	static int instanceCount;
-	DebugCircle(Point2i _center, int _radius, Scalar _color, int _thickness);
+	DebugCircle(Point2i _center, int _radius, Scalar _color, int _thickness, bool dotCenter = false);
 	DebugCircle(Point2i _center, int _radius, Scalar _color = Colors::Red, bool fill = false);
 	DebugCircle(Point2f centerFloat, int _radius, Scalar _color = Colors::Red, bool fill = false);
 	~DebugCircle();
 	void Draw(Mat * rgbaImage);
 
 private:
+	bool dotCenter;
 	Point2i center;
 	int radius, thickness;
 	Scalar color;		

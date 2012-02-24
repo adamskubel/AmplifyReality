@@ -138,6 +138,8 @@ namespace FastQR
 			cosine = _cosine;
 		}
 
+		void DrawDebug(vector<Drawable*> & debugVector);
+
 		Point2i pt0,pt1,pt2;
 		int length;
 		float cosine;
@@ -152,9 +154,9 @@ class FastQRFinder
 
 public: 
 	FastQRFinder(ARControllerDebugUI * config);
-	void LocateFPCorners(Mat & img, Rect fpRect, vector<Point2i> & corners, vector<Drawable*> & debugVector);
+	void LocateFPCorners(Mat & img, FinderPattern * pattern,  vector<Point2i> & corners, vector<Drawable*> & debugVector);
 	void EnhanceQRCodes(Mat & img, QRCode * qrCode, vector<Drawable*> & debugVector);
-	void CheckAlignmentPattern(Mat & img, Rect searchRegion, Point2i center, vector<Point2i> & patternPoints, vector<Drawable*> & debugVector);
+	void CheckAlignmentPattern(Mat & img, Point2i center, Size2f patternSize, vector<Point2i> & patternPoints, vector<Drawable*> & debugVector);
 
 private:
 	void FindPoint(Point2i regionPoint, IDetectableContour * contour, map<int,multimap<int,Point2i>*> & regionMap);

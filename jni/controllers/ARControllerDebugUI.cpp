@@ -1,36 +1,17 @@
 #include "ARControllerDebugUI.hpp"
 
-ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : PageDisplay()
+ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : TabDisplay(true)
 {	
 	int padding = 20;
 	GridDimensions = Size2i(3,2);
 	
-	GridLayout * firstPage = new GridLayout(Size2i(4,3));
-	
-	AddChild(firstPage);
-	
-	/*firstPage->AddChild(fpsLabel,Point2i(0,0));*/
-
-	GridLayout * myGrid = new GridLayout(Size2i(3,6));	
-
-	//rotationLabel = new DataDisplay("%3.2lf",Colors::Red);	
-	//translationLabel = new DataDisplay("%3.2lf",Colors::Blue);
-	//myGrid->AddChild(rotationLabel,Point2i(0,2));
-	//myGrid->AddChild(translationLabel,Point2i(0,3));
-
-
+	GridLayout * myGrid = new GridLayout(Size2i(3,6));		
 	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
 	myGrid->AddChild(stateLabel,Point2i(0,0));
-	AddChild(myGrid);
+	PageDisplay * page0 = new PageDisplay();
+	page0->AddChild(myGrid);
+	AddTab("Data",page0); 
 		
-
-	//certaintyIndicator = new CertaintyIndicator(0);
-	//myGrid->AddChild(certaintyIndicator,Point2i(3,2));
-	
-	
-
-	/*AddNewParameter("MinFPScore",190,10.0f,100,300,"%3.1f",3);
-	AddNewParameter("MinAlignScore",180,10.0f,100,300,"%3.1f",3);*/
 		
 	//Need to automate this..maybe
 	SelectBox * drawModeSelect = new SelectBox(3,Colors::MidnightBlue);
@@ -41,13 +22,9 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Pa
 	drawModeSelect->SetSelectedIndex(1);
 	//AddInNextPosition(drawModeSelect,3);
 
-	currentDrawMode = DrawModes::GrayImage;
-		
-	//AddNewParameter("T-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
-	//AddNewParameter("R-Alpha",0.9f,0.05f,0.0f,1.0f,"%2.2f",3);
-	
+	currentDrawMode = DrawModes::GrayImage;	
 
-	SetPage(0);
+	SetTab(0);
 	SetVisible(true);
 	LOGD(LOGTAG_INPUT,"(DebugUI) Starting layout");
 	DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
@@ -74,33 +51,37 @@ void ARControllerDebugUI::SetLabelValue(std::string labelName, float labelValue)
 	}
 }
 
-void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string format, int desiredPage)
+void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string format, string category)
 {
 	Label * newLabel = new Label(format,Point2i(0,0),Colors::Black,Colors::White);
 
 	labelMap.insert(pair<std::string,pair<Label*,std::string> >(labelName,pair<Label*,std::string>(newLabel,format)));
-	AddInNextPosition(newLabel,desiredPage);
+	AddInNextPosition(newLabel,category);
 }
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName,  float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
+void ARControllerDebugUI::AddNewParameter(std::string paramName,  float defaultValue, float step, float minValue, float maxValue, std::string format, string category)
 {
-	AddNewParameter(paramName,paramName,defaultValue,step,minValue,maxValue,format,desiredPage);
+	AddNewParameter(paramName,paramName,defaultValue,step,minValue,maxValue,format,category);
 }
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string paramKey, float defaultValue, float step, float minValue, float maxValue, std::string format, int desiredPage)
+void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string paramKey, float defaultValue, float step, float minValue, float maxValue, std::string format, string category)
 {
 	if (parameterMap.find(paramKey) != parameterMap.end())	
 	{
 		LOGI(LOGTAG_INPUT,"Parameter already exists, deleting");
 		//Clean up last spinner
-		for (int i=0;i<Children.size();i++)
+		for (int i=0;i<TabChildren.size();i++)
 		{
-			UIElement * element = ((GridLayout*)Children.at(i))->GetElementByName(paramKey);
-			if (element != NULL)
+			PageDisplay * pageObject = (PageDisplay*)TabChildren.at(i)->TabContent;
+			for (int j=0;j<pageObject->Children.size();j++)
 			{
-				delete element;
-				LOGI(LOGTAG_INPUT,"Parameter deleted successfully.");
-				break;
+				UIElement * element = ((GridLayout*)pageObject->Children.at(i))->GetElementByName(paramKey);
+				if (element != NULL)
+				{
+					delete element;
+					LOGI(LOGTAG_INPUT,"Parameter deleted successfully.");
+					break;
+				}
 			}
 		}
 	}
@@ -112,31 +93,37 @@ void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string par
 	newSpinner->AddValueChangedDelegate(NumberSpinnerEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::NumberSpinnerValueChanged>(this));
 
 	parameterMap.insert(pair<std::string,float>(paramKey,defaultValue));
-	AddInNextPosition(newSpinner,desiredPage);
+	AddInNextPosition(newSpinner,category);
 }
 
-void ARControllerDebugUI::AddInNextPosition(GraphicalUIElement * newControl, int desiredPage)
+void ARControllerDebugUI::AddInNextPosition(GraphicalUIElement * newControl, string category, int desiredPage)
 {
+	PageDisplay * pageObject = (PageDisplay*)GetTabByName(category);
+	if (pageObject == NULL)
+	{
+		pageObject = new PageDisplay();
+		AddTab(category, pageObject);
+	}
 	Point2i position;
 	int page = -1;
-	FindNextPosition(position,page,desiredPage);
-	GridLayout * grid = (GridLayout*)Children.at(page);
+	FindNextPosition(pageObject, position,page,desiredPage);
+	GridLayout * grid = (GridLayout*)pageObject->Children.at(page);
 	LOGI(LOGTAG_INPUT,"Adding new control to cell (%d,%d) on page %d",position.x,position.y,page);
 	grid->AddChild(newControl,position);
 }
 
-void ARControllerDebugUI::FindNextPosition(Point2i & position, int & pageNum, int desiredPage, Size2i controlSize)
+void ARControllerDebugUI::FindNextPosition(PageDisplay * pageObject, Point2i & position, int & pageNum, int desiredPage, Size2i controlSize)
 {
-	if (desiredPage >= Children.size())
+	if (desiredPage >= pageObject->Children.size())
 	{
-		LOGW(LOGTAG_INPUT, "Requested page %d is out of range, only %d pages present",desiredPage,Children.size());
-		desiredPage = Children.size();
+		LOGW(LOGTAG_INPUT, "Requested page %d is out of range, only %d pages present",desiredPage,pageObject->Children.size());
+		desiredPage = pageObject->Children.size();
 	}
 
-	for (int page = desiredPage; page < Children.size(); page++)
+	for (int page = desiredPage; page < pageObject->Children.size(); page++)
 	{
 		LOGI(LOGTAG_INPUT,"Looking for empty positions on page %d",page);
-		GridLayout * grid = (GridLayout*) Children[page];
+		GridLayout * grid = (GridLayout*) pageObject->Children[page];
 
 		for (int x = 0; x < grid->GetWidth(); x++)
 		{
@@ -156,9 +143,8 @@ void ARControllerDebugUI::FindNextPosition(Point2i & position, int & pageNum, in
 	position = Point2i(0,0);
 
 	GridLayout * newGrid = new GridLayout(GridDimensions);	
-	AddChild(newGrid);
-	pageNum = Children.size()-1;
-	return;
+	pageObject->AddChild(newGrid);
+	pageNum = pageObject->Children.size()-1;
 }
 
 

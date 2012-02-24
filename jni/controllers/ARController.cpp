@@ -95,8 +95,8 @@ void ARController::initializeUI(Engine * engine)
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
 		
-	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MidnightBlue,Colors::White);
-	fpsLabel->DoLayout(Rect(10,10,30,15));
+	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MediumBlue,Colors::DarkTurquoise);
+	fpsLabel->DoLayout(Rect(engine->imageWidth - 40,10,30,15));
 
 
 	deletableObjects.push_back(collection);
@@ -233,7 +233,9 @@ void ARController::ProcessFrame(Engine * engine)
 
 	//If paused, keep reusing image until unpaused
 	if (!paused)
+	{
 		getImages(engine);
+	}
 	else
 	{
 		//Need to refresh the RGB image
@@ -247,7 +249,7 @@ void ARController::ProcessFrame(Engine * engine)
 
 	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector,decode);
 	
-	fastQRFinder->EnhanceQRCodes(*grayImage, item->qrCode, debugVector);
+	//fastQRFinder->EnhanceQRCodes(*grayImage, item->qrCode, debugVector);
 	
 	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
 	
@@ -359,7 +361,6 @@ void ARController::ProcessFrame(Engine * engine)
 
 void ARController::Draw(Mat * rgbaImage)
 {
-	fpsLabel->Draw(rgbaImage);
 	if (drawingLevel == 2 || drawingLevel == 3)
 	{
 		struct timespec start,end;
@@ -376,6 +377,9 @@ void ARController::Draw(Mat * rgbaImage)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
+	LOGD(LOGTAG_ARCONTROLLER,"ImgDepth=%d",rgbaImage->depth());
+	//Draw FPS label on top of everything else
+	fpsLabel->Draw(rgbaImage);
 	//Update textured quad 
 	quadBackground->SetImage(rgbaImage);
 }

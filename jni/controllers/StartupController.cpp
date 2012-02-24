@@ -69,7 +69,7 @@ void StartupController::Initialize(Engine * engine)
 	{
 		startButton->SetEnabled(false);
 		calibrateButton->SetEnabled(false);
-		startButton->FillColor = Colors::Red;
+		startButton->SetFillColor(Colors::Red);
 		label->SetText("Error! Unable to access camera. Try restarting your phone.");
 	}
 	

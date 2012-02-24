@@ -108,6 +108,7 @@
     <ClCompile Include="..\jni\userinterface\uimodel\NumberSpinner.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\TabDisplay.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
     <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp" />
     <ClCompile Include="..\jni\zxing\Binarizer.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="..\jni\userinterface\uimodel\PageDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\SelectBox.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\TabDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIConstants.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />

@@ -17,7 +17,7 @@ PageDisplay::~PageDisplay()
 
 void PageDisplay::DoLayout(Rect boundaryRectangle)
 {
-	const Size2i DefaultButtonSize(120,80);
+	const Size2i DefaultButtonSize = UI_BUTTON_SIZE;
 	LOGD(LOGTAG_INPUT,"Laying out PageDisplay, Rect=[%d,%d,%d,%d]",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 	Size2i buttonSize = DefaultButtonSize;
 
@@ -48,10 +48,10 @@ void PageDisplay::DoLayout(Rect boundaryRectangle)
 	}
 	else
 	{
-		nextPage = new Button(">>",nextButtonBoundary,Colors::Blue);
+		nextPage = new Button(">>",nextButtonBoundary,UI_SPECIAL_BUTTON_COLOR);
 		nextPage->AddClickDelegate(ClickEventDelegate::from_method<PageDisplay,&PageDisplay::NextPage>(this));
 
-		previousPage = new Button("<<",previousButtonBoundary,Colors::Blue);
+		previousPage = new Button("<<",previousButtonBoundary,UI_SPECIAL_BUTTON_COLOR);
 		previousPage->AddClickDelegate(ClickEventDelegate::from_method<PageDisplay,&PageDisplay::PreviousPage>(this));
 	}
 

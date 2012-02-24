@@ -17,20 +17,20 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI, FastQRFinder * _qrFinder)
 	minimumFinderPatternScore = 180;
 	minimumAlignmentPatternScore = 180;
 	alignDebugLevel = 0;
-
-	config->AddNewParameter("EdgeThreshold",edgeThreshold,1,0,255,"%3.0f",2);
-	config->AddNewParameter("MinimumFPScore",minimumFinderPatternScore,10,0,400,"%3.0f",2);
-	config->AddNewParameter("MinimumAPScore",minimumAlignmentPatternScore,10,0,400,"%3.0f",2);
-	config->AddNewParameter("DetectorSize",detectorSize,1,1,5,"%1.0f",2);
-	config->AddNewParameter("DebugLevel",debugLevel,1,-3,5,"%3.0f",2);
-	config->AddNewParameter("AlignDebug",debugLevel,1,-3,5,"%3.0f",2);
-	config->AddNewParameter("YResolution",2,1,1,50,"%2.0f",2);
-	config->AddNewParameter("EdgeNonMax",(float)nonMaxEnabled,1,0,1,"%1.0f",2);
+		
+	config->AddNewParameter("APFastScale",1.4f,0.1f,1.0f,100,"%2.1f","QR");
+	config->AddNewParameter("EdgeThreshold",edgeThreshold,1,0,255,"%3.0f","QR");
+	config->AddNewParameter("MinimumFPScore",minimumFinderPatternScore,10,0,400,"%3.0f","QR");
+	config->AddNewParameter("MinimumAPScore",minimumAlignmentPatternScore,10,0,400,"%3.0f","QR");
+	config->AddNewParameter("DetectorSize",detectorSize,1,1,5,"%1.0f","QR");
+	config->AddNewParameter("QR Debug Level",debugLevel,1,-3,5,"%3.0f","Debug");
+	config->AddNewParameter("AlignDebug",debugLevel,1,-3,5,"%3.0f","Debug");
+	config->AddNewParameter("YResolution",2,1,1,50,"%2.0f","QR");
+	config->AddNewParameter("EdgeNonMax",(float)nonMaxEnabled,1,0,1,"%1.0f","QR");
 	
-	config->AddNewLabel("FinderPatternTime"," ms",1);
-	config->AddNewLabel("EdgeTime"," ms",1);
-	config->AddNewLabel("NumVerticalCalc","",1);
-
+	config->AddNewLabel("FinderPatternTime"," ms");
+	config->AddNewLabel("EdgeTime"," ms");
+	config->AddNewLabel("NumVerticalCalc","");
 
 	//Initialize matrix size variables
 	imgSize = Size2i(0,0);

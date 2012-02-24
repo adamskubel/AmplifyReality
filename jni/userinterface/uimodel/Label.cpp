@@ -93,6 +93,18 @@ cv::Size2i Label::GetTextSize()
 
 void Label::Draw(Mat * rgbaImage)
 {		
+	//if (false)
+	//{
+	//	Mat antiAliasedText = Mat(lastSize.height, lastSize.width,CV_8U);
+	//	if(FillColor[3] > 0)
+	//	{
+	//		//If FillColor has nonzero alpha, draw background outline 
+	//		putText(antiAliasedText, Text.c_str(), Position, FontFace, FontScale, Colors::White, FontThickness*3, 8);
+	//	}
+	//	putText(antiAliasedText, Text.c_str(), Position, FontFace, FontScale, Colors::Black, FontThickness, 8);	
+	//}
+
+
 	if(FillColor[3] > 0)
 	{
 		//If FillColor has nonzero alpha, draw background outline 
@@ -100,6 +112,7 @@ void Label::Draw(Mat * rgbaImage)
 	}
 	putText(*rgbaImage, Text.c_str(), Position, FontFace, FontScale, TextColor, FontThickness, 8);	
 }
+
 
 void Label::DoLayout(Rect boundaryRectangle)
 {	
