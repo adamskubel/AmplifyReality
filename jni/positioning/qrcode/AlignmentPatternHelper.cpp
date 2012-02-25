@@ -103,7 +103,7 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 								int alignPatternSize = MAX(apXSize,apYSize);
 								
 								vector<Point2i> patternPoints;
-								qrFinder->CheckAlignmentPattern(inputImg,Point2i(tempXCenter,tempYCenter),Size2f(apXSize,apYSize),patternPoints,debugVector);
+								fastQRFinder->CheckAlignmentPattern(inputImg,Point2i(tempXCenter,tempYCenter),Size2f(apXSize,apYSize),patternPoints,debugVector);
 
 								for (int i=0;i<patternPoints.size();i++)
 								{

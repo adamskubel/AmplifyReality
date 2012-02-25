@@ -27,6 +27,7 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
 	//Create locator object
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
 
+
 	//Initialize image matrices
 	grayImage = new Mat();
 	rgbImage = new Mat();
@@ -89,6 +90,9 @@ void ARController::initializeUI(Engine * engine)
 	drawObjects.push_back(debugUI);
 	deletableObjects.push_back(debugUI);
 
+	debugUI->AddNewParameter("T-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
+	debugUI->AddNewParameter("R-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
+	
 	
 			
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
@@ -120,10 +124,10 @@ void ARController::Initialize(Engine * engine)
 	//WorldLoader Instance
 	worldLoader = new WorldLoader();
 
-	//FastQRFinder
-	fastQRFinder = new FastQRFinder(debugUI);	
 	//Create QRFinder
-	qrFinder = new QRFinder(debugUI,fastQRFinder);
+	qrFinder = new QRFinder(debugUI);
+	//Initialize decoder
+	qrDecoder = new QRDecoder(debugUI);
 
 	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
@@ -228,7 +232,8 @@ void ARController::ProcessFrame(Engine * engine)
 	item->clearOldData();
 	//engine->getTime(&item->time);
 	
-	//LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d, FPS=%f. Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
+	LOGV(LOGTAG_ARCONTROLLER,"Processing frame #%d, FPS=%f.",frameCount,fpsAverage);
+		//Loose objects: QR=%d, Rect=%d, Circ=%d, FP=%d",
 		//frameCount,fpsAverage,(int)QRCode::instanceCount,DebugRectangle::instanceCount,DebugCircle::instanceCount, FinderPattern::instanceCount);
 
 	//If paused, keep reusing image until unpaused
@@ -244,43 +249,8 @@ void ARController::ProcessFrame(Engine * engine)
 		
 	vector<Drawable*> debugVector;
 
-	bool decode = (controllerState == ControllerStates::Loading && (worldLoader != NULL && worldLoader->GetState() == WorldStates::LookingForCode));
-	LOGV(LOGTAG_ARCONTROLLER,"Decoding=%d",decode);
-
-	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector,decode);
+	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector);	
 	
-	//fastQRFinder->EnhanceQRCodes(*grayImage, item->qrCode, debugVector);
-	
-	LOGV(LOGTAG_ARCONTROLLER,"Drawing debug items");
-	
-	if (drawingLevel == 1 || drawingLevel == 3)
-	{
-		/*if (item->qrCode != NULL)
-			item->qrCode->Draw(rgbImage);*/
-		struct timespec draw_start, draw_end;
-		SET_TIME(&draw_start);
-		while (!debugVector.empty())
-		{
-			debugVector.back()->Draw(rgbImage);
-			delete debugVector.back();
-			debugVector.pop_back();
-		}
-		SET_TIME(&draw_end);
-		LOG_TIME_PRECISE("DebugDrawing",draw_start,draw_end);
-	}
-	else //Still need to clean up debug vector!!!!
-	{
-		struct timespec draw_start, draw_end;
-		SET_TIME(&draw_start);
-		while (!debugVector.empty())
-		{
-			delete debugVector.back();
-			debugVector.pop_back();
-		}
-		SET_TIME(&draw_end);
-		LOG_TIME_PRECISE("DebugCleanup",draw_start,draw_end);
-	}
-
 	//What happens past here depends on the state
 	if (controllerState == ControllerStates::Loading)
 	{		
@@ -292,8 +262,19 @@ void ARController::ProcessFrame(Engine * engine)
 		if (worldState == WorldStates::LookingForCode)
 		{
 			debugUI->SetStateDisplay("Searching");
-			if (item->qrCode != NULL && item->qrCode->validCodeFound && item->qrCode->TextValue.length() > 2)
-			{
+			if (item->qrCode != NULL && item->qrCode->isValidCode())
+			{	
+				struct timespec decodeStart,decodeEnd;
+				//Need binary image for this step
+				LOGD(LOGTAG_ARCONTROLLER,"Thresholding for decoding");
+				ImageProcessor::SimpleThreshold(grayImage, binaryImage);
+
+				SET_TIME(&decodeStart);
+				qrDecoder->DecodeQRCode(*binaryImage,item->qrCode,debugVector);
+
+				SET_TIME(&decodeEnd);
+				LOG_TIME("QR decode", decodeStart,decodeEnd);
+
 				LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm with text=%s",item->qrCode->TextValue.c_str());
 				//TODO: Move decoding to here
 				worldLoader->LoadRealm(item->qrCode->TextValue);
@@ -330,7 +311,7 @@ void ARController::ProcessFrame(Engine * engine)
 	{
 		debugUI->SetStateDisplay("Run");
 
-		if (item->qrCode != NULL && item->qrCode->validCodeFound)
+		if (item->qrCode != NULL && item->qrCode->isDecoded())
 		{
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
 			debugUI->SetTranslation(item->translationMatrix);
@@ -355,6 +336,37 @@ void ARController::ProcessFrame(Engine * engine)
 		LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
 	}
 
+	
+	if (drawingLevel == 1 || drawingLevel == 3)
+	{
+		if (item->qrCode != NULL)
+			item->qrCode->Draw(rgbImage);
+
+		struct timespec draw_start, draw_end;
+		SET_TIME(&draw_start);
+		while (!debugVector.empty())
+		{
+			debugVector.back()->Draw(rgbImage);
+			delete debugVector.back();
+			debugVector.pop_back();
+		}
+		SET_TIME(&draw_end);
+		LOG_TIME_PRECISE("DebugDrawing",draw_start,draw_end);
+	}
+	else //Still need to clean up debug vector!!!!
+	{
+		struct timespec draw_start, draw_end;
+		SET_TIME(&draw_start);
+		while (!debugVector.empty())
+		{
+			delete debugVector.back();
+			debugVector.pop_back();
+		}
+		SET_TIME(&draw_end);
+		LOG_TIME_PRECISE("DebugCleanup",draw_start,draw_end);
+	}
+
+
 	//Do final processing
 	Draw(rgbImage);
 }
@@ -377,7 +389,6 @@ void ARController::Draw(Mat * rgbaImage)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
-	LOGD(LOGTAG_ARCONTROLLER,"ImgDepth=%d",rgbaImage->depth());
 	//Draw FPS label on top of everything else
 	fpsLabel->Draw(rgbaImage);
 	//Update textured quad 
@@ -426,12 +437,7 @@ void ARController::getImages(Engine * engine)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("Gray->RGBA", start, end);
 	} 
-	
-	//if (USE_FEEDBACK_THRESH)
-	//	ImageProcessor::FeedbackBinarization(item);
-	//else
-//	ImageProcessor::SimpleThreshold(grayImage, binaryImage);
-	
+		
 	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{
 		SET_TIME(&start)

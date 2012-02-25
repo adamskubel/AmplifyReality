@@ -24,6 +24,8 @@ public:
 	std::vector<ARObjectDefinition*> Children;
 	std::string Name;
 
+	float qrSize;
+
 	static RealmDefinition * FromJNIEnv(JNIEnv * env, jobject realmObject);
 
 		

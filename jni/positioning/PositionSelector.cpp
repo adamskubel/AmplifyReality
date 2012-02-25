@@ -30,7 +30,7 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 	}
 	else
 	{
-		if (qrCode->validCodeFound)
+		if (qrCode->isValidCode())
 		{
 			LOGV(LOGTAG_POSITION,"Using position from code found this frame");
 

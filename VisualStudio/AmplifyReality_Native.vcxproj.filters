@@ -101,6 +101,9 @@
     <Filter Include="Header Files\positioning\fast">
       <UniqueIdentifier>{4ea7e6ca-30f9-4e41-8dd0-6de53ef34f32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{02795942-e225-4b0a-a954-57f7f0e626b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\jni\controllers\CalibrationController.cpp">
@@ -256,12 +259,6 @@
     <ClCompile Include="..\jni\positioning\qrcode\PerspectiveTransform.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\qrcode\FindPattern.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper_Symmetry.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\positioning\qrcode\FinderPatternHelper.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
@@ -355,9 +352,6 @@
     <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\display\objloader\list.cpp">
       <Filter>Header Files\display\objloader</Filter>
     </ClCompile>
@@ -394,15 +388,6 @@
     <ClCompile Include="..\jni\positioning\fast\FastTracking.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
-    <ClCompile Include="..\jni\positioning\fast\DetectableSquare.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\fast\FastQRDAC.cpp">
-      <Filter>Header Files\positioning\fast</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jni\positioning\fast\Clustering.cpp">
-      <Filter>Source Files\QR</Filter>
-    </ClCompile>
     <ClCompile Include="..\jni\positioning\qrcode\QRCode.cpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClCompile>
@@ -411,6 +396,15 @@
     </ClCompile>
     <ClCompile Include="..\jni\userinterface\uimodel\TabDisplay.cpp">
       <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\AlphaLayer.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\FinderPattern.cpp">
+      <Filter>Source Files\QR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
+      <Filter>Source Files\QR</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -612,9 +606,6 @@
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\qrcode\FindPattern.h">
-      <Filter>Header Files\positioning\qrcode</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\PerspectiveTransform.h">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
@@ -777,14 +768,20 @@
     <ClInclude Include="..\jni\display\Colors.hpp">
       <Filter>Header Files\display</Filter>
     </ClInclude>
-    <ClInclude Include="..\jni\positioning\fast\Clustering.hpp">
-      <Filter>Header Files\positioning\fast</Filter>
-    </ClInclude>
     <ClInclude Include="..\jni\positioning\qrcode\QRFinder.hpp">
       <Filter>Header Files\positioning\qrcode</Filter>
     </ClInclude>
     <ClInclude Include="..\jni\userinterface\uimodel\TabDisplay.hpp">
       <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\AlphaLayer.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\qrcode\FinderPattern.hpp">
+      <Filter>Header Files\positioning\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\util\GeometryUtil.hpp">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,8 @@
 #include "LogDefinitions.h"
-#include "FindPattern.h"
+#include "FinderPattern.hpp"
 #include <opencv2/core/core.hpp>
 #include "model/Drawable.hpp"
+#include "model/DebugShape.hpp"
 
 #ifndef QRCODE_HPP_
 #define QRCODE_HPP_
@@ -16,18 +17,23 @@ public:
 
 	vector<FinderPattern*> finderPatterns;
 	Point2i alignmentPattern;
-	bool validCodeFound; 
 	std::string TextValue;
 
-	QRCode(vector<FinderPattern*> _finderPatterns, bool codeFound, Point2i _alignmentPattern = Point2i(0,0));
+	QRCode(vector<FinderPattern*> _finderPatterns, Point2i _alignmentPattern = Point2i(0,0));
 	~QRCode();
 
-	vector<cv::Point2i> getPatternsAsPoints();	
+	void getTrackingPoints(vector<Point2f> & points);
 	void Draw(Mat * rgbaImage);
+	void sortCorners();
+	bool isValidCode();
+	bool isDecoded();
 
 	static int FPDistance(FinderPattern * a,  FinderPattern * b);
 	static int FPAcuteAngleGeometry(FinderPattern* a, FinderPattern* b, FinderPattern* c);
 	static QRCode * CreateFromFinderPatterns(vector<FinderPattern*> & finderPatterns);
+
+private:
+	vector<Point2i> trackingCorners;
 
 };
 

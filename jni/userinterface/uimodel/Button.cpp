@@ -104,28 +104,29 @@ void Button::SetFillColor(Scalar _fillColor)
 	FillColor = _fillColor;
 }
 
-static void alphaBlend(Point2i offset, Mat & src, Mat *& dst, float alpha)
+static void alphaBlend(Point2i offset, Mat & src, Mat & dst, float alpha)
 {
-	int width = MIN(src.cols,dst->cols);
+	int width = MIN(src.cols,dst.cols);
 	float invAlpha = 1.0f - alpha;
 	offset.x *= 4;
 	width *= 4;
-	//LOGV(LOGTAG_INPUT,"alpha=%f,1-alpha=%f,offset=(%d,%d),width=%d",alpha,invAlpha,offset.x,offset.y,width);
-	for (int y = 0;y < src.rows && y < dst->rows;y++)
+	struct timespec start,end;
+	SET_TIME(&start);
+	for (int y = 0;y < src.rows && y < dst.rows;y++)
 	{
 		const unsigned char * rowPtr = src.ptr<unsigned char>(y);
-		unsigned char * destPtr = dst->ptr<unsigned char>(y+offset.y);
+		unsigned char * destPtr = dst.ptr<unsigned char>(y+offset.y);
 
 		for (int x =0;x < width; x+= 4)
 		{
 			int destX = x+ offset.x;		
-			//LOGV(LOGTAG_INPUT,"%u * %f + %u * %f",rowPtr[x+0],alpha,destPtr[destX+0],invAlpha);
 			destPtr[destX+0] = saturate_cast<unsigned char>(rowPtr[x+0] * alpha + destPtr[destX+0] * invAlpha); 
-			//LOGV(LOGTAG_INPUT,"=%u",destPtr[destX+0]);
 			destPtr[destX+1] = saturate_cast<unsigned char>(rowPtr[x+1] * alpha + destPtr[destX+1] * invAlpha); 
 			destPtr[destX+2] = saturate_cast<unsigned char>(rowPtr[x+2] * alpha + destPtr[destX+2] * invAlpha); 
 		}
 	}
+	SET_TIME(&end);
+	LOG_TIME_PRECISE("AlphaBlend",start,end);
 }
 
 void Button::Draw(Mat * rgbaImage)
@@ -141,13 +142,13 @@ void Button::Draw(Mat * rgbaImage)
 			buttonChanged = false;
 		}
 
-		alphaBlend(Point2i(buttonBoundaries.x,buttonBoundaries.y),alphaBuffer,rgbaImage, Alpha);
+		alphaBlend(Point2i(buttonBoundaries.x,buttonBoundaries.y),alphaBuffer,*rgbaImage, Alpha);
 		
 		if (UI_BORDER_COLOR != Colors::Transparent)
 		{
 			if (buttonChanged)
 				cv::rectangle(alphaBuffer,buttonBoundaries,UI_BORDER_COLOR,2,8);		
-			alphaBlend(Point2i(buttonBoundaries.x,buttonBoundaries.y),alphaBuffer,rgbaImage, Alpha);
+			alphaBlend(Point2i(buttonBoundaries.x,buttonBoundaries.y),alphaBuffer,*rgbaImage, Alpha);
 		}
 	}
 	else 

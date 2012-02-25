@@ -70,36 +70,4 @@
 
 
 
-
-
-	//Some common math functions, should go elsewhere 
-	static bool IsClockWise(cv::Point2f p1, cv::Point2f p2, cv::Point2f p0)
-	{
-		return ((p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x)) > 0;
-	}
-
-	static int ipow(int base, int exp)
-	{
-		int result = 1;
-		while (exp)
-		{
-			if (exp & 1)
-				result *= base;
-			exp >>= 1;
-			base *= base;
-		}
-
-		return result;
-	}
-	
-	static int GetSquaredDistance(cv::Point2i pt0, cv::Point2i pt1)
-	{
-		return ipow(pt0.x-pt1.x,2) + ipow(pt0.y-pt1.y,2);
-	} 
-
-	static float GetPointDistance(cv::Point2f p1, cv::Point2f p2)
-	{
-		return sqrt(pow(abs(p1.x-p2.x),2) + pow(abs(p1.y-p2.y),2));
-	}
-
 #endif

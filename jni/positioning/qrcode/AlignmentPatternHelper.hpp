@@ -4,7 +4,7 @@
 
 #include "LogDefinitions.h"
 #include <opencv2/core/core.hpp>
-#include "FindPattern.h"
+#include "FinderPattern.hpp"
 #include "QRCode.hpp"
 #include "model/DebugShape.hpp"
 

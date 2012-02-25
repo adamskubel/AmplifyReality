@@ -4,6 +4,17 @@
 #define FP_DEBUG_ENABLED true
 #define DETECTOR_SIZE 2
 
+
+class PatternSizeCompare
+{
+	public:
+      bool operator()(const FinderPattern * fp0, const FinderPattern * fp1)
+	  {
+		  return (fp0->size < fp1->size);
+	  }
+};
+
+
 static bool isInRadius(vector<Point3i> & patterns, Point2i point)
 {
 	for (int i=0;i<patterns.size();i++)
@@ -297,32 +308,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 	double edgeTime_local = calc_time_double(start,end);
 	edgeTime = (edgeTime + edgeTime_local)/2.0;
 	config->SetLabelValue("EdgeTime",(float)edgeTime/1000.0f);
-
-
-	//Testing Matrix based edge detection	
-	/*
-
-	for (int y = 0; y < edgeArray.rows; y ++)
-	{	
-		const short * edgePtr = edgeArray.ptr<short>(y);
-		for (int x = 0; x < edgeArray.cols; x ++)
-		{
-			int transition = edgePtr[x];
-			if (transition < 0)
-			{
-				debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Blue,true));
-			}
-			else if (transition > 0)
-			{
-				debugVector.push_back(new DebugCircle(Point2i(x,y),1,Colors::Green,true));
-			}
-		}
-	}
-	return;
 	
-	*/
-	//TESTING
-
 	if (debugLevel <= -2)
 	{
 		for (int x = 1; x < verticalEdgeArray.rows-1; x ++)
@@ -501,28 +487,48 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 
 								tempXCenter = (int)round((float)tempXCenter / (float)passCount);
 								avgXSize = (int)round((float)avgXSize/(float)passCount);
-								allowedVariance = (int)round((float)avgYSize/2.0f);
-
-								//Pattern width must be within 50% of height
+								allowedVariance = (int)round((float)avgYSize/1.5f);
+								
+								//Pattern width must be within 66% of height
 								if (abs(avgXSize - avgYSize) <= allowedVariance)
 								{
 									Point2i finderPatternCenter = Point2i(tempXCenter,tempYCenter); //Center of finder pattern
 
-									int finderPatternSize =  MAX(avgXSize,avgYSize);// bw[0] + bw[1] + bw[2] + bw[3] + bw[4];
+									int finderPatternSize =  MAX(avgXSize,avgYSize);
 									int fpRadius = (int)round((float)finderPatternSize/2.0f);
 									int fpRadiusExclude = ipow(finderPatternSize,2);
 
 
 									//Create a new pattern
-									FinderPattern * newPattern = new FinderPattern(finderPatternCenter,finderPatternSize);
-									if (validatePattern(newPattern,finderPatterns))
+									FinderPattern * newPattern = new FinderPattern(finderPatternCenter,Size2i(avgXSize,avgYSize));
+
+									vector<Point2i> corners;
+									struct timespec fastStart,fastEnd;
+									SET_TIME(&fastStart);
+									fastQRFinder->LocateFPCorners(inputImg,newPattern,corners,debugVector);
+									SET_TIME(&fastEnd);
+									double fastFPTime_Local = calc_time_double(fastStart,fastEnd);
+									fastFPTime += fastFPTime_Local;
+									if (corners.size() > 3)
 									{
-										vector<Point2i> corners;
-										qrFinder->LocateFPCorners(inputImg,newPattern,corners,debugVector);
-										fpVector.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
-										finderPatterns.push_back(newPattern);
-										if (FP_DEBUG_ENABLED && debugLevel > 0)
-											debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::DeepSkyBlue,3));
+										if (validatePattern(newPattern,finderPatterns))
+										{
+											fpVector.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
+											finderPatterns.push_back(newPattern);
+											if (FP_DEBUG_ENABLED && debugLevel > 0)
+											{
+												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1));
+												for (int i=0;i<corners.size();i++)
+												{
+													debugVector.push_back(new DebugCircle(corners[i],10,Colors::DodgerBlue,2));
+												}
+											}
+										}
+										else
+										{
+											if (FP_DEBUG_ENABLED && debugLevel > 0)
+												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::Orange,2));
+										}
 									}
 									else
 									{
@@ -530,29 +536,6 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 											debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::Red,2));
 										delete newPattern;
 									}
-
-
-								//	for (int arrayCopy=0;arrayCopy<5;arrayCopy++)
-								//	{
-								//		fp->patternWidths[arrayCopy] = bw[arrayCopy];
-								//	}
-								//	LOGD(LOGTAG_QR,"Copied size array");
-
-								//if (skip)
-								//{
-								//	int s = SkipHeuristic(fpv);
-
-								//	if (s > 0)
-								//	{
-								//		y = y + s - bw[2] - 2;
-								//		skip = false; /* Do not skip again! */
-
-								//		if (y > inputImg.rows) /* Something went wrong, back up. */
-								//		{
-								//			y = y - s + bw[2] + 2;
-								//		}
-								//	}
-								//}
 								}
 								else
 								{
@@ -618,7 +601,10 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 	finderPatternTime = (finderPatternTime + finderPatternTime_local)/2.0;
 	config->SetLabelValue("FinderPatternTime",(float)(finderPatternTime/1000.0));
 
-	numVerticalCalc = (numVerticalCalc + calculatedEdges.size());
+	config->SetLabelValue("FPCornerTime",fastFPTime/1000.0);
+	fastFPTime = 0;
+
+	numVerticalCalc = idiv(numVerticalCalc + calculatedEdges.size(),2);
 	config->SetLabelValue("NumVerticalCalc",numVerticalCalc);
 }
 
@@ -646,7 +632,7 @@ int QRFinder::CheckRatios(int * newBw, int * oldBw, float scoreModifier)
 
 	if (!comparisonScore)
 	{
-		LOGV(LOGTAG_QR,"Failed comparison, widths= %d,%d,%d,%d,%d",newBw[0],newBw[1],newBw[2],newBw[3],newBw[4]);
+		//LOGV(LOGTAG_QR,"Failed comparison, widths= %d,%d,%d,%d,%d",newBw[0],newBw[1],newBw[2],newBw[3],newBw[4]);
 		return -1;
 	}
 	
@@ -698,20 +684,6 @@ int QRFinder::CheckRatios(int * newBw, int * oldBw, float scoreModifier)
 		return 0;
 	}
 }
-//
-//int QRFinder::SkipHeuristic(FinderPattern_vector * fpv)
-//{
-//	long skip = 0;
-//
-//	if (fpv->HitConfidence() >= 2)
-//	{
-//		skip = abs(fpv->at(0)->pt.x - fpv->at(1)->pt.x) - abs(fpv->at(0)->pt.y - fpv->at(1)->pt.y);
-//		/* Get space between the
-//		 two "top" finder patterns. */
-//	}
-//
-//	return skip;
-//}
 
 int QRFinder::FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector)
 {
@@ -813,54 +785,88 @@ int QRFinder::FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[
 	
 	if (CheckRatios(bw,fpbw) == 1)
 	{
-		LOGV(LOGTAG_QR,"CheckRatios Horizontal T: New= %d,%d,%d,%d,%d",bw[0],bw[1],bw[2],bw[3],bw[4]);
+		//LOGV(LOGTAG_QR,"CheckRatios Horizontal T: New= %d,%d,%d,%d,%d",bw[0],bw[1],bw[2],bw[3],bw[4]);
 		xSize = bw[0]+bw[1]+bw[2]+bw[3]+bw[4];
 		return (j - bw[4] - bw[3]) - (bw[2] / 2);
 	}
 	else
 	{
-		LOGV(LOGTAG_QR,"CheckRatios Horizontal F: New= %d,%d,%d,%d,%d",bw[0],bw[1],bw[2],bw[3],bw[4]);
+		//LOGV(LOGTAG_QR,"CheckRatios Horizontal F: New= %d,%d,%d,%d,%d",bw[0],bw[1],bw[2],bw[3],bw[4]);
 		return 0;
 	}
 }
 
-bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*> patternVector)
+bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*> & patternVector)
 {
-	//Quick size comparison against existing patterns
-	if (patternVector.size() > 1)
+	
+
+	//Choose the best patterns. If the new is used, return true.
+	if (patternVector.size() >= 2)
 	{
+
+		//LOGD(LOGTAG_QR,"Validating %d patterns",patternVector.size());
+		float minDeviance = config->GetParameter("MinFPDeviance");
+		float maxDevianceRatio = config->GetParameter("MaxDevianceRatio");
+		vector<FinderPattern*> tmpVector = patternVector;
+
+		//std::sort(tmpVector.begin(),tmpVector.end(),PatternSizeCompare());
+				
 		float avgSize = 0;
-		for (int i= 0;i<patternVector.size();i++)
+		tmpVector.push_back(newPattern);
+		for (int i=0;i<tmpVector.size();i++)
 		{
-			avgSize += patternVector.at(i)->size;
+			avgSize += tmpVector.at(i)->size;
 		}
-		avgSize = avgSize / (float)patternVector.size();
-		
-		float variance = avgSize / 3.0f;
+		avgSize = avgSize / (float)tmpVector.size();
+		float avgDeviance = 0;
 
-		if (abs(newPattern->size - avgSize) > variance)
+		for (int i=0;i<tmpVector.size();i++)
 		{
-			return false;
-		}		
+			avgDeviance = abs(tmpVector[i]->size - avgSize);
+		}
+
+		float devRatio = avgDeviance/avgSize;
+
+
+		//Can't determine pattern validity accurately, so return true
+		if (devRatio > maxDevianceRatio)
+		{
+			//LOGD(LOGTAG_QR,"Too much deviance, aborting");
+			return true;
+		}
+		else
+		{
+			patternVector.clear();
+			avgDeviance = MAX(minDeviance*avgSize,avgDeviance);
+			//LOGD(LOGTAG_QR,"Allowed Deviance =%f",avgDeviance);
+			bool result = false;
+			for (int i=0;i<tmpVector.size();i++)
+			{
+				float deviance = abs(tmpVector[i]->size - avgSize);
+				if (deviance <= avgDeviance)
+				{					
+					//Don't push back new pattern
+					if (tmpVector.at(i) == newPattern)
+					{
+						//LOGD(LOGTAG_QR,"New pattern is ok!");
+						result = true;
+					}
+					else
+						patternVector.push_back(tmpVector.at(i));
+				}
+				else
+				{
+					//LOGD(LOGTAG_QR,"Deleting pattern with pt=(%d,%d)",tmpVector[i]->pt.x,tmpVector[i]->pt.y);
+					delete tmpVector.at(i);
+				}
+			}
+			
+			//LOGD(LOGTAG_QR,"Validated %d patterns!",patternVector.size());
+			return result;
+		}
 	}
-	//else if (patternVector.size() > 0)
-	//{
-	//	float avgSize = 0;
-	//	for (int i= 0;i<patternVector.size();i++)
-	//	{
-	//		avgSize += patternVector.at(i)->size;
-	//	}
-	//	avgSize = avgSize / (float)patternVector.size();
-	//	
-	//	float variance = avgSize / 2.0f;
-
-	//	if (abs(newPattern->size - avgSize) > variance)
-	//	{
-	//		return false;
-	//	}		
-	//}
-
-
+	
+	//LOGD(LOGTAG_QR,"Only %d patterns, cannot validate",patternVector.size());
 	return true;
 }
 
@@ -1002,88 +1008,3 @@ int QRFinder::FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vec
 	}
 }
 
-
-
-//Old way
-/*
-
-static int getTransitionVertical(const Mat & img, int x, int y, int threshold)
-{
-	int detectorTop[] = {-2,-1};
-	int detectorBottom[] = {1,2};
-
-	unsigned char testPx = img.at<unsigned char>(y,x);
-	unsigned char pxLower = (threshold > testPx) ? 0 : testPx - threshold;
-	unsigned char pxUpper = img.at<unsigned char>(y,x) + threshold;
-
-	int lightToDark = 0, darkToLight = 0;
-	for (int i=0;i<2;i++)
-	{
-		unsigned char px = img.at<unsigned char>((detectorTop[i] + y),x);
-		if (px < pxLower)
-		{
-			darkToLight++;
-		}
-		else if (px > pxUpper)
-		{
-			lightToDark++;
-		}
-	}
-	for (int i=0;i<2;i++)
-	{
-		unsigned char px = img.at<unsigned char>((detectorBottom[i] + y),x);
-		if (px < pxLower)
-		{
-			lightToDark++;
-		}
-		else if (px > pxUpper)
-		{
-			darkToLight++;
-		}
-	}
-	
-	if (darkToLight > lightToDark)
-		return 1;
-	else if (lightToDark == darkToLight)
-		return 0;
-	else
-		return -1; //Positive transition: top is darker, bottom is lighter
-}
-
-static int getTransition(const unsigned char* rowPtr, int x, int threshold)
-{
-	unsigned char pxLower = rowPtr[x] - threshold;
-	unsigned char pxUpper = rowPtr[x] + threshold;
-
-	int lightToDark  = 0, darkToLight = 0;
-	for (int i=1;i<3;i++)
-	{
-		unsigned char px = rowPtr[x - i];
-		if (px < pxLower)
-		{
-			darkToLight++;
-		}
-		else if (px > pxUpper)
-		{
-			lightToDark++;
-		}
-
-		px = rowPtr[x + i];
-		if (px < pxLower)
-		{
-			lightToDark++;
-		}
-		else if (px > pxUpper)
-		{
-			darkToLight++;
-		}
-	}	
-	
-	if (darkToLight > lightToDark)
-		return 1;
-	else if (lightToDark == darkToLight)
-		return 0;
-	else
-		return -1; //Positive transition: left is darker, right side is light
-}
-*/

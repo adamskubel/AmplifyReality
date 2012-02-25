@@ -50,15 +50,7 @@ extern "C"
 		pthread_mutex_unlock(&incomingMutex);
 		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
 	}
-
-	/*JNIEXPORT jint 
-		JNI_OnLoad(JavaVM * jvm, void * reserved)
-	{
-		LOGD(LOGTAG_JNI,"JNI Load Called");
-		javaVM = jvm;
-		return JNI_VERSION_1_6;
-	}*/
-
+	
 	JNIEXPORT jobjectArray JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
 	{		
@@ -249,7 +241,7 @@ void android_main(struct android_app* state)
 	pthread_mutex_init(&incomingMutex,NULL);
 	pthread_mutex_init(&outgoingMutex,NULL);
 
-
+	jniDataVector.clear();
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
@@ -311,12 +303,12 @@ void android_main(struct android_app* state)
 			{
 				count++;
 				mainEngine.communicator->AddIncomingMessage(jniDataVector.back());
-				LOGD(LOGTAG_MAIN,"Deleting JNI message. Count = %d",count);
-				delete jniDataVector.back();
+				//LOGD(LOGTAG_MAIN,"Deleting JNI message. Count = %d",count);
+				//delete jniDataVector.back();
 				jniDataVector.pop_back();
 			}
 			if (count > 0)
-				LOGD(LOGTAG_NETWORKING,"Got %d messages from JNI queue");
+				LOGD(LOGTAG_NETWORKING,"Got %d messages from JNI queue",count);
 			pthread_mutex_unlock(&incomingMutex);
 		}
 		else
@@ -335,11 +327,7 @@ void android_main(struct android_app* state)
 			else
 			{
 				LOGD(LOGTAG_NETWORKING,"Unable to lock outgoing mutex");
-			}
-			
-			/*vector<OutgoingMessage*> outgoingVector;
-			mainEngine.communicator->GetOutgoingMessages(outgoingVector);
-			sendMessagesToJNI(outgoingVector);*/
+			}			
 		}
 	
 

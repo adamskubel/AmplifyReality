@@ -8,23 +8,19 @@
 #include "zxing/qrcode/decoder/Decoder.h"
 #include "zxing/common/Counted.h"
 #include "model/DebugShape.hpp"
-
-//#define QR_DECODE_DEBUGGING
+#include "controllers/ARControllerDebugUI.hpp"
 
 using namespace cv;
 class QRDecoder
 {
-
-
 public:
-	QRDecoder();
+	QRDecoder(ARControllerDebugUI * config);
 	~QRDecoder();
-	void DecodeQRCode(Mat & image, QRCode * qrCode, vector<Drawable*> & debugVector);
+	bool DecodeQRCode(Mat & image, QRCode * qrCode, vector<Drawable*> & debugVector);
 
 private:
 	zxing::qrcode::Decoder * decoder;
-
-
+	ARControllerDebugUI * config;
 };
 
 #endif

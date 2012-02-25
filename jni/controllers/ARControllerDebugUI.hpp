@@ -44,8 +44,8 @@ public:
 	//int GetIntegerParameter(std::string paramKey, int defaultValue = 0);
 
 
-	void AddNewParameter(std::string paramName, std::string paramKey, float startValue, float step, float minValue, float maxValue, std::string format,string category);
-	void AddNewParameter(std::string paramName, float startValue, float step, float minValue, float maxValue, std::string format, string category);
+	void AddNewParameter(std::string paramName, std::string paramKey, float startValue, float step, float minValue, float maxValue, std::string format,string category, bool mapOnly = false);
+	void AddNewParameter(std::string paramName, float startValue, float step, float minValue, float maxValue, std::string format, string category, bool mapOnly = false);
 
 	void SetLabelValue(std::string labelName, float value);
 	void AverageLabelValue(std::string labelName, float value);

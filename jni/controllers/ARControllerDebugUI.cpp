@@ -59,13 +59,19 @@ void ARControllerDebugUI::AddNewLabel(std::string labelName, std::string format,
 	AddInNextPosition(newLabel,category);
 }
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName,  float defaultValue, float step, float minValue, float maxValue, std::string format, string category)
+void ARControllerDebugUI::AddNewParameter(std::string paramName,  float defaultValue, float step, float minValue, float maxValue, std::string format, string category, bool mapOnly)
 {
-	AddNewParameter(paramName,paramName,defaultValue,step,minValue,maxValue,format,category);
+	AddNewParameter(paramName,paramName,defaultValue,step,minValue,maxValue,format,category,mapOnly);
 }
 
-void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string paramKey, float defaultValue, float step, float minValue, float maxValue, std::string format, string category)
+void ARControllerDebugUI::AddNewParameter(std::string paramName, std::string paramKey, float defaultValue, float step, float minValue, float maxValue, std::string format, string category, bool mapOnly)
 {
+	if (mapOnly)
+	{
+		parameterMap.insert(pair<std::string,float>(paramKey,defaultValue));
+		return;
+	}
+
 	if (parameterMap.find(paramKey) != parameterMap.end())	
 	{
 		LOGI(LOGTAG_INPUT,"Parameter already exists, deleting");

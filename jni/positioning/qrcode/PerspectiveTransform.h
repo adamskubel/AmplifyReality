@@ -3,7 +3,7 @@
 #ifndef PT_H
 #define PT_H
 
-#include "FindPattern.h"
+#include "FinderPattern.hpp"
 #include <opencv2/core/core.hpp>
 
 using namespace cv;

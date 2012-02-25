@@ -44,11 +44,13 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 	qrVector.push_back(Point3f(apSize,apSize,0)); //alignment pattern
 	qrVector.push_back(Point3f(0,qrSize,0));
 		
-	vector<Point2f> imagePointVector;// = vector<Point2f>();
+	vector<Point2f> imagePointVector;/*
 	imagePointVector.push_back(Point2f(qrCode->finderPatterns.at(0)->pt.x,qrCode->finderPatterns.at(0)->pt.y));
 	imagePointVector.push_back(Point2f(qrCode->finderPatterns.at(1)->pt.x,qrCode->finderPatterns.at(1)->pt.y));
 	imagePointVector.push_back(Point2f(qrCode->alignmentPattern.x, qrCode->alignmentPattern.y));
-	imagePointVector.push_back(Point2f(qrCode->finderPatterns.at(2)->pt.x,qrCode->finderPatterns.at(2)->pt.y));
+	imagePointVector.push_back(Point2f(qrCode->finderPatterns.at(2)->pt.x,qrCode->finderPatterns.at(2)->pt.y));*/
+
+	qrCode->getTrackingPoints(imagePointVector);
 
 	/*LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"ImagePoints",&imagePointVector);
 	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_QR,"QR-Points",&qrVector);*/

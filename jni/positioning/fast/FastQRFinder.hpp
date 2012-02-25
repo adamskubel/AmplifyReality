@@ -9,7 +9,7 @@
 
 #include <vector>
 #include "LogDefinitions.h"
-#include "positioning/qrcode/FindPattern.h"
+#include "positioning/qrcode/FinderPattern.hpp"
 #include "positioning/qrcode/QRCode.hpp"
 #include "model/Drawable.hpp"
 #include "model/DebugShape.hpp"

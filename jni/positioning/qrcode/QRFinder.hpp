@@ -8,7 +8,7 @@
 #include <opencv2/objdetect/objdetect.hpp>
 #include <vector>
 #include "LogDefinitions.h"
-#include "FindPattern.h"
+#include "FinderPattern.hpp"
 #include "QRCode.hpp"
 #include "model/Drawable.hpp"
 #include "model/DebugShape.hpp"
@@ -20,6 +20,7 @@
 #include "positioning/fast/FastQRFinder.hpp"
 #include "LogDefinitions.h"
 #include "QRCode.hpp"
+#include "util/GeometryUtil.hpp"
 
 
 using namespace cv;
@@ -29,9 +30,9 @@ using namespace std;
 class QRFinder
 {
 public:
-	QRFinder(ARControllerDebugUI * debugUI, FastQRFinder * fastQR);
+	QRFinder(ARControllerDebugUI * debugUI);
 	~QRFinder();
-	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector, bool decode);
+	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector);
 
 private:
 	//Finder patterns
@@ -40,7 +41,7 @@ private:
 	int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int * verticalPatternSize = NULL);
 	int FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector);
 	void FindEdgesVerticalClosed(const Mat & inputImg, int xPosition);
-	bool validatePattern(FinderPattern * newPattern, vector<FinderPattern*> patternVector);
+	bool validatePattern(FinderPattern * newPattern, vector<FinderPattern*> & patternVector);
 	//int SkipHeuristic(vector<FinderPattern*> & patternVector);
 		
 	//Alignment pattern
@@ -54,8 +55,7 @@ private:
 	
 	//Fields
 	ARControllerDebugUI * config;
-	QRDecoder * qrDecoder;	
-	FastQRFinder * qrFinder;
+	FastQRFinder * fastQRFinder;
 
 	//Stateful image values
 	Size2i imgSize;
@@ -64,7 +64,7 @@ private:
 	map<int,bool> calculatedEdges;
 
 	//Statistics
-	double finderPatternTime, edgeTime;
+	double finderPatternTime, edgeTime, fastFPTime;
 	int numVerticalCalc;
 
 	//Parameters

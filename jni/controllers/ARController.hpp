@@ -77,9 +77,10 @@ private:
 
 	QRLocator * qrLocator;
 	QRFinder * qrFinder;
+	QRDecoder * qrDecoder;
+
 	AugmentedView * augmentedView;
 	WorldLoader * worldLoader;
-	FastQRFinder * fastQRFinder;
 
 	//UI objects
 	ARControllerDebugUI * debugUI;
