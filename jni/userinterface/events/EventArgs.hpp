@@ -68,4 +68,14 @@ public:
 
 };
 
+class KeyEventArgs : public EventArgs
+{
+public:
+	KeyEventArgs(int32_t _keyCode);
+	KeyEventArgs(int32_t _keyCode, char keyCharacter);
+	int32_t keyCode;
+	char KeyCharacter;
+	bool hasCharacter;
+};
+
 #endif

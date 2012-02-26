@@ -27,6 +27,8 @@ public:
 	void sortCorners();
 	bool isValidCode();
 	bool isDecoded();
+	
+	bool GuessAlignmentPosition(Point2i & result,Size2i & size);
 
 	static int FPDistance(FinderPattern * a,  FinderPattern * b);
 	static int FPAcuteAngleGeometry(FinderPattern* a, FinderPattern* b, FinderPattern* c);

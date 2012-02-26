@@ -34,11 +34,14 @@ public:
 
 	void SetText(std::string newText);
 
+	void SetLayout(bool centerX,bool centerY, bool scaleToFit);
+
 private:
 	int fontBaseline;
 	Size2i lastSize;
 	Point2i lastPosition;
 	std::string Text;
+	bool centerX,centerY, scaleToFit;
 };
 
 #endif

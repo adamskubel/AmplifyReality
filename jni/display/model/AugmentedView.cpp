@@ -76,14 +76,14 @@ void AugmentedView::Render(OpenGL * openGL)
 	{		
 		ARObject * object = objectVector.at(i);
 
-		//LOGV(LOGTAG_OPENGL,"Drawing ARObject at (%f,%f,%f)",object->position.x,object->position.y,object->position.z);
+		LOGV(LOGTAG_OPENGL,"Drawing ARObject at (%f,%f,%f)",object->position.x,object->position.y,object->position.z);
 
 		 
 		Mat modelMatrix = Mat::eye(4,4,CV_32F);
 		
 		OpenGLHelper::translate(modelMatrix,Point3f(object->position.x,object->position.y,object->position.z));
 		
-		//LOGV(LOGTAG_OPENGL,"With rotation (%f,%f,%f)",object->rotation.x,object->rotation.y,object->rotation.z);
+		LOGV(LOGTAG_OPENGL,"With rotation (%f,%f,%f)",object->rotation.x,object->rotation.y,object->rotation.z);
 
 		OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
 		OpenGLHelper::rotate(modelMatrix,object->rotation.y, Point3f(0.0f, 1.0f, 0.0f));
@@ -117,8 +117,8 @@ void AugmentedView::Update(FrameItem * item)
 
 void AugmentedView::SetCameraPosition(OpenGLRenderData & renderData)
 {	
-	/*LOGD_Mat(LOGTAG_POSITION,"Camera position",position);
-	LOGD_Mat(LOGTAG_POSITION,"Camera rotation",rotation);*/
+	LOGD_Mat(LOGTAG_POSITION,"Camera position",position);
+	LOGD_Mat(LOGTAG_POSITION,"Camera rotation",rotation);
 	
 	Mat projection = Mat::eye(4,4,CV_32F);
 	OpenGLHelper::gluPerspective(projection,40.0f,1.7f,20.0f, 600.0f);

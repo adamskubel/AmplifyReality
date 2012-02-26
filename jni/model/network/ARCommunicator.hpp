@@ -15,8 +15,14 @@ public:
 	bool HasOutgoingMessages();
 	void AddIncomingMessage(IncomingMessage * message);
 	bool FilterMessages(std::string filter, std::vector<IncomingMessage*> & newMsgs);
+	void SetConnected(bool connected);
+	bool IsConnected();
+	std::string GetConnectionString();
+	void SetConnectionString(std::string connectionString);
 
 private:	
+	std::string connectionString;
+	bool isConnected;
 	//Message queues used to communicate with outside
 	std::vector<IncomingMessage*> incomingMessageQueue;
 	std::vector<OutgoingMessage*> outgoingMessageQueue;	

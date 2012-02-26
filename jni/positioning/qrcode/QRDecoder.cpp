@@ -110,7 +110,6 @@ bool QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 		LOGV(LOGTAG_QR,"Text = %s",result->getText()->getText().c_str());
 		qrCode->TextValue = std::string(result->getText()->getText().c_str());
 		success = true;
-		debugVector.push_back(new DebugLabel(qrCode->finderPatterns[0]->pt,qrCode->TextValue,Colors::Black,2.0f,Colors::Beige));
 	}
 	catch (exception & exp)
 	{

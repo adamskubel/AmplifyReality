@@ -30,6 +30,20 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Ta
 	DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
 }
 
+void ARControllerDebugUI::SetLabelValue(std::string labelName, std::string labelText)
+{
+	map<std::string,pair<Label*,std::string> >::iterator labelIterator = labelMap.find(labelName);
+
+	if (labelIterator != labelMap.end())
+	{	
+		(*labelIterator).second.first->SetText(labelText);
+	}
+	else
+	{
+		LOGW(LOGTAG_INPUT,"Attempted to set value of non-existent label: %s",labelName.c_str());
+	}
+}
+
 void ARControllerDebugUI::SetLabelValue(std::string labelName, float labelValue)
 {
 	map<std::string,pair<Label*,std::string> >::iterator labelIterator = labelMap.find(labelName);

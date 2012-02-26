@@ -338,7 +338,7 @@ static void sortKPMap(const map<int,map<int,KeyPoint>*> & keyPointMap_Start, map
 	//LOGD(LOGTAG_QRFAST,"Sorting complete.");
 }
 
-static void sortPointsByAngle(map<int,map<int,KeyPoint>*> & keyPointMap_Outer, map<int,map<int,KeyPoint>*> & keyPointMap_Inner, const vector<KeyPoint> keypoints)
+static void sortPointsByAngle(map<int,map<int,KeyPoint>*> & keyPointMap_Outer, map<int,map<int,KeyPoint>*> & keyPointMap_Inner, const vector<KeyPoint> keypoints, bool insideOnly = false)
 {
 	for (int i=0;i<keypoints.size();i++)
 	{
@@ -358,7 +358,7 @@ static void sortPointsByAngle(map<int,map<int,KeyPoint>*> & keyPointMap_Outer, m
 				(*it).second->insert(pair<int,KeyPoint>(point.y,kp));		
 			}
 		}
-		else
+		else if (!insideOnly) 
 		{
 			map<int,map<int,KeyPoint>* >::iterator it = keyPointMap_Outer.find(point.x);
 			if (it == keyPointMap_Outer.end())
@@ -585,7 +585,7 @@ static bool keyPointTest(vector<Point2i> & innerPoints, FinderPattern * pattern,
 //	}
 //}
 
-static void MapBasedSuppression(vector<KeyPoint> & keypoints, vector<Point2i> & outsideCornersVector, vector<Point2i> & insideCornersVector, Size2i searchSize, int iterations)
+static void MapBasedSuppression(vector<KeyPoint> & keypoints, vector<Point2i> & outsideCornersVector, vector<Point2i> & insideCornersVector, Size2i searchSize, int iterations, bool insideOnly = false)
 {
 	map<int,map<int,KeyPoint>*> insideCornersMap_Unsorted;
 	map<int,map<int,KeyPoint>*> outsideCornersMap_Unsorted;
@@ -597,7 +597,9 @@ static void MapBasedSuppression(vector<KeyPoint> & keypoints, vector<Point2i> & 
 	//Extract local maximums	
 	//SET_TIME(&start);
 	sortKPMap(insideCornersMap_Unsorted,insideCornersMap,iterations,searchSize);
-	sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,iterations,searchSize);
+
+	if (!insideOnly) 
+		sortKPMap(outsideCornersMap_Unsorted,outsideCornersMap,iterations,searchSize);
 
 	//Add points to vectors
 	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = insideCornersMap.begin();xIterator != insideCornersMap.end(); xIterator++)
@@ -608,16 +610,18 @@ static void MapBasedSuppression(vector<KeyPoint> & keypoints, vector<Point2i> & 
 			insideCornersVector.push_back(point);
 		}
 	}
-	for (map<int,map<int,KeyPoint>*>::iterator  xIterator = outsideCornersMap.begin();xIterator != outsideCornersMap.end(); xIterator++)
+	if (!insideOnly) 
 	{
-		for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
+		for (map<int,map<int,KeyPoint>*>::iterator  xIterator = outsideCornersMap.begin();xIterator != outsideCornersMap.end(); xIterator++)
 		{
-			KeyPoint kp = (*yIterator).second;
-			Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);
-			outsideCornersVector.push_back(point);
+			for (map<int,KeyPoint>::iterator yIterator = (*xIterator).second->begin(); yIterator != (*xIterator).second->end(); yIterator++)
+			{
+				KeyPoint kp = (*yIterator).second;
+				Point2i point = Point2i((int)kp.pt.x,(int)kp.pt.y);
+				outsideCornersVector.push_back(point);
+			}
 		}
 	}
-
 	//Cleanup maps
 	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = insideCornersMap.begin(); deleteIt != insideCornersMap.end();deleteIt++) delete (*deleteIt).second;
 	for (map<int,map<int,KeyPoint>*>::iterator deleteIt = outsideCornersMap.begin(); deleteIt != outsideCornersMap.end();deleteIt++) delete (*deleteIt).second;
@@ -641,17 +645,14 @@ static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, v
 	SET_TIME(&start);	
 	if (flannIndexType == 0)
 	{		
-		LOGD(LOGTAG_QRFAST,"Creating linear index");
 		flannPointIndex = new flann::Index(outsideCornerMat, cv::flann::LinearIndexParams());
 	}
 	else if (flannIndexType == 1)
 	{
-		LOGD(LOGTAG_QRFAST,"Creating KDTree Index with %d trees",numTrees);
 		flannPointIndex = new flann::Index(outsideCornerMat,cv::flann::KDTreeIndexParams(numTrees));  
 	}
 	else if (flannIndexType == 2)
 	{		
-		LOGD(LOGTAG_QRFAST,"Creating KMeans index");
 		flannPointIndex = new flann::Index(outsideCornerMat,cv::flann::KMeansIndexParams());
 	}
 	else
@@ -717,13 +718,13 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		
 
 	//Draw points for debug view	
-	if (debugLevel > 4)
-	{
-		for (int i=0;i<outsideCornersVector.size();i++)
-		{
-			debugVector.push_back(new DebugCircle(outsideCornersVector[i],4,Colors::Red));
-		}
-	}
+	//if (debugLevel > 4)
+	//{
+	//	for (int i=0;i<outsideCornersVector.size();i++)
+	//	{
+	//		debugVector.push_back(new DebugCircle(outsideCornersVector[i],4,Colors::Red));
+	//	}
+	//}
 	if (debugLevel > 2)
 	{
 		for (int i=0;i<insideCornerVector.size();i++)

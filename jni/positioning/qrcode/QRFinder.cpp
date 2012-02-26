@@ -10,10 +10,9 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
 	finderPatternTime = 0;
 	edgeTime = 0;
 	fastFPTime = 0;
-	//fastAPTime = 0;
 	debugLevel = 1;
 	nonMaxEnabled = true;
-	edgeThreshold = 10;
+	edgeThreshold = 20;
 	detectorSize = 2;
 	minimumFinderPatternScore = 180;
 	minimumAlignmentPatternScore = 180;
@@ -64,8 +63,9 @@ private:
 
 static void chooseBestPatterns(vector<FinderPattern*> & patternVector)
 {
-	if (patternVector.size() <= 3)
+	if (patternVector.size() < 3)
 		return;
+	LOGV(LOGTAG_QR,"Sorting %d patterns",patternVector.size());
 
 	Point2i centroid(0,0);
 	for (int i =0;i<patternVector.size();i++)
@@ -83,38 +83,71 @@ static void chooseBestPatterns(vector<FinderPattern*> & patternVector)
 	}
 }
 
-
-QRCode * QRFinder::LocateQRCodes(cv::Mat& M, vector<Drawable*>& debugVector) 
+void QRFinder::prepareMatrices(Mat & inputImg)
 {
+	calculatedEdges.clear();	
+	numVerticalCalc = 0;
+
+	//If image size has changed, reallocate the matrix
+	if (imgSize.width != inputImg.cols || imgSize.height != inputImg.rows)
+	{
+		imgSize = Size2i(inputImg.cols,inputImg.rows);
+		LOGD(LOGTAG_QR,"Initializing new matrix, size=(%d,%d)",imgSize.width,imgSize.height);
+		edgeArray = Mat::zeros(inputImg.rows,inputImg.cols,CV_16S); //Maximized edges
+		verticalEdgeArray = Mat::zeros(inputImg.cols,inputImg.rows,CV_16S); //Maximized vertical edges
+	}
+}
+
+QRCode * QRFinder::LocateQRCodes(cv::Mat& inputImg, vector<Drawable*>& debugVector, QRCode * lastCode) 
+{
+	
+
+	prepareMatrices(inputImg);
+
+	float regionAdjuster = 1.5f;
+	vector<FinderPattern*> finderPatterns;
+		
 	struct timespec start,end;
 	SET_TIME(&start);
+	if (lastCode != NULL && lastCode->isValidCode())
+	{		
+		LOGV(LOGTAG_QR,"Tracking %d patterns",finderPatterns.size());
+		for (int i=0;i<lastCode->finderPatterns.size();i++)
+		{
+			FinderPattern * fp = lastCode->finderPatterns.at(i);
+			Size2i regionSize = fp->patternSize;
+			regionSize = Size2i((float)regionSize.width * regionAdjuster, (float)regionSize.height * regionAdjuster);
+			Rect fpRegion = Rect(fp->pt.x - regionSize.width,fp->pt.y - regionSize.height,2 * regionSize.width, 2 * regionSize.height);
+			ConstrainRectangle(inputImg,fpRegion);
+			
+			FindFinderPatterns(inputImg,fpRegion,finderPatterns,debugVector);
+		}
+	}
+	else
+	{
+		LOGV(LOGTAG_QR,"No tracking");
+		FindFinderPatterns(inputImg,Rect(0,0,inputImg.cols,inputImg.rows), finderPatterns, debugVector);
+	}
+	SET_TIME(&end);
+	LOG_TIME("FinderPatternSearch", start, end);	
 
-	vector<FinderPattern*> finderPatterns;
-
-	FindFinderPatterns(M, finderPatterns, debugVector);
-	
-	chooseBestPatterns(finderPatterns);
+	chooseBestPatterns(finderPatterns);	
 
 	//If 3 patterns are found, we've probably found a QR code. Generate it and return.
 	if (finderPatterns.size() == 3)
 	{		
 		LOGD(LOGTAG_QR,"Creating new code.");
 		QRCode * newCode = QRCode::CreateFromFinderPatterns(finderPatterns);
-		SET_TIME(&end);
-		LOG_TIME("QR Search(Found)", start, end);		
 		
 		//Determine alignment pattern position
 		struct timespec aStart,aEnd;
 		SET_TIME(&aStart);		
-		FindAlignmentPattern(M, newCode,debugVector);				
+		FindAlignmentPattern(inputImg, newCode,debugVector);				
 		SET_TIME(&aEnd);
 		LOG_TIME("Alignment Search", aStart, aEnd);
 
 		return newCode;
-	} 
-		
-	SET_TIME(&end);
-	LOG_TIME("QR Search(NotFound)", start, end);
+	} 	
 
 	QRCode * newCode = new QRCode(finderPatterns);	
 	return newCode;

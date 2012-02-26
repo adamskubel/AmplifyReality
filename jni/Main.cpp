@@ -13,6 +13,10 @@
 pthread_mutex_t incomingMutex, outgoingMutex;
 static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
+static std::string connectionString;
+static bool connectedToServer;
+
+
 //static JNIEnv * javaEnvironment;
 //static JavaVM * javaVM;
 //static jobject clientObject;
@@ -87,19 +91,25 @@ extern "C"
 		return returnArray;
 	}
 
-	//JNIEXPORT jobjectArray JNICALL 
-	//	Java_com_amplifyreality_AmplifyRealityActivity_SetJavaEnv(JNIEnv * env, jobject  obj, jobject _clientObject)
-	//{		
-	//	clientObject = _clientObject;
-	//	//javaEnvironment = new JNIEnv();
-	//	//LOGI(LOGTAG_JNI,"Copying java environment...");
-	//	//memcpy(javaEnvironment, env, sizeof(JNIEnv));
-	////	javaEnvironment = env;
+	
 
-	//	LOGI(LOGTAG_JNI,"JNIEnv set, version=%d",env->GetVersion());
+	JNIEXPORT void JNICALL 
+		Java_com_amplifyreality_AmplifyRealityActivity_SetConnected(JNIEnv * env, jobject  obj, jboolean connected)
+	{
+		pthread_mutex_lock(&incomingMutex);
+		LOGD(LOGTAG_JNI,"Setting connected state to %d",connected);
+		connectedToServer =  (connected != 0);
+		pthread_mutex_unlock(&incomingMutex);
+	}
 
-	//	javaEnvInitialized = true;
-	//}
+	JNIEXPORT jstring JNICALL 
+		Java_com_amplifyreality_AmplifyRealityActivity_GetConnectionString(JNIEnv * env, jobject  obj)
+	{
+		pthread_mutex_lock(&incomingMutex);
+		LOGD(LOGTAG_JNI,"Returning connection string:%s",connectionString.c_str());
+		pthread_mutex_unlock(&incomingMutex);
+		return env->NewStringUTF(connectionString.c_str());
+	}
 
 	
 }
@@ -242,6 +252,8 @@ void android_main(struct android_app* state)
 	pthread_mutex_init(&outgoingMutex,NULL);
 
 	jniDataVector.clear();
+	connectedToServer = false;
+	connectionString = "test";
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
@@ -298,6 +310,12 @@ void android_main(struct android_app* state)
 
 		if ( pthread_mutex_trylock(&incomingMutex) == 0)
 		{
+			mainEngine.communicator->SetConnected(connectedToServer);
+			if (connectionString.length() == 0)
+			{
+				connectionString = mainEngine.communicator->GetConnectionString();
+			}
+
 			int count = 0;
 			while (!jniDataVector.empty())
 			{
@@ -315,8 +333,7 @@ void android_main(struct android_app* state)
 		{
 			LOGD(LOGTAG_NETWORKING,"Unable to lock incoming mutex");
 		}
-
-
+		
 		if (mainEngine.communicator->HasOutgoingMessages())
 		{
 			if ( pthread_mutex_trylock(&outgoingMutex) == 0)

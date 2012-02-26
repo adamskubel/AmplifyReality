@@ -32,14 +32,14 @@ class QRFinder
 public:
 	QRFinder(ARControllerDebugUI * debugUI);
 	~QRFinder();
-	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector);
+	QRCode * LocateQRCodes(cv::Mat& M, vector<Drawable*> & debugVector, QRCode * lastCode = NULL);
 
 private:
 	//Finder patterns
-	void FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fpv, vector<Drawable*> & debugVector);
+	void FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vector<FinderPattern*> & fpv, vector<Drawable*> & debugVector);
 	int CheckRatios(int * bw, int  * oldBw, float scoreModifier = 1.0f);
 	int FindCenterVertical(const Mat& image, int x, int y, int fpbw[], vector<Drawable*> & debugVector, int * verticalPatternSize = NULL);
-	int FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector);
+	int FindCenterHorizontal(int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector);
 	void FindEdgesVerticalClosed(const Mat & inputImg, int xPosition);
 	bool validatePattern(FinderPattern * newPattern, vector<FinderPattern*> & patternVector);
 	//int SkipHeuristic(vector<FinderPattern*> & patternVector);
@@ -53,6 +53,9 @@ private:
 	bool CheckPoint(Mat & M, Point2i searchCenter, Size2i searchRange, int moduleSize);
 	bool CheckAlignmentDiagonals(const Mat& image, Point2i center, int * verticalBw, int * horizontalBw, vector<Drawable*> & debugVector);
 	
+	void prepareMatrices(Mat & inputImg);
+	void FindEdgesClosed(const Mat & inputImg, Rect regionOfInterest, Mat & edgeArray, short threshold, bool nonMaxSuppress, int detectorSize = 3, int yResolution = 1);
+
 	//Fields
 	ARControllerDebugUI * config;
 	FastQRFinder * fastQRFinder;

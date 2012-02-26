@@ -21,3 +21,16 @@ EventArgs::EventArgs()
 {
 	;
 }
+
+KeyEventArgs::KeyEventArgs(int32_t _keyCode)
+{
+	keyCode = _keyCode;
+	hasCharacter = false;
+}
+
+KeyEventArgs::KeyEventArgs(int32_t _keyCode, char keyCharacter)
+{
+	keyCode = _keyCode;
+	KeyCharacter = keyCharacter;
+	hasCharacter = true;
+}

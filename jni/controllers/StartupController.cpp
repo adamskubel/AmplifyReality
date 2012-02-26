@@ -9,12 +9,17 @@ StartupController::StartupController()
 
 StartupController::~StartupController()
 {
+	LOGD(LOGTAG_MAIN,"Cleaning up StartupController");
 	delete rgbaImage;
 
 	if (!isInitialized)
 		return;
-
-	deleteVector.clear();
+	
+	while (!deleteVector.empty())
+	{
+		delete deleteVector.back();
+		deleteVector.pop_back();
+	}
 }
 
 void StartupController::ProcessFrame(Engine * engine)
@@ -22,8 +27,21 @@ void StartupController::ProcessFrame(Engine * engine)
 	if (!isInitialized)
 		return;
 
+
 	//Draw background
 	rectangle(*rgbaImage,Point2i(0,0),Point2i(rgbaImage->cols,rgbaImage->rows),Colors::CornflowerBlue,-1);
+
+	if (!engine->communicator->IsConnected())
+	{
+		startButton->SetFillColor(Colors::LightSlateGray);
+		statusLabel->SetText("Offline mode only");
+	}
+	else
+	{
+		startButton->SetFillColor(Colors::LimeGreen);
+		statusLabel->SetText("Ready!");
+	}
+
 
 	//Draw UI objects
 	for (int i=0;i<drawObjects.size();i++)
@@ -49,7 +67,7 @@ void StartupController::Initialize(Engine * engine)
 
 	engine->inputHandler->SetRootUIElement(grid);
 
-	Button * startButton = new Button("Start",Colors::MidnightBlue);
+	startButton = new Button("Start",Colors::LimeGreen);
 	startButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::startButtonPress>(this));
 	startButton->Name = "Start";
 	
@@ -57,11 +75,15 @@ void StartupController::Initialize(Engine * engine)
 	calibrateButton->Name = "Calibrate";
 	calibrateButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::startButtonPress>(this));
 
-	Label * label = new Label("Status: Ready",Point2i(0,0),Colors::Black,Colors::White);
+	statusLabel = new Label("Ready!",Point2i(0,0),Colors::Black,Colors::White);
 
-	grid->AddChild(label,Point2i(0,0),Size(4,1));
-	grid->AddChild(startButton,Point2i(1,1),Size(2,1));
-	grid->AddChild(calibrateButton,Point2i(1,2),Size(2,1));
+	TextBox * hostName = new TextBox(engine->ScreenSize());
+	engine->inputHandler->AddTextListener(hostName);
+
+	grid->AddChild(statusLabel,Point2i(0,0),Size(4,1));
+	grid->AddChild(startButton,Point2i(1,1),Size(1,1));
+	grid->AddChild(calibrateButton,Point2i(2,1),Size(1,1));
+	grid->AddChild(hostName,Point2i(1,2),Size(2,1));
 		
 	drawObjects.push_back(grid);
 
@@ -70,9 +92,14 @@ void StartupController::Initialize(Engine * engine)
 		startButton->SetEnabled(false);
 		calibrateButton->SetEnabled(false);
 		startButton->SetFillColor(Colors::Red);
-		label->SetText("Error! Unable to access camera. Try restarting your phone.");
+		statusLabel->SetText("Error! Unable to access camera. Try restarting your phone.");
 	}
-	
+	else if (!engine->communicator->IsConnected())
+	{
+		startButton->SetFillColor(Colors::LightSlateGray);
+		statusLabel->SetText("Offline mode only");
+	}
+
 	quadBackground = new QuadBackground(engine->ScreenSize());
 
 	deleteVector.push_back(quadBackground);

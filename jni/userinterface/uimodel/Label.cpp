@@ -13,8 +13,10 @@ Label::Label(std::string text,  cv::Point2i position, cv::Scalar textColor,  cv:
 	FontFace = FONT_HERSHEY_SIMPLEX;
 
 	fontBaseline = 0;
-}
 
+	scaleToFit = true;
+	centerX = centerY = true;
+}
 
 Label::~Label()
 {
@@ -31,19 +33,29 @@ void Label::HandleInput()
 	return;
 }
 
+void Label::SetLayout(bool _centerX, bool _centerY, bool _scaleToFit)
+{
+	centerX = _centerX;
+	centerY = _centerY;
+	scaleToFit = _scaleToFit;
+}
+
 void Label::SetCenter(Point2i centerPoint)
 {	
 	lastPosition = centerPoint;
-	//LOGV(LOGTAG_INPUT,"Setting label center (%d,%d)",centerPoint.x,centerPoint.y);
 	Size2i size = GetTextSize();
-	Position = Point2i(centerPoint.x - size.width/2, centerPoint.y + size.height/2);
-	
+	Position = Point2i(centerPoint.x, centerPoint.y);
+	if (centerX)
+		Position.x = centerPoint.x - size.width/2;
+	if (centerY)
+		Position.y = centerPoint.y + size.height/2;
+
 	if (Position.x < 0 || Position.y < 0)
 	{
 		LOGW(LOGTAG_INPUT,"Attempted to place label outside of screen! (%d,%d)",Position.x,Position.y);
 		Position = Point2i(0,0);
 	}
-	//LOGV(LOGTAG_INPUT,"New position is (%d,%d)",Position.x,Position.y);
+
 }
 
 void Label::FitTextToBoundary(Size2f limits)
@@ -51,20 +63,18 @@ void Label::FitTextToBoundary(Size2f limits)
 	lastSize = limits;
 	Size2i size = GetTextSize();
 
-	/*if (FontScale > 2 && size.width <= limits.width && size.height <= limits.height)
-		return;*/
+	if (scaleToFit)
+	{
+		float ySpace = limits.height/(float)size.height;
+		float xSpace = limits.width/(float)size.width;
 
-	float ySpace = limits.height/(float)size.height;
-	float xSpace = limits.width/(float)size.width;
-		
-	FontScale *= std::min(xSpace,ySpace);
+		FontScale *= std::min(xSpace,ySpace);
 
-	if (FontScale > 1.0f)
-		FontScale = 1.0f;
-	if (FontScale <= 0.1f)
-		FontScale = 0.1f;
-	
-	//LOGV(LOGTAG_INPUT,"New FontScale is %f",FontScale);
+		if (FontScale > 1.0f)
+			FontScale = 1.0f;
+		if (FontScale <= 0.1f)
+			FontScale = 0.1f;
+	}
 }
 
 void Label::SetText(std::string newText)
@@ -93,18 +103,6 @@ cv::Size2i Label::GetTextSize()
 
 void Label::Draw(Mat * rgbaImage)
 {		
-	//if (false)
-	//{
-	//	Mat antiAliasedText = Mat(lastSize.height, lastSize.width,CV_8U);
-	//	if(FillColor[3] > 0)
-	//	{
-	//		//If FillColor has nonzero alpha, draw background outline 
-	//		putText(antiAliasedText, Text.c_str(), Position, FontFace, FontScale, Colors::White, FontThickness*3, 8);
-	//	}
-	//	putText(antiAliasedText, Text.c_str(), Position, FontFace, FontScale, Colors::Black, FontThickness, 8);	
-	//}
-
-
 	if(FillColor[3] > 0)
 	{
 		//If FillColor has nonzero alpha, draw background outline 
@@ -116,13 +114,29 @@ void Label::Draw(Mat * rgbaImage)
 
 void Label::DoLayout(Rect boundaryRectangle)
 {	
-	LOGI(LOGTAG_INPUT,"Adding myself(Label) to layout. Rect = (%d,%d,%d,%d)",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
+	LOGD(LOGTAG_INPUT,"Adding myself(Label) to layout. Rect = (%d,%d,%d,%d)",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
 
-	Point2i newPoint = Point2i(boundaryRectangle.x + boundaryRectangle.width/2, boundaryRectangle.y + boundaryRectangle.height/2);
-	
-	FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
-	
-	SetCenter(newPoint);	
+
+	Point2i newPoint = Point2i( boundaryRectangle.x, boundaryRectangle.y);
+	if (centerX || centerY)
+	{
+		if (centerY)
+			newPoint.y =  boundaryRectangle.y + boundaryRectangle.height/2;
+		if (centerX)
+			newPoint.x = boundaryRectangle.x + boundaryRectangle.width/2;
+
+		SetCenter(newPoint);	
+	}
+	else
+	{
+		Position = newPoint;
+	}
+
+	if (scaleToFit)
+	{
+		FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
+	}
 }
+
 
 

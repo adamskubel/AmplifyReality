@@ -6,6 +6,7 @@
 
 typedef srutil::delegate<void (void*,TouchEventArgs)> TouchEventDelegate;
 typedef srutil::delegate<void (void*,PhysicalButtonEventArgs)> ButtonEventDelegate;
+typedef srutil::delegate<void (void*,KeyEventArgs)> KeyEventDelegate;
 typedef srutil::delegate<void (void*,EventArgs)> ClickEventDelegate;
 typedef srutil::delegate<void (void*,NumberSpinnerEventArgs)> NumberSpinnerEventDelegate;
 typedef srutil::delegate<void (void*,SelectionChangedEventArgs)> SelectionChangedEventDelegate;

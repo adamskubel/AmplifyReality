@@ -98,11 +98,11 @@ void AmplifyRunner::CheckControllerExpiry(Engine * engine)
 
 void AmplifyRunner::Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args)
 {	
-	if (args.ButtonCode == AKEYCODE_MENU)
+	/*if (args.ButtonCode == AKEYCODE_MENU)
 	{
 		LOGD(LOGTAG_MAIN,"Menu button pressed. Expiring current controller");
 		currentController->SetExpired();
-	}
+	}*/
 }
 
 

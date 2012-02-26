@@ -3,6 +3,7 @@
 
 ARCommunicator::ARCommunicator()
 {
+	isConnected = false;
 	outgoingMessageQueue.clear();
 }
 
@@ -11,6 +12,16 @@ void ARCommunicator::SendMessage(OutgoingMessage * message)
 	outgoingMessageQueue.push_back(message);
 }
 
+
+void ARCommunicator::SetConnectionString(std::string _connectionString)
+{
+	connectionString = _connectionString;
+}
+
+std::string ARCommunicator::GetConnectionString()
+{
+	return connectionString;
+}
 
 void ARCommunicator::GetOutgoingMessages(std::vector<OutgoingMessage*> & newMsgQueue)
 {
@@ -26,6 +37,15 @@ bool ARCommunicator::HasOutgoingMessages()
 	return (!outgoingMessageQueue.empty());
 }
 
+bool ARCommunicator::IsConnected()
+{
+	return isConnected;
+}
+
+void ARCommunicator::SetConnected(bool _connected)
+{
+	isConnected = _connected;
+}
 
 void ARCommunicator::AddIncomingMessage(IncomingMessage * message)
 {

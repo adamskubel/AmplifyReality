@@ -99,14 +99,8 @@ public class ARClient
 					Object[] msgs = null;
 					try
 					{
-
-						// msgs = outgoingQueue.take();
 						msgs = AmplifyRealityActivity.GetOutgoingMessages();
 					}
-					// catch (InterruptedException e)
-					// {
-					// Log.e(LOGTAG_NETWORKING,"Interrupted taking data from outgoing queue.",e);
-					// }
 					catch (Exception e)
 					{
 						Log.e(LOGTAG_NETWORKING, "Exception checking native layer", e);
@@ -134,7 +128,6 @@ public class ARClient
 
 	private void StartListening()
 	{
-		listening = true;
 		Thread t = new Thread(new Runnable()
 		{
 			@Override
@@ -245,13 +238,18 @@ public class ARClient
 			{
 				try
 				{
+					Log.i(LOGTAG_NETWORKING,"HostString=" + AmplifyRealityActivity.GetConnectionString());
+										
 					Log.i(LOGTAG_NETWORKING, "Connecting to server");
 					mySocket = new Socket(host, port);
 					Log.i(LOGTAG_NETWORKING, "Socket created");
-	
+					AmplifyRealityActivity.SetConnected(true);
+
+					listening = true;
+					
 					RequestData();
 					StartListening();
-	
+					
 	
 				} catch (Exception e)
 				{

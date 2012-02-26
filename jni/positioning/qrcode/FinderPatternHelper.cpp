@@ -81,10 +81,15 @@ static void FindEdges(const Mat & inputImg, Mat & edgeArray, short threshold, bo
 }
 
 //Finds horizontal edges and stores in edgeArray
-static void FindEdgesClosed(const Mat & inputImg, Mat & edgeArray, short threshold, bool nonMaxSuppress, int detectorSize = 3)
+void QRFinder::FindEdgesClosed(const Mat & inputImg, Rect regionOfInterest, Mat & edgeArray, short threshold, bool nonMaxSuppress, int detectorSize, int yResolution)
 {
 	//const short detectorSize = 3;
-	const short maxColumn = inputImg.cols - detectorSize;
+	short maxColumn = (regionOfInterest.height == 0) ? inputImg.cols : regionOfInterest.x + regionOfInterest.width;
+	maxColumn -= detectorSize;	
+	short maxRow = (regionOfInterest.height == 0) ? 0 : regionOfInterest.y + regionOfInterest.height;
+	short xStart = (regionOfInterest.height == 0) ? 0 : regionOfInterest.x;
+	short yStart = (regionOfInterest.height == 0) ? 0 : regionOfInterest.y;
+	xStart += detectorSize;
 		
 	Mat tmpEdgeArray = Mat::zeros(3,inputImg.cols,CV_16S); //Located and scored edges. Always 3??
 	
@@ -96,12 +101,13 @@ static void FindEdgesClosed(const Mat & inputImg, Mat & edgeArray, short thresho
 	short * lastOutputRow = NULL;
 	short * beforeLastOutputRow = NULL;
 	
-	for (int i=0;i < inputImg.rows;i++)
+
+	for (int i=yStart;i < maxRow;i+= yResolution)
 	{
 		imgRowPtr = inputImg.ptr<unsigned char>(i);
 		outputEdgeRowPtr = edgeArray.ptr<short>(i);
 	
-		for (int j=detectorSize;j < maxColumn;j++)
+		for (int j=xStart;j < maxColumn;j++)
 		{
 			if (detectorSize == 3)
 				edgeRowPtr[j] = -((short)imgRowPtr[j+1] + (short)imgRowPtr[j+2] + (short)imgRowPtr[j+3]) + 
@@ -265,18 +271,10 @@ void QRFinder::FindEdgesVerticalClosed(const Mat & inputImg, int xPosition)
 	//LOG_TIME_PRECISE("VerticalEdgeTest",start,end);	
 }
 
-void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & finderPatterns, vector<Drawable*> & debugVector)
+void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vector<FinderPattern*> & finderPatterns, vector<Drawable*> & debugVector)
 {
 	struct timespec start,end;
-	SET_TIME(&start);
-	//LOGD(LOGTAG_QR,"Enter FFP");
-	bool skip = true;
-	int bw[6] = { 0 };
-	int k = 0;
-
-	//Clear vertical edge map
-	calculatedEdges.clear();	
-	numVerticalCalc = 0;
+	SET_TIME(&start);	
 
 	//Get parameters from config
 	edgeThreshold = config->GetIntegerParameter("EdgeThreshold");
@@ -286,29 +284,34 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 	minimumFinderPatternScore = config->GetIntegerParameter("MinimumFPScore");
 	detectorSize = config->GetIntegerParameter("DetectorSize");
 
-	if (verticalResolution < 1)
-		verticalResolution = 1;
 	int yBorder = detectorSize;
+	vector<Point3i> exclusionZones;
+	
+	//Calculate limits
+	int maxColumn = regionOfInterest.x + regionOfInterest.width;
+	maxColumn -= detectorSize;	
+	int maxRow = regionOfInterest.y + regionOfInterest.height;
+	int xStart = regionOfInterest.x;
+	int yStart = regionOfInterest.y;
+	xStart += detectorSize;
+	yStart += detectorSize;
+	maxColumn -= detectorSize;
+	maxRow -= detectorSize;
 
-	vector<Point3i> fpVector;
+	
+	if (debugLevel > 0)
+		debugVector.push_back(new DebugRectangle(Rect(Point2i(xStart,yStart),Point2i(maxColumn,maxRow)),Colors::Aqua,1));
 
-	//If image size has changed, reallocate the matrix
-	if (imgSize.width != inputImg.cols && imgSize.height != inputImg.rows)
-	{
-		imgSize = Size2i(inputImg.cols,inputImg.rows);
-		LOGD(LOGTAG_QR,"Initializing new matrix, size=(%d,%d)",imgSize.width,imgSize.height);
-		edgeArray = Mat::zeros(inputImg.rows,inputImg.cols,CV_16S); //Maximized edges
-		verticalEdgeArray = Mat::zeros(inputImg.cols,inputImg.rows,CV_16S); //Maximized vertical edges
-	}
 	
 	//Find horizontal edges
 	SET_TIME(&start);
-	FindEdgesClosed(inputImg,edgeArray,edgeThreshold,nonMaxEnabled,detectorSize);
+	FindEdgesClosed(inputImg,regionOfInterest,edgeArray,edgeThreshold,nonMaxEnabled,detectorSize);
 	SET_TIME(&end);
 	double edgeTime_local = calc_time_double(start,end);
 	edgeTime = (edgeTime + edgeTime_local)/2.0;
 	config->SetLabelValue("EdgeTime",(float)edgeTime/1000.0f);
 	
+	//If debug level set, find all vertical edges and draw them
 	if (debugLevel <= -2)
 	{
 		for (int x = 1; x < verticalEdgeArray.rows-1; x ++)
@@ -331,15 +334,21 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 	}
 	//END
 	
-	for (int y = yBorder; y < edgeArray.rows - yBorder; y += verticalResolution)
+	
+	int bw[6] = { 0 };
+	int k = 0;
+	//LOGV(LOGTAG_QR,"Beginning search. y[%d->%d], x[%d->%d]",yStart,maxRow,xStart,maxColumn);
+	//LOGV(LOGTAG_QR,"ImgSize=[%d,%d] EdgeSize=[%d,%d]",inputImg.rows,inputImg.cols,edgeArray.rows,edgeArray.cols);
+
+	for (int y = yStart; y < maxRow; y += verticalResolution)
 	{	
 		k = 0;
 		bw[0] = bw[1] = bw[2] = bw[3] = bw[4] = bw[5] = 0;
 
 		const short * edgeRowPtr = edgeArray.ptr<short>(y);
-		for (int x = 2; x < (edgeArray.cols-2); x++)
+		for (int x = xStart; x < maxColumn; x++)
 		{
-			if (isInRadius(fpVector,Point2i(x,y)))
+			if (isInRadius(exclusionZones,Point2i(x,y)))
 				continue;
 
 			int transition =  edgeRowPtr[x]; //getTransition(Mi,x,threshold);
@@ -386,17 +395,11 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 			if (k == 6)
 			{		
 				int result = 0;
-			/*	if (fpv->size() > 0)
-				{
-					result = CheckRatios(bw,fpv->back()->patternWidths);
-				}
-				else
-				{*/
 				result = CheckRatios(bw,NULL);
-				//}
 
 				if (result == 1)
-				{
+				{	
+					//LOGV(LOGTAG_QR,"Ratio check pass");
 					//Center based on initial ratio					
 					float patternCenterWidth = (float)bw[2];
 					int tempXCenter = (x - bw[4] - bw[3]) - (int)round(patternCenterWidth/2.0f); 
@@ -418,7 +421,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 					int passCount = 0;
 					int avgYSize = 0;
 
-					int verticalPatternSize[5];
+					int averageVerticalSize[5] = {0,0,0,0,0};
 
 					for (int yTest = 0; yTest < 3; yTest++)
 					{
@@ -428,7 +431,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 							tempYCenter += tempYCenterArray[yTest];
 							for (int i=0;i<5;i++)
 							{
-								verticalPatternSize[i] += (verticalPatternSizes[yTest])[i];
+								averageVerticalSize[i] += (verticalPatternSizes[yTest])[i];
 								avgYSize += (verticalPatternSizes[yTest])[i]; 
 							}
 						}						
@@ -436,6 +439,8 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 
 					if (passCount >= 2)
 					{
+						//LOGV(LOGTAG_QR,"Vertical test pass-1");
+						
 						tempYCenter = (int)round((float)tempYCenter / (float)passCount);
 						avgYSize = (int)round((float)avgYSize / (float)passCount);
 
@@ -455,18 +460,22 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 
 						if (yVarianceTest)
 						{
+							//LOGV(LOGTAG_QR,"Vertical test pass-2. Passcount=%d",passCount);
+							//Average the vertical pattern sizes
 							for (int i=0;i<5;i++)
 							{
-								verticalPatternSize[i] = (float)verticalPatternSize[i] / (float)passCount;
+								averageVerticalSize[i] = idiv(averageVerticalSize[i],passCount);
 							}
+							//LOGV(LOGTAG_QR,"Averaged sizes. Center=%d",averageVerticalSize[2]);
 
 							int tempXCenterArray[] = {0,0,0};
 							int xSizeArray[] = {0,0,0};
-							int yOffset = (int)round((float)verticalPatternSize[2]/6.0f);
+							int yOffset = idiv(averageVerticalSize[2],6.0f);
 
-							tempXCenterArray[0] = FindCenterHorizontal(edgeArray, tempXCenter, tempYCenter-yOffset, bw, xSizeArray[0], debugVector); 
-							tempXCenterArray[1] = FindCenterHorizontal(edgeArray, tempXCenter, tempYCenter, bw, xSizeArray[1], debugVector); 
-							tempXCenterArray[2] = FindCenterHorizontal(edgeArray, tempXCenter, tempYCenter+yOffset, bw, xSizeArray[2], debugVector); 
+							//LOGV(LOGTAG_QR,"Yoffset=%d,yCenter=%d",yOffset,tempYCenter);
+							tempXCenterArray[0] = FindCenterHorizontal(tempXCenter, tempYCenter-yOffset, bw, xSizeArray[0], debugVector); 
+							tempXCenterArray[1] = FindCenterHorizontal(tempXCenter, tempYCenter, bw, xSizeArray[1], debugVector); 
+							tempXCenterArray[2] = FindCenterHorizontal(tempXCenter, tempYCenter+yOffset, bw, xSizeArray[2], debugVector); 
 
 							tempXCenter = 0;
 							passCount = 0;
@@ -484,7 +493,8 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 
 							if (passCount >= 2)
 							{
-
+								
+								//LOGV(LOGTAG_QR,"Horizontal test pass");
 								tempXCenter = (int)round((float)tempXCenter / (float)passCount);
 								avgXSize = (int)round((float)avgXSize/(float)passCount);
 								allowedVariance = (int)round((float)avgYSize/1.5f);
@@ -492,13 +502,15 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 								//Pattern width must be within 66% of height
 								if (abs(avgXSize - avgYSize) <= allowedVariance)
 								{
+									
+									//LOGV(LOGTAG_QR,"Size test pass");
 									Point2i finderPatternCenter = Point2i(tempXCenter,tempYCenter); //Center of finder pattern
 
 									int finderPatternSize =  MAX(avgXSize,avgYSize);
 									int fpRadius = (int)round((float)finderPatternSize/2.0f);
 									int fpRadiusExclude = ipow(finderPatternSize,2);
 
-
+									//LOGD(LOGTAG_QR,"Creating new pattern[%d,%d]",avgXSize,avgYSize);
 									//Create a new pattern
 									FinderPattern * newPattern = new FinderPattern(finderPatternCenter,Size2i(avgXSize,avgYSize));
 
@@ -513,7 +525,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 									{
 										if (validatePattern(newPattern,finderPatterns))
 										{
-											fpVector.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
+											exclusionZones.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
 											finderPatterns.push_back(newPattern);
 											if (FP_DEBUG_ENABLED && debugLevel > 0)
 											{
@@ -526,12 +538,15 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 										}
 										else
 										{
+											//LOGV(LOGTAG_QR,"Compare check failed");
 											if (FP_DEBUG_ENABLED && debugLevel > 0)
 												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::Orange,2));
 										}
 									}
 									else
 									{
+										
+										//LOGV(LOGTAG_QR,"FAST check failed");
 										if (FP_DEBUG_ENABLED && debugLevel > 0)
 											debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::Red,2));
 										delete newPattern;
@@ -539,13 +554,15 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 								}
 								else
 								{
-									//Horizontal variance check failed
+									//LOGV(LOGTAG_QR,"Size check failed");
+									//Size check failed
 									if (FP_DEBUG_ENABLED && debugLevel > 1)
 										debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),13, Colors::HotPink,1));
 								}
 							}
 							else
 							{
+								//LOGV(LOGTAG_QR,"Horizontal check failed");
 								//Vertical check succeeded, but horizontal re-check failed
 								if (FP_DEBUG_ENABLED && debugLevel > 1)
 									debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),12, Colors::OrangeRed,1));
@@ -596,6 +613,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, vector<FinderPattern*> & fi
 		}
 	}
 	
+	//LOGV(LOGTAG_QR,"Returning from FPSearch");
 	SET_TIME(&end);
 	double finderPatternTime_local = calc_time_double(start,end);
 	finderPatternTime = (finderPatternTime + finderPatternTime_local)/2.0;
@@ -685,7 +703,7 @@ int QRFinder::CheckRatios(int * newBw, int * oldBw, float scoreModifier)
 	}
 }
 
-int QRFinder::FindCenterHorizontal(const Mat& edgeArray, int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector)
+int QRFinder::FindCenterHorizontal(int x, int y, int fpbw[], int & xSize, vector<Drawable*> & debugVector)
 {
 	//Size2i debugCircleSize(0,50);
 	int debugCircleSize = 3;
@@ -804,7 +822,7 @@ bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*
 	if (patternVector.size() >= 2)
 	{
 
-		//LOGD(LOGTAG_QR,"Validating %d patterns",patternVector.size());
+		LOGD(LOGTAG_QR,"Validating %d patterns",patternVector.size());
 		float minDeviance = config->GetParameter("MinFPDeviance");
 		float maxDevianceRatio = config->GetParameter("MaxDevianceRatio");
 		vector<FinderPattern*> tmpVector = patternVector;
@@ -831,7 +849,7 @@ bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*
 		//Can't determine pattern validity accurately, so return true
 		if (devRatio > maxDevianceRatio)
 		{
-			//LOGD(LOGTAG_QR,"Too much deviance, aborting");
+			LOGD(LOGTAG_QR,"Too much deviance, aborting");
 			return true;
 		}
 		else
@@ -856,17 +874,17 @@ bool QRFinder::validatePattern(FinderPattern * newPattern, vector<FinderPattern*
 				}
 				else
 				{
-					//LOGD(LOGTAG_QR,"Deleting pattern with pt=(%d,%d)",tmpVector[i]->pt.x,tmpVector[i]->pt.y);
+					LOGD(LOGTAG_QR,"Deleting pattern with pt=(%d,%d)",tmpVector[i]->pt.x,tmpVector[i]->pt.y);
 					delete tmpVector.at(i);
 				}
 			}
 			
-			//LOGD(LOGTAG_QR,"Validated %d patterns!",patternVector.size());
+			LOGD(LOGTAG_QR,"Validated %d patterns!",patternVector.size());
 			return result;
 		}
 	}
 	
-	//LOGD(LOGTAG_QR,"Only %d patterns, cannot validate",patternVector.size());
+	LOGD(LOGTAG_QR,"Only %d patterns, cannot validate",patternVector.size());
 	return true;
 }
 

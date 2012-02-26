@@ -23,6 +23,7 @@ public:
 	FinderPattern(FinderPattern & copy);
 	
 	Point2i getFarthestCorner(Point2i point);	
+	void SortCorners();
 };
 
 #endif

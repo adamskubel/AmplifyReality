@@ -1,5 +1,11 @@
 #include "userinterface/AndroidInputHandler.hpp"
 
+AndroidInputHandler::AndroidInputHandler()
+{
+	keyboardIsOpen = false;
+	rootDefined = false;
+}
+
 int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEvent * inputEvent)
 {
 	int32_t eventType = AInputEvent_getType(inputEvent);
@@ -35,9 +41,7 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 	}
 	else if ( eventType == AINPUT_EVENT_TYPE_KEY)
 	{
-		//Check for physical key events, which are not contexual
 		HandleButtonEvent(inputEvent);
-		//Nothing else yet
 	}
 	return 0;
 }
@@ -68,27 +72,69 @@ bool AndroidInputHandler::CreateTouchEvent(AInputEvent * inputEvent, TouchEventA
 	return false;
 }
 
-//void AndroidInputHandler::HandleGlobalTouchEvents(AInputEvent * inputEvent)
-//{
-//	TouchEventArgs touchEvent = TouchEventArgs();
-//
-//	if (CreateTouchEvent(inputEvent, &touchEvent))
-//	{
-//		for (int i=0;i<globalTouchEventDelegates.size();i++)
-//		{
-//			LOGD(LOGTAG_INPUT,"Sending touch event to callback: %d",i);
-//			globalTouchEventDelegates.at(i)(NULL,touchEvent);
-//		}
-//	}
-//}
+
+char AndroidInputHandler::GetCharFromKeyCode(int32_t keyCode, bool & validKey, bool upperCase)
+{
+	if (keyCode >= AKEYCODE_A && keyCode <= AKEYCODE_Z)
+	{
+		int adjustedValue = ((upperCase) ? 36 : 68) + (int)keyCode;		
+		validKey = true;
+		return cv::saturate_cast<char>(adjustedValue);
+	}
+	else if (keyCode >= AKEYCODE_0 && keyCode <= AKEYCODE_9)
+	{
+		int adjustedValue = 41 + (int)keyCode;
+		validKey = true;
+		return cv::saturate_cast<char>(adjustedValue);
+	}
+	else
+	{
+		validKey = true;
+		switch(keyCode)
+		{
+		case AKEYCODE_COMMA:
+			return ',';
+		case AKEYCODE_SPACE:
+			return ' ';
+		case AKEYCODE_SEMICOLON:
+			return ';';
+		default:
+			validKey = false;
+			return ' ';
+		}
+	}
+}
 
 void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 {
 	int32_t eventAction = AKeyEvent_getAction(inputEvent);
 	int32_t eventKey = AKeyEvent_getKeyCode(inputEvent);
-	//Ignore home, other three physical buttons are hard-defined
-	if (eventKey == AKEYCODE_HOME || eventKey == AKEYCODE_MENU || eventKey == AKEYCODE_SEARCH)
+	
+	//Physical buttons of interest
+	if (eventKey == AKEYCODE_MENU || eventKey == AKEYCODE_SEARCH || eventKey == AKEYCODE_BACK)
 	{
+		//Check for keyboard opening/closing events
+		int32_t flags = AKeyEvent_getFlags(inputEvent);
+		if (eventKey == AKEYCODE_BACK)
+		{
+			keyboardIsOpen = false;
+			for (int i=0;i<textListeners.size();i++)
+			{
+				textListeners.at(i)->VirtualKeyboardEvent(false); 
+			}
+		}
+		else if (flags & AKEY_EVENT_FLAG_LONG_PRESS) 
+		{
+			if (eventKey == AKEYCODE_MENU)
+			{
+				keyboardIsOpen = !keyboardIsOpen;
+				for (int i=0;i<textListeners.size();i++)
+				{
+					textListeners.at(i)->VirtualKeyboardEvent(keyboardIsOpen); 
+				}
+			}
+		}
+
 		//Only care about complete press, doesn't check for down occuring
 		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))
 		{		
@@ -96,11 +142,31 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 			{
 				PhysicalButtonEventArgs buttonEvent = PhysicalButtonEventArgs();
 				buttonEvent.ButtonCode = eventKey;
-				LOGD(LOGTAG_INPUT,"Sending button event to callback: %d",i);
 				globalButtonEventDelegates.at(i)(NULL,buttonEvent);
 			}
 		}
 	}
+	else
+	{
+		//Only care about complete press, doesn't check for down occuring
+		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))
+		{		
+			for (int i=0;i<textListeners.size();i++)
+			{
+				bool validChar = false;
+				KeyEventArgs keyEvent(eventKey);
+				keyEvent.KeyCharacter = GetCharFromKeyCode(eventKey,validChar,false);
+				keyEvent.hasCharacter = validChar;
+				
+				textListeners.at(i)->HandleKeyEvent(keyEvent);
+			}
+		}
+	}
+}
+
+void AndroidInputHandler::AddTextListener(ITextListener * newListener)
+{
+	textListeners.push_back(newListener);
 }
 
 void AndroidInputHandler::AddGlobalButtonDelegate(ButtonEventDelegate myDelegate)

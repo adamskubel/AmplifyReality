@@ -93,6 +93,7 @@ void ARController::initializeUI(Engine * engine)
 	debugUI->AddNewParameter("T-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("R-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	
+	debugUI->AddNewLabel("CurrentCode","","Data");
 	
 			
 	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
@@ -185,9 +186,6 @@ void ARController::initializeARView()
 	//augmentedView->AddObject(fromFile);	
 
 
-	ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
-	augmentedView->AddObject(myCube);	
-
 	//myCube = new ARObject(OpenGLHelper::CreateSolidColorCube(20,Colors::MediumSeaGreen),Point3f(0,0,-40));
 	//augmentedView->AddObject(myCube);	
 	
@@ -249,7 +247,7 @@ void ARController::ProcessFrame(Engine * engine)
 		
 	vector<Drawable*> debugVector;
 
-	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector);	
+	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector, ( frameList->size() > 1) ? frameList->getRelative(-1)->qrCode : NULL);	
 	
 	//What happens past here depends on the state
 	if (controllerState == ControllerStates::Loading)
@@ -262,6 +260,7 @@ void ARController::ProcessFrame(Engine * engine)
 		if (worldState == WorldStates::LookingForCode)
 		{
 			debugUI->SetStateDisplay("Searching");
+			
 			if (item->qrCode != NULL && item->qrCode->isValidCode())
 			{	
 				struct timespec decodeStart,decodeEnd;
@@ -271,13 +270,35 @@ void ARController::ProcessFrame(Engine * engine)
 
 				SET_TIME(&decodeStart);
 				qrDecoder->DecodeQRCode(*binaryImage,item->qrCode,debugVector);
-
 				SET_TIME(&decodeEnd);
 				LOG_TIME("QR decode", decodeStart,decodeEnd);
 
-				LOGI(LOGTAG_ARCONTROLLER,"Code found, initializing realm with text=%s",item->qrCode->TextValue.c_str());
-				//TODO: Move decoding to here
-				worldLoader->LoadRealm(item->qrCode->TextValue);
+				if (item->qrCode->isDecoded())
+				{
+					string codeText = "Code=";
+					codeText.append(item->qrCode->TextValue);
+					debugUI->SetLabelValue("CurrentCode",codeText);
+
+					if (engine->communicator->IsConnected())
+					{
+						LOGI(LOGTAG_ARCONTROLLER,"Code found, fetching realm with ID=%s",item->qrCode->TextValue.c_str());
+						worldLoader->LoadRealm(item->qrCode->TextValue);
+					}
+					else //If not connected, just add a test object
+					{
+						LOGI(LOGTAG_ARCONTROLLER,"Starting in offline mode.");
+
+						debugUI->SetStateDisplay("OfflineMode");
+						initializeARView();
+
+						ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
+						augmentedView->AddObject(myCube);	
+
+						SetState(ControllerStates::Running);
+						delete worldLoader;
+						worldLoader = NULL;
+					}
+				}
 			}
 		}
 		else if (worldState == WorldStates::WaitingForRealm || worldState == WorldStates::WaitingForResources)
@@ -311,11 +332,12 @@ void ARController::ProcessFrame(Engine * engine)
 	{
 		debugUI->SetStateDisplay("Run");
 
-		if (item->qrCode != NULL && item->qrCode->isDecoded())
+		if (item->qrCode != NULL && item->qrCode->isValidCode())
 		{
+			LOGV(LOGTAG_QR,"Getting position");
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
-			debugUI->SetTranslation(item->translationMatrix);
-			debugUI->SetRotation(item->rotationMatrix);
+			//debugUI->SetTranslation(item->translationMatrix);
+			//debugUI->SetRotation(item->rotationMatrix);
 		}	
 
 		//Evaluate the position	
@@ -400,7 +422,6 @@ void ARController::Render(OpenGL * openGL)
 	if (!isInitialized)
 		return;
 	
-	LOGV(LOGTAG_ARCONTROLLER,"Rendering ARController. %d objects to render.", renderObjects.size()+1);
 	quadBackground->Render(openGL);
 
 	if (augmentedView != NULL)

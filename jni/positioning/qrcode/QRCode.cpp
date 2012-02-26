@@ -9,29 +9,60 @@ QRCode::QRCode(vector<FinderPattern*> _finderPatterns, Point2i _alignmentPattern
 	finderPatterns = _finderPatterns;
 	alignmentPattern = _alignmentPattern;
 
-
+	trackingCorners.clear();
 }
 
 QRCode::~QRCode() 
 {		
 	QRCode::instanceCount--;
-
-	LOGD(LOGTAG_QR,"Deleting %d FPs",finderPatterns.size());
 	while (!finderPatterns.empty())
 	{
 		delete finderPatterns.back();
 		finderPatterns.pop_back();
-	}
-	
-	LOGD(LOGTAG_QR,"QR code deleted");
+	}	
 }
 
+static Point2i ExtendLine(Point2i pt0, Point2i pt1, float scale)
+{
+	Point2f diff = pt1 - pt0;
+
+	Point2f floatEnd = Point2f(pt1.x,pt1.y) + (diff * scale);
+	return floatEnd;
+}
+
+bool QRCode::GuessAlignmentPosition(Point2i & result, Size2i & size)
+{
+	if (finderPatterns.size() != 3)
+		return false;
+
+	sortCorners();
+	for (int i=0;i<finderPatterns.size();i++)
+	{
+		finderPatterns[i]->SortCorners();
+	}
+
+	//Get AP-aligning corners
+	Point2i upperRight0 = finderPatterns[1]->patternCorners[3];
+	Point2i upperRight1 = finderPatterns[1]->patternCorners[2];
+
+	Point2i lowerLeft0 = finderPatterns[2]->patternCorners[1];
+	Point2i lowerLeft1 = finderPatterns[2]->patternCorners[2];
+
+	Point2i closePosition1 = ExtendLine(upperRight0,upperRight1,2);
+	Point2i closePosition2 = ExtendLine(lowerLeft0,lowerLeft0,2);
+
+	
+	Point2i farPosition1 = ExtendLine(upperRight0,upperRight1,2);
+	Point2i farPosition2 = ExtendLine(lowerLeft0,lowerLeft0,2);
+}
 
 
 void QRCode::sortCorners()
 {
+	LOGD(LOGTAG_QR,"Sorting corners for %d patterns",finderPatterns.size());
 	//Top left, top right, bottom left
 	Point2i codeCenter = Point2i(0,0);
+	trackingCorners.clear();
 	for (int i=0;i<finderPatterns.size();i++)
 	{
 		codeCenter += finderPatterns[i]->pt;
@@ -42,7 +73,6 @@ void QRCode::sortCorners()
 	{
 		trackingCorners.push_back(finderPatterns[i]->getFarthestCorner(codeCenter));
 	}
-
 }
 
 bool QRCode::isValidCode()
@@ -57,19 +87,23 @@ bool QRCode::isDecoded()
 
 void QRCode::getTrackingPoints(vector<cv::Point2f> & points)
 {
-	if (trackingCorners.size() == 0)
+	if (trackingCorners.size() < 3)
 		sortCorners();
 
-	for (int i=0;i<finderPatterns.size();i++)
-	{
-		points.push_back(Point2f(trackingCorners.at(i).x,trackingCorners.at(i).y));
-	}
+	points.push_back(Point2f(trackingCorners.at(0).x,trackingCorners.at(0).y));
+	points.push_back(Point2f(trackingCorners.at(1).x,trackingCorners.at(1).y));
+	points.push_back(Point2f(alignmentPattern.x,alignmentPattern.y));
+	points.push_back(Point2f(trackingCorners.at(2).x,trackingCorners.at(2).y));	
 }
 
 void QRCode::Draw(Mat * rgbaImage)
 {
 	if (isValidCode())
 	{
+		if (isDecoded())
+		{
+			DebugLabel(finderPatterns[1]->pt,TextValue,Colors::Black,2.0f,Colors::Beige).Draw(rgbaImage);
+		}
 		//For each of the 3 finder patterns, store the point in an array to form the debug rectangle
 		Point2i points[4];
 

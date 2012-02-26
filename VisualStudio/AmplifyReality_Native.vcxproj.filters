@@ -406,6 +406,12 @@
     <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp">
       <Filter>Source Files\QR</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\model\network\ARCommunicator.cpp">
+      <Filter>Header Files\model\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jni\userinterface\uimodel\TextBox.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -782,6 +788,12 @@
     </ClInclude>
     <ClInclude Include="..\jni\util\GeometryUtil.hpp">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\TextBox.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\userinterface\uimodel\ITextListener.hpp">
+      <Filter>Header Files\userinterface\uimodel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

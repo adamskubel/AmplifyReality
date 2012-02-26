@@ -11,6 +11,7 @@
 #include <opencv2/core/core.hpp>
 #include "CalibrationController.hpp"
 #include "ARController.hpp"
+#include "userinterface/uimodel/TextBox.hpp"
 
 
 #ifndef STARTUP_CONTROLLER_HPP_
@@ -39,7 +40,8 @@ public:
 
 private:
 	bool doCalibration;
-
+	Button * startButton;
+	Label * statusLabel;
 	vector<IDeletable*> deleteVector;
 	vector<Drawable*> drawObjects;
 	GridLayout * grid;

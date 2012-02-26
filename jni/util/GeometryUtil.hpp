@@ -18,7 +18,7 @@ static int ipow(int base, int exp)
 	return result;
 }
 
-#define idiv(a,b) ((int)round((float)a/(float)b))
+#define idiv(a,b) ((int)round(((float)a)/((float)b)))
 
 static int GetSquaredDistance(cv::Point2i pt0, cv::Point2i pt1)
 {
@@ -33,6 +33,20 @@ static bool IsClockWise(cv::Point2f p1, cv::Point2f p2, cv::Point2f p0)
 static float GetPointDistance_Slow(cv::Point2f p1, cv::Point2f p2)
 {
 	return sqrt(pow(abs(p1.x-p2.x),2) + pow(abs(p1.y-p2.y),2));
+}
+
+static void ConstrainRectangle(cv::Mat & matrix, cv::Rect & rectangle)
+{
+	if (rectangle.x < 0)
+		rectangle.x = 0;	
+	if ((rectangle.x+rectangle.width) >= matrix.cols)
+		rectangle.width = matrix.cols - rectangle.x - 1;
+		
+	if (rectangle.y < 0)
+		rectangle.y = 0;	
+	if ((rectangle.y + rectangle.height) >= matrix.rows)
+		rectangle.height = matrix.rows - rectangle.y - 1;
+
 }
 
 class PointCompare

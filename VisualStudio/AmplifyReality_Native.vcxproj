@@ -79,6 +79,7 @@
     <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp" />
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
+    <ClCompile Include="..\jni\model\network\ARCommunicator.cpp" />
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
@@ -106,6 +107,7 @@
     <ClCompile Include="..\jni\userinterface\uimodel\PageDisplay.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\TabDisplay.cpp" />
+    <ClCompile Include="..\jni\userinterface\uimodel\TextBox.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
     <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp" />
     <ClCompile Include="..\jni\zxing\Binarizer.cpp" />
@@ -222,12 +224,14 @@
     <ClInclude Include="..\jni\userinterface\uimodel\DataDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GraphicalUIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\InputScaler.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\ITextListener.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Label.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\NumberSpinner.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\PageDisplay.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\Panel.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\SelectBox.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\TabDisplay.hpp" />
+    <ClInclude Include="..\jni\userinterface\uimodel\TextBox.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIConstants.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElement.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />

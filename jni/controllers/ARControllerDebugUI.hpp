@@ -48,6 +48,7 @@ public:
 	void AddNewParameter(std::string paramName, float startValue, float step, float minValue, float maxValue, std::string format, string category, bool mapOnly = false);
 
 	void SetLabelValue(std::string labelName, float value);
+	void SetLabelValue(std::string labelName, std::string labelText);
 	void AverageLabelValue(std::string labelName, float value);
 	void AddNewLabel(std::string labelName, std::string suffex, string category = "Data");
 

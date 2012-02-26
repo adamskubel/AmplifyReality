@@ -142,7 +142,7 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s is empty",matDescription);
 	}
 	else
-	{
+	{/*
 		char matString[800];
 		int charCount = 0;
 		for (int i = 0; i < matrix->rows; i++)
@@ -176,9 +176,46 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 				charCount = sprintf(matString,"%s]\n",matString);
 			}
 			
+		}*/
+		
+		int charCount = 0;
+		std::stringstream textStream;		
+		textStream.precision(1);
+		textStream.setf(std::ios_base::fixed);
+
+		for (int i = 0; i < matrix->rows; i++)
+		{			
+			textStream << "[";
+			for (int j = 0; j < matrix->cols*matrix->channels(); j++)
+			{		
+				switch(matrix->depth())
+				{
+				case CV_8U:
+					textStream << matrix->at<unsigned char>(i,j);
+					break;
+				case CV_8S:
+					textStream << matrix->at<signed char>(i,j);
+					break;
+				case CV_16S:
+					textStream << matrix->at<signed short>(i,j);
+					break;
+				case CV_32S:
+					textStream << matrix->at<int>(i,j);
+					break;
+				case CV_32F:
+					textStream << matrix->at<float>(i,j);
+					break;
+				case CV_64F:
+					textStream << matrix->at<double>(i,j);
+					break;
+				default:
+					textStream << "?";
+				}
+			}
+			textStream << "]\n";			
 		}
 		std::string prefix = std::string("AmplifyR-");
-		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s=\n%s",matDescription,matString);
+		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s=\n%s",matDescription,textStream.str().c_str());
 	}
 }
 

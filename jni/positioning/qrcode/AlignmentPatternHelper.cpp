@@ -4,6 +4,7 @@
 #define AP_DEBUG_ENABLED true
 
 
+
 void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Drawable*>& debugVector)
 {
 	Point2i searchCenter = newCode->alignmentPattern;
@@ -14,17 +15,19 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 	int verticalResolution = config->GetIntegerParameter("YResolution");
 
 
+
+
 	int startX = searchCenter.x - finderPatternSize, endX = searchCenter.x + finderPatternSize;
-	if (startX < 0)
-		startX = 0;
-	if (endX >= edgeArray.cols)
-		endX = edgeArray.cols -1;
+	if (startX < 0) startX = 0;
+	if (endX >= edgeArray.cols) endX = edgeArray.cols -1;
 
 	int startY = searchCenter.y- finderPatternSize, endY = searchCenter.y + finderPatternSize;
 	if (startY < 0) startY = 0;
 	if (endY >= edgeArray.rows) endY = edgeArray.rows -1;
 
 	Rect searchRegion = Rect(Point2i(startX,startY),Point2i(endX,endY));
+
+	FindEdgesClosed(inputImg,searchRegion,edgeArray,edgeThreshold,nonMaxEnabled,detectorSize,verticalResolution);
 
 
 	if (alignDebugLevel > 0)
