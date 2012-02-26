@@ -15,7 +15,8 @@ Label::Label(std::string text,  cv::Point2i position, cv::Scalar textColor,  cv:
 	fontBaseline = 0;
 
 	scaleToFit = true;
-	centerX = centerY = true;
+	centerX = true;
+	centerY = true;
 }
 
 Label::~Label()
@@ -63,18 +64,17 @@ void Label::FitTextToBoundary(Size2f limits)
 	lastSize = limits;
 	Size2i size = GetTextSize();
 
-	if (scaleToFit)
-	{
-		float ySpace = limits.height/(float)size.height;
-		float xSpace = limits.width/(float)size.width;
 
-		FontScale *= std::min(xSpace,ySpace);
+	float ySpace = limits.height/(float)size.height;
+	float xSpace = limits.width/(float)size.width;
 
-		if (FontScale > 1.0f)
-			FontScale = 1.0f;
-		if (FontScale <= 0.1f)
-			FontScale = 0.1f;
-	}
+	FontScale *= std::min(xSpace,ySpace);
+
+	if (FontScale > 1.0f)
+		FontScale = 1.0f;
+	if (FontScale <= 0.1f)
+		FontScale = 0.1f;
+
 }
 
 void Label::SetText(std::string newText)
@@ -115,6 +115,11 @@ void Label::Draw(Mat * rgbaImage)
 void Label::DoLayout(Rect boundaryRectangle)
 {	
 	LOGD(LOGTAG_INPUT,"Adding myself(Label) to layout. Rect = (%d,%d,%d,%d)",boundaryRectangle.x,boundaryRectangle.y,boundaryRectangle.width,boundaryRectangle.height);
+	
+	if (scaleToFit)
+	{
+		FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
+	}
 
 
 	Point2i newPoint = Point2i( boundaryRectangle.x, boundaryRectangle.y);
@@ -132,10 +137,6 @@ void Label::DoLayout(Rect boundaryRectangle)
 		Position = newPoint;
 	}
 
-	if (scaleToFit)
-	{
-		FitTextToBoundary(Size2f(boundaryRectangle.width,boundaryRectangle.height));
-	}
 }
 
 

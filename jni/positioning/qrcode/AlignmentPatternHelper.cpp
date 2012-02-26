@@ -7,31 +7,45 @@
 
 void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Drawable*>& debugVector)
 {
-	Point2i searchCenter = newCode->alignmentPattern;
-	float finderPatternSize = newCode->finderPatterns.at(0)->size;
-
 	minimumAlignmentPatternScore = config->GetIntegerParameter("MinimumAPScore");
 	alignDebugLevel = config->GetIntegerParameter("AlignDebug");
 	int verticalResolution = config->GetIntegerParameter("YResolution");
+	
+	Rect searchRegion;
+	Point2i guess;
+	if (newCode->GuessAlignmentPosition(guess,searchRegion))
+	{
+		if (alignDebugLevel > 0)
+			debugVector.push_back(new DebugRectangle(searchRegion,Colors::GreenYellow,1));
 
+		LOGD(LOGTAG_QR,"SearchRegion[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
+		ConstrainRectangle(edgeArray,searchRegion);
+		LOGD(LOGTAG_QR,"ConstrainedSearchRegion[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
 
+	}
+	else
+	{
+		if (alignDebugLevel > 0)
+			debugVector.push_back(new DebugRectangle(searchRegion,Colors::Red,1));
+		
+		LOGD(LOGTAG_QR,"SearchRegion2[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
+		ConstrainRectangle(edgeArray,searchRegion);
+		LOGD(LOGTAG_QR,"ConstrainedSearchRegion2[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
+	}	
+	
+	int finderPatternSize = round(newCode->getAvgPatternSize());
 
-
-	int startX = searchCenter.x - finderPatternSize, endX = searchCenter.x + finderPatternSize;
-	if (startX < 0) startX = 0;
-	if (endX >= edgeArray.cols) endX = edgeArray.cols -1;
-
-	int startY = searchCenter.y- finderPatternSize, endY = searchCenter.y + finderPatternSize;
-	if (startY < 0) startY = 0;
-	if (endY >= edgeArray.rows) endY = edgeArray.rows -1;
-
-	Rect searchRegion = Rect(Point2i(startX,startY),Point2i(endX,endY));
-
+	if (alignDebugLevel > 1)
+		debugVector.push_back(new DebugCircle(guess,12,Colors::SkyBlue,1,true));
+		
 	FindEdgesClosed(inputImg,searchRegion,edgeArray,edgeThreshold,nonMaxEnabled,detectorSize,verticalResolution);
+	
 
+	int startY = searchRegion.y;
+	int startX = searchRegion.x;
+	int endY = startY + searchRegion.height;
+	int endX = startX + searchRegion.width;
 
-	if (alignDebugLevel > 0)
-		debugVector.push_back(new DebugRectangle(Rect(Point2i(startX,startY),Point2i(endX,endY)),Colors::GreenYellow,1));
 
 	for (int y = startY;y < endY; y += verticalResolution)
 	{
@@ -119,7 +133,8 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 									if (alignDebugLevel > -1)
 										debugVector.push_back(new DebugCircle(Point2i(tempXCenter,tempYCenter),(alignPatternSize/2.0f),Colors::Blue,1));
 
-									newCode->alignmentPattern = Point2i(tempXCenter,tempYCenter);
+									newCode->SetAlignmentCorners(patternPoints);
+									/*newCode->alignmentPattern = Point2i(tempXCenter,tempYCenter);*/
 									return;
 								}
 							}	
@@ -428,13 +443,13 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int finderPatternSize)
 	if (score > minimumAlignmentPatternScore)
 	{				
 		//LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
-		//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::minimumAlignmentPatternScore);
+		//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d, FPSize=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore,finderPatternSize);
 		return true;
 	}
 	else
 	{
 		//LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d",newBw[0],newBw[1],newBw[2]);
-		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,QRFinder::minimumAlignmentPatternScore);
+		//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d, FPSize=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore,finderPatternSize);
 		return false;
 	}
 
@@ -450,7 +465,7 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
 		{
 			if (log)
 			{
-				LOGD(LOGTAG_QR,"Zero for width #%d",i);
+				//LOGD(LOGTAG_QR,"Zero for width #%d",i);
 			}
 			return false; 
 		}
@@ -463,7 +478,7 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
 	{
 		if (log)
 		{
-			LOGD(LOGTAG_QR,"Alignment Pattern too small: %d < 3",alignmentPatternSum);
+			//LOGD(LOGTAG_QR,"Alignment Pattern too small: %d < 3",alignmentPatternSum);
 		}
 		return false; 
 	}
@@ -491,8 +506,8 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
 	{		
 		if (log)
 		{
-			LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
-			LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
+			//LOGV(LOGTAG_QR,"CheckAlignRatios T: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
+			//LOGV(LOGTAG_QR,"Found alignment pattern! Scores were: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
 		}
 		return true;
 	}
@@ -500,8 +515,8 @@ bool QRFinder::CheckAlignmentRatios(int * newBw, int * previousBw, bool log)
 	{
 		if (log)
 		{
-			LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
-			LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
+			//LOGV(LOGTAG_QR,"CheckAlignRatios F: New= %d,%d,%d - Old = %d,%d,%d",newBw[0],newBw[1],newBw[2],previousBw[0],previousBw[1],previousBw[2]);
+			//LOGV(LOGTAG_QR,"Scores: Sym=%d,Size=%d,OldNewScore=%d < MinScore=%d",symmetryScore,sizeScore,oldNewCompareScore,minimumAlignmentPatternScore);
 		}
 		return false;
 	}

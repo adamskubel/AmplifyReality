@@ -1,6 +1,6 @@
 #include "QRDecoder.hpp"
 
-
+#define QR_DECODE_DEBUGGING
 
 QRDecoder::QRDecoder(ARControllerDebugUI * _config)
 {
@@ -71,7 +71,7 @@ bool QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 	zxing::Ref<zxing::BitMatrix> matrix = zxing::Ref<zxing::BitMatrix>(new zxing::BitMatrix(numModulesPerSide));
 	//matrix->clear();
 
-	
+
 
 	//Get binary values from image
 	int yCount = 0;
@@ -81,25 +81,31 @@ bool QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 		for (float x=startPoint.x; x <= endPoint.x; x += moduleSize, xCount++)
 		{
 			Point2f samplePoint(x,y);
+
 			pt.TransformPoint(samplePoint);
-			if (binaryImage.at<unsigned char>((int)round(samplePoint.y),(int)round(samplePoint.x)) == 0)
-				matrix->set(xCount,yCount);
+			Point2i intPoint = Point2i((int)round(samplePoint.x),(int)round(samplePoint.y));
+
+			if (intPoint.x < binaryImage.cols && intPoint.y < binaryImage.rows && intPoint.x >= 0 && intPoint.y >= 0)
+			{
+				if (binaryImage.at<unsigned char>((int)round(samplePoint.y),(int)round(samplePoint.x)) == 0)
+					matrix->set(xCount,yCount);
+			}
 		}
 		//LOGD(LOGTAG_QR,"For y = %d, xCount=%d",yCount,xCount);
 	}
-	
+
 #ifdef QR_CODE_DEBUGGING
-	//Log each row to make sure it's set right
-	for (int y=0;y<matrix->getHeight(); y++)
-	{		
-		std::string qrString;// = new char[matrix->getWidth()];
-		for (int x=0;x<matrix->getWidth();x++)
-		{
-			qrString += matrix->get(x,y) ? '1' : '0';
-		}
-		LOGV(LOGTAG_QR,"QRDATA:%s",qrString.c_str());
-	}
-	
+	////Log each row to make sure it's set right
+	//for (int y=0;y<matrix->getHeight(); y++)
+	//{		
+	//	std::string qrString;// = new char[matrix->getWidth()];
+	//	for (int x=0;x<matrix->getWidth();x++)
+	//	{
+	//		qrString += matrix->get(x,y) ? '1' : '0';
+	//	}
+	//	LOGV(LOGTAG_QR,"QRDATA:%s",qrString.c_str());
+	//}
+	//
 	LOGD(LOGTAG_QR,"Calling decoder");
 #endif
 	

@@ -18,9 +18,9 @@ Point2i FinderPattern::getFarthestCorner(Point2i point)
 
 	LOGV(LOGTAG_QR,"Sorting FP points by distance from (%d,%d)",point.x,point.y);
 	std::sort(patternCorners.begin(),patternCorners.end(),PointCompare(point));
-	Point2i pt = patternCorners.back();
-	LOGV(LOGTAG_QR,"Farthest point is (%d,%d)",pt.x,pt.y);
-	return pt;
+	Point2i centerPoint = patternCorners.back();
+	LOGV(LOGTAG_QR,"Farthest point is (%d,%d)",centerPoint.x,centerPoint.y);
+	return centerPoint;
 }
 
 //Clockwise starting at farthest (patternCorners.back())

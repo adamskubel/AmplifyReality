@@ -525,6 +525,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 									{
 										if (validatePattern(newPattern,finderPatterns))
 										{
+											newPattern->patternCorners = corners;
 											exclusionZones.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
 											finderPatterns.push_back(newPattern);
 											if (FP_DEBUG_ENABLED && debugLevel > 0)
@@ -532,7 +533,8 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1));
 												for (int i=0;i<corners.size();i++)
 												{
-													debugVector.push_back(new DebugCircle(corners[i],10,Colors::DodgerBlue,2));
+													if (FP_DEBUG_ENABLED && debugLevel > 0)
+														debugVector.push_back(new DebugCircle(corners[i],10,Colors::DodgerBlue,2));
 												}
 											}
 										}

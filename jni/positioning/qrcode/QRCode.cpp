@@ -3,12 +3,10 @@
 
 
 
-QRCode::QRCode(vector<FinderPattern*> _finderPatterns, Point2i _alignmentPattern) 
+QRCode::QRCode(vector<FinderPattern*> _finderPatterns) 
 { 
 	QRCode::instanceCount++;
 	finderPatterns = _finderPatterns;
-	alignmentPattern = _alignmentPattern;
-
 	trackingCorners.clear();
 }
 
@@ -25,35 +23,84 @@ QRCode::~QRCode()
 static Point2i ExtendLine(Point2i pt0, Point2i pt1, float scale)
 {
 	Point2f diff = pt1 - pt0;
-
-	Point2f floatEnd = Point2f(pt1.x,pt1.y) + (diff * scale);
-	return floatEnd;
+	Point2f floatEnd = Point2f(pt0.x,pt0.y) + (diff * scale);
+	return Point2i((int)floatEnd.x,(int)floatEnd.y);
 }
 
-bool QRCode::GuessAlignmentPosition(Point2i & result, Size2i & size)
+void QRCode::SetAlignmentCorners(vector<Point2i> & alignmentCorners)
 {
-	if (finderPatterns.size() != 3)
-		return false;
+	std::sort(alignmentCorners.begin(),alignmentCorners.end(),PointCompare(codeCenter));
+	alignmentPattern = alignmentCorners.back();
+	LOGD(LOGTAG_QR,"Selected alignment pattern (%d,%d)",alignmentPattern.x,alignmentPattern.y);
+}
 
-	sortCorners();
+float QRCode::getAvgPatternSize()
+{
+	float avgPatternSize = 0;
 	for (int i=0;i<finderPatterns.size();i++)
 	{
-		finderPatterns[i]->SortCorners();
+		avgPatternSize += finderPatterns[i]->size;
 	}
+	avgPatternSize = idiv(avgPatternSize,finderPatterns.size());
+	return avgPatternSize;
+}
 
-	//Get AP-aligning corners
-	Point2i upperRight0 = finderPatterns[1]->patternCorners[3];
-	Point2i upperRight1 = finderPatterns[1]->patternCorners[2];
+bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
+{
+	if (finderPatterns.size() == 3)
+	{	
+		
+		
+		if (finderPatterns[1]->patternCorners.size() != 4 || finderPatterns[2]->patternCorners.size() != 4)
+		{			
+			int fpSize = (int)round(finderPatterns[0]->size/2.0f);
+			result.x = (finderPatterns[1]->pt.x - finderPatterns[0]->pt.x) + finderPatterns[2]->pt.x - fpSize;
+			result.y = (finderPatterns[1]->pt.y - finderPatterns[0]->pt.y) + finderPatterns[2]->pt.y - fpSize;		
+			alignmentPattern = result;
+			
+			int startX = result.x - fpSize, endX = result.x + fpSize;
+			int startY = result.y- fpSize, endY = result.y + fpSize;
 
-	Point2i lowerLeft0 = finderPatterns[2]->patternCorners[1];
-	Point2i lowerLeft1 = finderPatterns[2]->patternCorners[2];
+			searchArea = Rect(Point2i(startX,startY),Point2i(endX,endY));
+			
+			return false;
+		}
+		else
+		{
+			sortCorners();
+			for (int i=0;i<finderPatterns.size();i++)
+			{
+				finderPatterns[i]->SortCorners();
+			}
+			
+			//Get AP-aligning corners
+			Point2i upperRight0 = finderPatterns[1]->patternCorners[3];
+			Point2i upperRight1 = finderPatterns[1]->patternCorners[2];
 
-	Point2i closePosition1 = ExtendLine(upperRight0,upperRight1,2);
-	Point2i closePosition2 = ExtendLine(lowerLeft0,lowerLeft0,2);
+			Point2i lowerLeft0 = finderPatterns[2]->patternCorners[1];
+			Point2i lowerLeft1 = finderPatterns[2]->patternCorners[2];
 
-	
-	Point2i farPosition1 = ExtendLine(upperRight0,upperRight1,2);
-	Point2i farPosition2 = ExtendLine(lowerLeft0,lowerLeft0,2);
+			LOGV(LOGTAG_QR,"Calculating AP position");
+
+			Point2i closePosition1 = ExtendLine(upperRight0,upperRight1,3.0f);
+			//Point2i closePosition2 = ExtendLine(lowerLeft0,lowerLeft0,2);
+
+			//Point2i farPosition1 = ExtendLine(upperRight0,upperRight1,2.43f);
+			Point2i farPosition2 = ExtendLine(lowerLeft0,lowerLeft0,3.43f);
+
+
+			//Abitrary choosing points
+			result = farPosition2;		
+			alignmentPattern = result;
+			searchArea = Rect(closePosition1,farPosition2);
+			return true;
+		}
+	}
+	else
+	{
+		LOGW(LOGTAG_QR,"Not enough finder patterns to guess alignment pattern. Size=%d",finderPatterns.size());
+		return false;
+	}
 }
 
 
@@ -61,7 +108,7 @@ void QRCode::sortCorners()
 {
 	LOGD(LOGTAG_QR,"Sorting corners for %d patterns",finderPatterns.size());
 	//Top left, top right, bottom left
-	Point2i codeCenter = Point2i(0,0);
+	codeCenter = Point2i(0,0);
 	trackingCorners.clear();
 	for (int i=0;i<finderPatterns.size();i++)
 	{
@@ -104,20 +151,32 @@ void QRCode::Draw(Mat * rgbaImage)
 		{
 			DebugLabel(finderPatterns[1]->pt,TextValue,Colors::Black,2.0f,Colors::Beige).Draw(rgbaImage);
 		}
-		//For each of the 3 finder patterns, store the point in an array to form the debug rectangle
-		Point2i points[4];
+		//if (trackingCorners.size() != 3)
+		{
+			//For each of the 3 finder patterns, store the point in an array to form the debug rectangle
+			Point2i points[4];
 
-		points[0] = (finderPatterns.at(0))->pt;
-		points[1] = (finderPatterns.at(1))->pt;
+			points[0] = (finderPatterns.at(0))->pt;
+			points[1] = (finderPatterns.at(1))->pt;
 
-		//Alignment Pattern is bottom right point
-		points[2] = alignmentPattern;
+			//Alignment Pattern is bottom right point
+			points[2] = alignmentPattern;
 
-		points[3] = (finderPatterns.at(2))->pt;
+			points[3] = (finderPatterns.at(2))->pt;
 
-		int npts = 4;
-		const Point2i * pArray[] = {points};
-		polylines(*rgbaImage,pArray,&npts,1,true,Colors::MediumTurquoise,2);
+			int npts = 4;
+			const Point2i * pArray[] = {points};
+			polylines(*rgbaImage,pArray,&npts,1,true,Colors::MediumTurquoise,2);
+		}
+		/*else
+		{
+			vector<Point2i> drawPoints;
+			drawPoints.push_back(Point2f(trackingCorners.at(0).x,trackingCorners.at(0).y));
+			drawPoints.push_back(Point2f(trackingCorners.at(1).x,trackingCorners.at(1).y));
+			drawPoints.push_back(Point2f(alignmentPattern.x,alignmentPattern.y));
+			drawPoints.push_back(Point2f(trackingCorners.at(2).x,trackingCorners.at(2).y));	
+			DebugPoly(drawPoints,Colors::Olive,2).Draw(rgbaImage);
+		}*/
 	}
 	else 
 	{
@@ -125,11 +184,11 @@ void QRCode::Draw(Mat * rgbaImage)
 		{
 			FinderPattern *  pattern = finderPatterns.at(i);
 
-			if (pattern->patternCorners.size() > 0)
+			/*if (pattern->patternCorners.size() > 0)
 			{
 				DebugPoly(pattern->patternCorners,Colors::Orchid,2).Draw(rgbaImage);
 			}
-			else
+			else*/
 			{
 				Point2i halfSize(idiv(pattern->patternSize.width,2), idiv(pattern->patternSize.height,2));
 				DebugRectangle(Rect(pattern->pt - halfSize,pattern->pt + halfSize),Colors::Purple,2).Draw(rgbaImage);
@@ -220,13 +279,9 @@ QRCode * QRCode::CreateFromFinderPatterns(vector<FinderPattern*> & finderPattern
 	patternVector.push_back(bottom_left);
 
 
-	int fpSize = (int)round(top_left->size/2.0f);
+						
 
-	Point2i alignmentGuess;
-	alignmentGuess.x = (top_right->pt.x - top_left->pt.x) + bottom_left->pt.x - fpSize;
-	alignmentGuess.y = (top_right->pt.y - top_left->pt.y) + bottom_left->pt.y - fpSize;								
-
-	return new QRCode(patternVector, alignmentGuess);
+	return new QRCode(patternVector);
 }
 
 

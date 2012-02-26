@@ -19,7 +19,7 @@ public:
 	Point2i alignmentPattern;
 	std::string TextValue;
 
-	QRCode(vector<FinderPattern*> _finderPatterns, Point2i _alignmentPattern = Point2i(0,0));
+	QRCode(vector<FinderPattern*> _finderPatterns);
 	~QRCode();
 
 	void getTrackingPoints(vector<Point2f> & points);
@@ -27,14 +27,19 @@ public:
 	void sortCorners();
 	bool isValidCode();
 	bool isDecoded();
+
+	float getAvgPatternSize();
+
+	void SetAlignmentCorners(vector<Point2i> & alignmentCorners);
 	
-	bool GuessAlignmentPosition(Point2i & result,Size2i & size);
+	bool GuessAlignmentPosition(Point2i & result,Rect & searchRegion);
 
 	static int FPDistance(FinderPattern * a,  FinderPattern * b);
 	static int FPAcuteAngleGeometry(FinderPattern* a, FinderPattern* b, FinderPattern* c);
 	static QRCode * CreateFromFinderPatterns(vector<FinderPattern*> & finderPatterns);
 
 private:
+	Point2i codeCenter;
 	vector<Point2i> trackingCorners;
 
 };
