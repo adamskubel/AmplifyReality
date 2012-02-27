@@ -6,6 +6,7 @@ ARObject::ARObject(GLObject * _glObject)
 	rotation = cv::Point3f(0,0,0);
 	position = cv::Point3f(0,0,0);
 	scale = cv::Point3f(1,1,1);
+	BoundingSphereRadius = 10.0f;
 }
 
 ARObject::ARObject(GLObject * _glObject, cv::Point3f _position)
@@ -14,6 +15,7 @@ ARObject::ARObject(GLObject * _glObject, cv::Point3f _position)
 	rotation = cv::Point3f(0,0,0);
 	position = _position;
 	scale = cv::Point3f(1,1,1);
+	BoundingSphereRadius = 10.0f;
 }
 
 ARObject::ARObject(GLObject * _glObject, cv::Point3f _position, cv::Point3f _rotation)
@@ -22,6 +24,7 @@ ARObject::ARObject(GLObject * _glObject, cv::Point3f _position, cv::Point3f _rot
 	rotation = _rotation;
 	position = _position;
 	scale = cv::Point3f(1,1,1);
+	BoundingSphereRadius = 10.0f;
 }
 
 ARObject::ARObject(GLObject * _glObject, cv::Point3f _position, cv::Point3f _rotation, cv::Point3f _scale)
@@ -30,6 +33,7 @@ ARObject::ARObject(GLObject * _glObject, cv::Point3f _position, cv::Point3f _rot
 	rotation = _rotation;
 	position = _position;
 	scale = _scale;
+	BoundingSphereRadius = 10.0f;
 }
 
 ARObject::~ARObject()

@@ -150,26 +150,26 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 	{
 		
 
-		////Check for keyboard opening/closing events
-		//bool lastKBState = keyboardIsOpen;
-		//if (eventKey == AKEYCODE_MENU && flags & AKEY_EVENT_FLAG_LONG_PRESS) //Long menu press toggles soft KB
-		//{
-		//	keyboardIsOpen = !keyboardIsOpen;
-		//}
-		//if (flags & AKEY_EVENT_FLAG_SOFT_KEYBOARD) //If it came from the soft KB, then soft KB better be open!
-		//{
-		//	LOGD(LOGTAG_INPUT,"Soft KB event!");
-		//	keyboardIsOpen = true;
-		//}
+		//Check for keyboard opening/closing events
+		bool lastKBState = keyboardIsOpen;
+		if (eventKey == AKEYCODE_MENU && flags & AKEY_EVENT_FLAG_LONG_PRESS) //Long menu press toggles soft KB
+		{
+			keyboardIsOpen = !keyboardIsOpen;
+		}
+		if (flags & AKEY_EVENT_FLAG_SOFT_KEYBOARD) //If it came from the soft KB, then soft KB better be open!
+		{
+			LOGD(LOGTAG_INPUT,"Soft KB event!");
+			keyboardIsOpen = true;
+		}
 
-		////If soft keyboard state has changed, notify listeners
-		//if (lastKBState != keyboardIsOpen)
-		//{			
-		//	for (int i=0;i<textListeners.size();i++)
-		//	{
-		//		textListeners.at(i)->VirtualKeyboardEvent(keyboardIsOpen); 
-		//	}
-		//}
+		//If soft keyboard state has changed, notify listeners
+		if (lastKBState != keyboardIsOpen)
+		{			
+			for (int i=0;i<textListeners.size();i++)
+			{
+				textListeners.at(i)->VirtualKeyboardEvent(keyboardIsOpen); 
+			}
+		}
 
 		//Only care about complete press, doesn't check for down occuring
 		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))

@@ -63,8 +63,7 @@ void Label::FitTextToBoundary(Size2f limits)
 {
 	lastSize = limits;
 	Size2i size = GetTextSize();
-
-
+	
 	float ySpace = limits.height/(float)size.height;
 	float xSpace = limits.width/(float)size.width;
 
@@ -96,7 +95,7 @@ void Label::SetText(std::string newText)
 cv::Size2i Label::GetTextSize()
 {	
 	fontBaseline = 0;
-	Size textSize = getTextSize(Text.c_str(), FontFace, FontScale, FontThickness, &fontBaseline);
+	Size textSize = getTextSize(Text.c_str(), FontFace, FontScale, FontThickness*3, &fontBaseline);
 	fontBaseline += FontThickness;
 	return textSize;
 }

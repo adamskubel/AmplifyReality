@@ -46,7 +46,7 @@
 	//NEXUS S Camera Properties
 	#define NEXUS_S_CAMERA_IMAGE_WIDTH 720
 	#define NEXUS_S_CAMERA_IMAGE_HEIGHT 480
-	#define NEXUS_S_CAMERA_MATRIX {934, 0, 400, 0, 934, 260, 0, 0 ,1}; //This one is from actual calibration
+	#define NEXUS_S_CAMERA_MATRIX {934, 0, 400, 0, 934, 260, 0, 0 ,1}; //This one is (not) from actual calibration
 
 //Camera
 //=[,771.814475,0.000000,379.685733]

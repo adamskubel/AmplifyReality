@@ -11,7 +11,12 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Ta
 	PageDisplay * page0 = new PageDisplay();
 	page0->AddChild(myGrid);
 	AddTab("Data",page0); 
-		
+
+	rotationLabel = new DataDisplay("%4.3f",Colors::Aqua,Colors::Blue);		
+	translationLabel = new DataDisplay("%4.1f",Colors::Aqua,Colors::Blue);		
+	
+	myGrid->AddChild(translationLabel,Point2i(1,0),Size2i(1,1));
+	myGrid->AddChild(rotationLabel,Point2i(1,2),Size2i(1,1));
 		
 	//Need to automate this..maybe
 	SelectBox * drawModeSelect = new SelectBox(3,Colors::MidnightBlue);
@@ -259,11 +264,11 @@ void ARControllerDebugUI::SetStateDisplay(string stateDescription)
 
 void ARControllerDebugUI::SetRotation(Mat * mat)
 {
-	//rotationLabel->SetData(mat);
+	rotationLabel->SetData(mat);
 }
 void ARControllerDebugUI::SetTranslation(Mat * mat)
 {
-	//translationLabel->SetData(mat);
+	translationLabel->SetData(mat);
 }
 
 void ARControllerDebugUI::SetPositionCertainty(float certainty)

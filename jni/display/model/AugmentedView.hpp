@@ -10,6 +10,23 @@
 #ifndef AUGMENTEDVIEW_HPP_
 #define AUGMENTEDVIEW_HPP_
 
+
+struct SelectedObject
+{
+	SelectedObject(ARObject * _arObject, struct timespec _selectTime)
+	{
+		arObject = _arObject;
+		selectTime = _selectTime;
+	}
+
+	ARObject * arObject;
+	struct timespec selectTime;
+	Mat startPosition;
+	Mat startRotation;
+	Point3f originalPosition;
+	Point3f originalRotation;
+};
+
 /*
 Renders the virtual objects to be overlayed on the camera image. 
 Uses input from locationing to determine where to display objects.
@@ -36,7 +53,11 @@ private:
 	vector<Point2i> inputPoints;
 	Mat projection;
 	float fieldOfView;
-	ARObject * testObject;
+	ARObject * selectionIndicator, * testObject;
+	SelectedObject * selectedObject;
+
+	struct timespec lastSelectionTime;
+	
 
 };
 

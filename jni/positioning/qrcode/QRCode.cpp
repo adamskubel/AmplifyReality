@@ -187,7 +187,7 @@ void QRCode::getTrackingPoints(vector<cv::Point2f> & points)
 void QRCode::getImagePoints(vector<Point3f> & qrVector)
 {
 	float finderPatternSpacing = 29.0f * QRCodeDimension;
-	float alignmentPatternSpacing = 24.0f * QRCodeDimension;
+	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
 
 	qrVector.push_back(Point3f(0,0,0));
 	qrVector.push_back(Point3f(finderPatternSpacing,0,0));

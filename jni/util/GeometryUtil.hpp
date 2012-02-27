@@ -25,6 +25,13 @@ static int GetSquaredDistance(cv::Point2i pt0, cv::Point2i pt1)
 	return ipow(pt0.x-pt1.x,2) + ipow(pt0.y-pt1.y,2);
 } 
 
+
+static int GetSquaredDistance(cv::Point3f pt0, cv::Point3f pt1)
+{
+	return pow(pt0.x-pt1.x,2) + pow(pt0.y-pt1.y,2) + pow(pt0.z - pt1.z,2);
+} 
+
+
 static bool IsClockWise(cv::Point2f p1, cv::Point2f p2, cv::Point2f p0)
 {
 	return ((p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x)) > 0;

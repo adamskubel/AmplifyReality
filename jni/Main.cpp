@@ -179,8 +179,8 @@ int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
 	//LOGV(LOGTAG_INPUT,"Main: ContentRect[%d,%d,%d,%d]",app->contentRect.left,app->contentRect.top,app->contentRect.right,app->contentRect.bottom);
 
 		//AConfiguration_setKeysHidden(app->config,ACONFIGURATION_KEYSHIDDEN_NO);
-	/*engine->androidConfiguration = app->config;*/
-	//LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
+	//engine->androidConfiguration = app->config;
+	LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
 	return engine->inputHandler->HandleInputEvent(app,inputEvent);
 }
 
@@ -398,12 +398,12 @@ void android_main(struct android_app* state)
 		}
 		else
 		{
-			//LOGW(LOGTAG_MAIN,"Exiting due to internal user command.");
-			//running = false;
+			LOGW(LOGTAG_MAIN,"Exiting due to internal user command.");
+			running = false;
 		}
 	}
 	myRunner.~AmplifyRunner();
 	shutdownEngine(&mainEngine);
-
+	ANativeActivity_finish(state->activity);
 }
 

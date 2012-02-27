@@ -303,8 +303,18 @@ void ARController::ProcessFrame(Engine * engine)
 						debugUI->SetStateDisplay("OfflineMode");
 						initializeARView(engine);
 
-						ARObject * myCube = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
-						augmentedView->AddObject(myCube);	
+						ARObject * myCube1 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
+						
+						//ARObject * myCube2 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(50,10,0));
+						
+						//ARObject * myCube3 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(-50,-10,0));
+
+						augmentedView->AddObject(myCube1);	
+						//augmentedView->AddObject(myCube2);	
+						//augmentedView->AddObject(myCube3);	
+						myCube1->BoundingSphereRadius = 30;
+						//myCube2->BoundingSphereRadius = 30;
+						//myCube3->BoundingSphereRadius = 30;
 
 						SetState(ControllerStates::Running);
 						delete worldLoader;
@@ -351,8 +361,8 @@ void ARController::ProcessFrame(Engine * engine)
 			currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
 			item->qrCode->QRCodeDimension = currentQRSize;
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
-			//debugUI->SetTranslation(item->translationMatrix);
-			//debugUI->SetRotation(item->rotationMatrix);
+			debugUI->SetTranslation(item->translationMatrix);
+			debugUI->SetRotation(item->rotationMatrix);
 		}	
 
 		//Evaluate the position	
