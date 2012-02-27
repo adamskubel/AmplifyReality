@@ -43,7 +43,7 @@ class TouchEventArgs : public EventArgs
 public:
 	TouchEventArgs();
 	ARInput::TouchInputType InputType;
-	cv::Point2i * TouchLocations;
+	cv::Point2i TouchLocations;
 };
 
 class NumberSpinnerEventArgs : public EventArgs

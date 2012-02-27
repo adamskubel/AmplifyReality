@@ -12,6 +12,7 @@
 #include "CalibrationController.hpp"
 #include "ARController.hpp"
 #include "userinterface/uimodel/TextBox.hpp"
+#include "userinterface/uimodel/TabDisplay.hpp"
 
 
 #ifndef STARTUP_CONTROLLER_HPP_
@@ -32,6 +33,7 @@ public:
 	Controller * GetSuccessor(Engine * engine);
 	
 	void startButtonPress(void * sender, EventArgs args);
+	void exitApplication(void * sender, EventArgs args);
 
 	void Render(OpenGL * openGL);
 
@@ -40,14 +42,18 @@ public:
 
 private:
 	bool doCalibration;
-	Button * startButton;
+	Button * startButton, * calibrateButton;
 	Label * statusLabel;
 	vector<IDeletable*> deleteVector;
 	vector<Drawable*> drawObjects;
 	GridLayout * grid;
 	Mat * rgbaImage;
-	bool isInitialized, isExpired;
+	bool isInitialized, isExpired, exitNext;
 	QuadBackground * quadBackground;
+	TextBox * password, * userName, * hostName;
+	int frameCount;
+	int dir;
+
 	
 };
 

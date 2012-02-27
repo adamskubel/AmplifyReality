@@ -25,6 +25,10 @@
 	
 	#define UI_ALPHA_ENABLED false
 
+	#define DEFAULT_HOST "192.168.1.9"
+	#define DEFAULT_USER "AdamSkubel"
+	#define DEFAULT_PASS "myPassword"
+
 	#define VERSION_STRING "0.47";
 	#define NO_ICONV true //Required for compiling zxing..doesn't work here though
 

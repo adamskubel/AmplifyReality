@@ -1,12 +1,13 @@
 #include "TabDisplay.hpp"
 
 
-TabDisplay::TabDisplay(bool _collapseMode)
+TabDisplay::TabDisplay(bool _collapseMode, Size2i buttonSize)
 {
 	collapseEnabled = _collapseMode;
 	currentTab = -1;
 	isCollapsed = false;
 	collapseButton = NULL;
+	DefaultButtonSize = buttonSize;
 }
 
 
@@ -44,6 +45,11 @@ void TabDisplay::AddTab(std::string tabName, GraphicalUIElement * tabContent)
 	}
 }
 
+void TabDisplay::SetButtonSize(Size2i size)
+{
+	DefaultButtonSize = size;
+}
+
 void TabDisplay::SetCollapseMode(bool _collapseMode)
 {
 	collapseEnabled = _collapseMode;
@@ -57,7 +63,6 @@ void TabDisplay::LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize)
 	buttonWidth = MIN(buttonSize.width,buttonWidth);
 	LOGD(LOGTAG_INPUT,"Setting tab button size to [%d,%d]",buttonWidth,buttonSize.height);
 	
-	
 	if (collapseEnabled)
 	{		
 		Rect tabButtonRect = Rect(boundaryRectangle.x,boundaryRectangle.y,buttonWidth,buttonSize.height);
@@ -70,17 +75,28 @@ void TabDisplay::LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize)
 		}
 		collapseButton->DoLayout(tabButtonRect);
 	}
+	
+	int ySpaceOffset = 3;
 	for (int i=0;i< TabChildren.size();i++)
 	{
 		int j = (collapseEnabled) ? i+1 : i;
 		Rect tabButtonRect = Rect(boundaryRectangle.x + (j*buttonWidth),boundaryRectangle.y,buttonWidth,buttonSize.height);
-		TabChildren[i]->TabButton->DoLayout(tabButtonRect);
+
+		TabChildren[i]->TabButton->DoLayout(tabButtonRect);		
+		// (int)round((float)tabButtonRect.width * 0.25f);
+		
+		//Calculate joining rectangle
+		int border = TabChildren[i]->TabButton->BorderThickness;
+		int xSpaceOffset = 0;
+		TabChildren[i]->TabJoinRect = Rect(tabButtonRect.x + xSpaceOffset + border, tabButtonRect.y + tabButtonRect.height - border,tabButtonRect.width - ((border+xSpaceOffset)*2),border+ySpaceOffset);
 	}
+		
+	tabLineSeperatorRectangle = Rect(boundaryRectangle.x,boundaryRectangle.y + buttonSize.height + ySpaceOffset,boundaryRectangle.width,3);
+	
 }
 
 void TabDisplay::DoLayout(Rect boundaryRectangle)
 {
-	const Size2i DefaultButtonSize = UI_BUTTON_SIZE;
 	Size2i buttonSize = DefaultButtonSize;
 	lastBoundaryRectangle = boundaryRectangle;
 	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y+buttonSize.height,boundaryRectangle.width,boundaryRectangle.height-buttonSize.height);	
@@ -187,7 +203,10 @@ void TabDisplay::SetTab(int tabIndex)
 	if (tabIndex < TabChildren.size())
 	{
 		if (TabChildren.at(tabIndex)->TabButton != NULL)
+		{
+		//	tabLineJoiningRectangle = TabChildren.at(tabIndex)->TabButton->buttonBoundaries;
 			TabChildren.at(tabIndex)->TabButton->SetFillColor(UI_BUTTON_ALT_STATE_COLOR);
+		}
 		currentTab = tabIndex;
 	}
 	else		
@@ -213,8 +232,13 @@ void TabDisplay::Draw(Mat * rgbaImage)
 
 		if (currentTab >= 0)
 		{
+			//Draw tab line
+			rectangle(*rgbaImage,tabLineSeperatorRectangle,UI_BUTTON_ALT_STATE_COLOR,-1);
+			rectangle(*rgbaImage,TabChildren.at(currentTab)->TabJoinRect,UI_BUTTON_ALT_STATE_COLOR,-1);
+
 			if (TabChildren.at(currentTab)->TabContent->IsVisible())
 				TabChildren.at(currentTab)->TabContent->Draw(rgbaImage);
+
 		}
 	}
 }

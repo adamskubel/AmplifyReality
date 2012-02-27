@@ -21,10 +21,12 @@ public:
 	void AddGlobalButtonDelegate(ButtonEventDelegate newDelegate);
 	void AddGlobalTouchDelegate(TouchEventDelegate newDelegate);
 	void AddTextListener(ITextListener * newListener);
+	void RemoveTextListener(ITextListener * listener);
 	void RemoveDelegate(TouchEventDelegate removeDelegate);
 	void RemoveDelegate(ButtonEventDelegate removeDelegate);
 	void SetRootUIElement(UIElement * element);
-	
+	void SoftKeyboardChanged(bool keyboardOpen);
+
 private:
 	bool CheckEventTime(AInputEvent * inputEvent, int minEventTimeMillis);
 	void HandleButtonEvent(AInputEvent * inputEvent);
@@ -36,7 +38,7 @@ private:
 	char GetCharFromKeyCode(int32_t keyCode, bool & validKey, bool upperCase);
 	bool rootDefined;
 	UIElement * rootElement;
-
+	
 	bool keyboardIsOpen;
 };
 

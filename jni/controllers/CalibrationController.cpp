@@ -58,7 +58,10 @@ void CalibrationController::Initialize(Engine * engine)
 	cameraMatDisplay = new DataDisplay("%6.2lf",Colors::Black,Colors::White);
 	distortionMatDisplay = new DataDisplay("%3.2lf",Colors::Black,Colors::White);
 
-	layout->AddChild(cameraMatDisplay,Point2i(0,0), Size2i(3,2));	
+	infoLabel = new Label("",Point2i(0,0),Colors::Black,Colors::White);
+	
+	layout->AddChild(infoLabel,Point2i(0,0), Size2i(4,1));	
+	layout->AddChild(cameraMatDisplay,Point2i(0,1), Size2i(3,2));	
 	layout->AddChild(distortionMatDisplay,Point2i(0,3),Size2i(3,1));
 
 	//Create exit button
@@ -296,10 +299,14 @@ void CalibrationController::CalculateMatrices()
 	double fovx,fovy,focalLength,aspectRatio;
 	Point2d principalPoint;
 	calibrationMatrixValues(*cameraMatrix,grayImage->size(),1,1,fovx,fovy,focalLength,principalPoint,aspectRatio);
-	LOGI(LOGTAG_CALIBRATION,"Camera physical parameters: fovx=%lf,fovy=%lf,focalLength=%lf,PrincipalPoint=(%lf,%lf),aspectRatio=%lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
 		
 	LOGI(LOGTAG_CALIBRATION,"Calibration Complete");
 
+	char labelStr[500];
+	sprintf(labelStr,"fovx=%lf,fovy=%lf,focalLength=%lf,PrincipalPoint=(%lf,%lf),aspectRatio=%lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
+	LOGI(LOGTAG_CALIBRATION,"Data:%s",labelStr);
+
+	infoLabel->SetText(labelStr);
 	
 	state = CalibrationControllerStates::Calculated;
 

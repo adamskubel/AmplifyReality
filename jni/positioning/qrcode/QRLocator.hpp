@@ -18,6 +18,7 @@ class QRLocator
 {
 private:
 	Mat * cameraMatrix, * distortionMatrix;
+	//float qrCodeUnitDimension;
 
 public:
 	QRLocator(Mat  cameraMatrix, Mat distortionMatrix);

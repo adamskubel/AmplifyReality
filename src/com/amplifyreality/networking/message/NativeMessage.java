@@ -51,6 +51,15 @@ public class NativeMessage
 				ClientRequest request = new ClientRequest("Resource",resourceName);
 				return request;
 			}
+			else if (dataString.contains("ObjectRepositioning:")) //[tag]:ObjectId=x;TX=1;TY=;TZ=;RX=...
+			{
+				String[] positionSplit = dataString.split(":");
+				
+				if (positionSplit.length < 2)
+					throw new UnknownClientActionException("Invalid resource request request. " + dataString);
+				
+				return null;
+			}
 		}
 		throw new UnknownClientActionException();
 	}

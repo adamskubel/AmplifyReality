@@ -18,12 +18,12 @@ Point2i FinderPattern::getFarthestCorner(Point2i point)
 
 	LOGV(LOGTAG_QR,"Sorting FP points by distance from (%d,%d)",point.x,point.y);
 	std::sort(patternCorners.begin(),patternCorners.end(),PointCompare(point));
-	Point2i centerPoint = patternCorners.back();
-	LOGV(LOGTAG_QR,"Farthest point is (%d,%d)",centerPoint.x,centerPoint.y);
-	return centerPoint;
+	Point2i outerPoint = patternCorners.front();
+	LOGV(LOGTAG_QR,"Farthest point is (%d,%d)",outerPoint.x,outerPoint.y);
+	return outerPoint;
 }
 
-//Clockwise starting at farthest (patternCorners.back())
+//Clockwise starting at farthest (patternCorners.front())
 void FinderPattern::SortCorners()
 {
 	if (patternCorners.size() == 4)
@@ -31,13 +31,27 @@ void FinderPattern::SortCorners()
 		LOGD(LOGTAG_QR,"Sorting FP corners");
 		Point2i tmp;
 
+		//first point in vector is farthest corner
+		vector<Point2i> tmpCorners;
+		tmpCorners.push_back(patternCorners[1]);
+		tmpCorners.push_back(patternCorners[2]);
+		tmpCorners.push_back(patternCorners[3]);
+
+		std::sort(tmpCorners.begin(),tmpCorners.end(),PointCompare(patternCorners.front()));
+		//farthest is first in tmpCorners
 		//sort out middle two
-		if (!IsClockWise(patternCorners[1],patternCorners.back(), patternCorners.front()))
+		if (!IsClockWise(tmpCorners.front(),patternCorners.front(), tmpCorners[1]))
 		{
 			//If not clockwise, swap
-			tmp = patternCorners[1];
-			patternCorners[1] = patternCorners[3];
-			patternCorners[3] = tmp;
+			patternCorners[1] = tmpCorners[2];
+			patternCorners[2] = tmpCorners[0];
+			patternCorners[3] = tmpCorners[1];
+		}
+		else
+		{
+			patternCorners[1] = tmpCorners[1];
+			patternCorners[2] = tmpCorners[0];
+			patternCorners[3] = tmpCorners[2];		
 		}
 	}
 }

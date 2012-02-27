@@ -28,6 +28,8 @@
 #define LOGTAG_NETWORKING "Networking"
 #define LOGTAG_JNI "JNI"
 #define LOGTAG_WORLD "WorldLoader"
+#define LOGTAG_ARINPUT "ARInput"
+
 
 #define STR(tok) #tok
 
@@ -142,51 +144,17 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 		__android_log_print(logPriority,(prefix.append(matrixTag)).c_str(),"%s is empty",matDescription);
 	}
 	else
-	{/*
-		char matString[800];
-		int charCount = 0;
-		for (int i = 0; i < matrix->rows; i++)
-		{						
-			for (int j = 0; j < matrix->cols*matrix->channels(); j++)
-			{		
-				charCount += sprintf(matString,"[%s",matString);
-				switch(matrix->depth())
-				{
-				case CV_8U:
-					charCount = sprintf(matString,"%s,%u",matString,matrix->at<unsigned char>(i,j));
-					break;
-				case CV_8S:
-					charCount = sprintf(matString,"%s,%d",matString,matrix->at<signed char>(i,j));
-					break;
-				case CV_16S:
-					charCount = sprintf(matString,"%s,%d",matString,matrix->at<signed short>(i,j));
-					break;
-				case CV_32S:
-					charCount = sprintf(matString,"%s,%d",matString,matrix->at<int>(i,j));
-					break;
-				case CV_32F:
-					charCount = sprintf(matString,"%s,%f",matString,matrix->at<float>(i,j));
-					break;
-				case CV_64F:
-					charCount = sprintf(matString,"%s,%lf",matString,matrix->at<double>(i,j));
-					break;
-				default:
-					charCount = sprintf(matString,"%s,?-%lf-?",matString,matrix->at<double>(i,j));
-				}
-				charCount = sprintf(matString,"%s]\n",matString);
-			}
-			
-		}*/
-		
+	{		
 		int charCount = 0;
 		std::stringstream textStream;		
-		textStream.precision(1);
+		textStream.precision(2);
 		textStream.setf(std::ios_base::fixed);
+		int maxCol = matrix->cols*matrix->channels();
 
 		for (int i = 0; i < matrix->rows; i++)
 		{			
 			textStream << "[";
-			for (int j = 0; j < matrix->cols*matrix->channels(); j++)
+			for (int j = 0; j < maxCol; j++)
 			{		
 				switch(matrix->depth())
 				{
@@ -211,6 +179,9 @@ static void LOG_Mat(android_LogPriority logPriority, std::string matrixTag, cons
 				default:
 					textStream << "?";
 				}
+				
+				if (j != (maxCol-1))
+					textStream << ",";
 			}
 			textStream << "]\n";			
 		}

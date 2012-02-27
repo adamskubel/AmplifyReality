@@ -12,12 +12,13 @@ public:
 	std::string TabName;
 	Button * TabButton;
 	GraphicalUIElement * TabContent;
+	Rect TabJoinRect;
 };
 
 class TabDisplay  : public GraphicalUIElement
 {
-	public:
-	TabDisplay(bool collapseEnabled = false);
+public:
+	TabDisplay(bool collapseEnabled = false, Size2i buttonSize = UI_BUTTON_SIZE);
 	~TabDisplay();
 	void AddChild(GraphicalUIElement * child);
 	void Draw(Mat * rgbaImage);
@@ -35,13 +36,16 @@ class TabDisplay  : public GraphicalUIElement
 	void AddTab(std::string tabName, GraphicalUIElement * tabContent);
 	GraphicalUIElement * GetTabByName(string tabName);
 
+	void SetButtonSize(Size2i size);
+
 private:
 	int currentTab;
 	Rect contentRect, lastBoundaryRectangle;
 	void LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize);
 	bool collapseEnabled, isCollapsed;
 	Button * collapseButton;
-
+	Rect tabLineSeperatorRectangle, tabLineJoiningRectangle;
+	Size2i DefaultButtonSize;
 protected:	
 	vector<TabPage*> TabChildren;
 };

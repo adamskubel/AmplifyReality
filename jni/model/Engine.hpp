@@ -23,6 +23,8 @@ public:
 	AndroidInputHandler * inputHandler;
 	SensorCollector * sensorCollector;
 	ARCommunicator * communicator;
+	AConfiguration * androidConfiguration;
+
 	
 	////Putting some configuration stuff in here for now
 	//Configuration::DrawMode drawMode;
@@ -30,6 +32,11 @@ public:
 	//Camera matrices
 	Mat * cameraMatrix;
 	Mat * distortionMatrix;
+
+	void ExitApplication()
+	{
+		animating = 0;
+	}
 
 
 	//Retrieve current time

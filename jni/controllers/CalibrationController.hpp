@@ -73,6 +73,7 @@ private:
 	vector<Point3f> generateChessboardPoints(Size_<int> boardDimensions, float squareSize);
 	NumberSpinner * sizeSpinner;
 	DataDisplay * cameraMatDisplay, * distortionMatDisplay;
+	Label * infoLabel;
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 

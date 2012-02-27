@@ -1,8 +1,18 @@
 #include "TextBox.hpp"
 
-void ITextListener::HandleKeyEvent(KeyEventArgs a)
+bool ITextListener::HandleKeyEvent(KeyEventArgs a)
 {
 	;
+}
+
+void ITextListener::SetFocus(bool focused)
+{
+
+}
+
+void ITextListener::LostFocus()
+{
+
 }
 
 void ITextListener::VirtualKeyboardEvent(bool opened)
@@ -10,7 +20,16 @@ void ITextListener::VirtualKeyboardEvent(bool opened)
 	;
 }
 
-TextBox::TextBox(Size2i imageSize)
+void ITextListener::AddFocusChangedListener(ITextListener * focusDelegate)
+{
+
+}
+void ITextListener::RemoveFocusChangedListener(ITextListener * focusDelegate)
+{
+
+}
+
+TextBox::TextBox(Size2i imageSize, std::string startText)
 {
 	keyboardOpenRectangle = Rect(0,0,imageSize.width,imageSize.height/2);
 	isFocused = false;
@@ -21,15 +40,18 @@ TextBox::TextBox(Size2i imageSize)
 	BorderThickness = 2;
 	PressColor = Colors::MediumTurquoise;
 	FocusedColor = Colors::OrangeRed;
-	textLabel = new Label("X",Point2i(0,0),TextColor,Colors::Transparent);
+	textLabel = new Label("",Point2i(0,0),TextColor,Colors::Transparent);
 	textLabel->SetLayout(false,true,true);
+	obfuscateMode = false;
+	
+	SetText(startText);
 }
 
 void TextBox::HandleInput(TouchEventArgs args)
 {
 	if (args.InputType == ARInput::Press)
 	{
-		isFocused = !isFocused;
+		SetFocus(!isFocused);
 		isPressed = false;
 	}
 	else if (args.InputType == ARInput::FingerDown)
@@ -41,6 +63,79 @@ void TextBox::HandleInput(TouchEventArgs args)
 void TextBox::VirtualKeyboardEvent(bool opened)
 {
 	keyboardOpen = opened;
+	
+	//Unfocus on KB close
+	if (isFocused && !keyboardOpen)
+		SetFocus(false);
+}
+
+void TextBox::LostFocus()
+{	
+	isFocused = false;	
+	RefreshLabelText();
+}
+
+void TextBox::SetFocus(bool focus)
+{
+	isFocused = focus;	
+	RefreshLabelText();
+	
+	if (focus)
+	{
+		for (int i=0;i<focusListenerVector.size();i++)
+		{
+			focusListenerVector[i]->LostFocus();
+		}
+	}
+}
+
+void TextBox::SetText(std::string text)
+{
+	currentText = text;
+	RefreshLabelText();
+}
+
+void TextBox::AddFocusChangedListener(ITextListener * focusListener)
+{
+	focusListenerVector.push_back(focusListener);
+}
+
+
+void TextBox::RemoveFocusChangedListener(ITextListener * focusListener)
+{
+	for (int i=0;i<focusListenerVector.size();i++)
+	{
+		if (focusListenerVector[i] == focusListener)
+		{
+			focusListenerVector.erase(focusListenerVector.begin() + i);
+			i--;
+		}
+	}
+}
+
+
+void TextBox::RefreshLabelText()
+{
+	if (obfuscateMode)
+	{
+		if (!isFocused)
+		{
+			std::string obfString = "";
+			for (int i=0;i<currentText.size();i++)
+			{
+				obfString.push_back('*');
+			}
+			textLabel->SetText(obfString);
+		}
+		else
+		{
+			textLabel->SetText(currentText);
+		}
+	}
+	else
+	{
+		textLabel->SetText(currentText);
+	}
 }
 
 void TextBox::DoLayout(Rect boundaries)
@@ -68,21 +163,18 @@ UIElement * TextBox::GetElementAt(cv::Point2i point)
 }
 
 
-void TextBox::HandleKeyEvent(KeyEventArgs args)
+bool TextBox::HandleKeyEvent(KeyEventArgs args)
 {
 	if (isFocused)
-	{
-		int32_t keyCode = args.keyCode;
-
-		bool validKey = false;
-		
+	{				
 		if (args.hasCharacter)
 			currentText.push_back(args.KeyCharacter);
-		else if (keyCode == AKEYCODE_DEL)
+		else if (args.keyCode == AKEYCODE_DEL)
 		{
 			if (currentText.size() >= 2)
 			{
-				currentText.erase(currentText.size() - 2,1);
+				LOGV(LOGTAG_INPUT,"Erasing last character");
+				currentText.erase(currentText.size() - 1,-1);
 			}
 			else
 			{
@@ -90,8 +182,10 @@ void TextBox::HandleKeyEvent(KeyEventArgs args)
 			}
 		}
 
-		textLabel->SetText(currentText);
+		RefreshLabelText();
+		return true;
 	}
+	return false;
 }
 
 void TextBox::Draw(Mat * rgbaImage)
@@ -113,6 +207,4 @@ void TextBox::Draw(Mat * rgbaImage)
 	{
 		textLabel->Draw(rgbaImage);
 	}
-	
-
 }

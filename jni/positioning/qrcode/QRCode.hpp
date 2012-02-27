@@ -23,6 +23,9 @@ public:
 	~QRCode();
 
 	void getTrackingPoints(vector<Point2f> & points);
+	void getImagePoints(vector<Point3f> & points);
+
+
 	void Draw(Mat * rgbaImage);
 	void sortCorners();
 	bool isValidCode();
@@ -38,9 +41,13 @@ public:
 	static int FPAcuteAngleGeometry(FinderPattern* a, FinderPattern* b, FinderPattern* c);
 	static QRCode * CreateFromFinderPatterns(vector<FinderPattern*> & finderPatterns);
 
+	void SetDrawingLevel(int level);
+	float QRCodeDimension;
+
 private:
 	Point2i codeCenter;
 	vector<Point2i> trackingCorners;
+	int debugDrawingLevel;
 
 };
 

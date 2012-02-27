@@ -9,7 +9,7 @@
 TouchEventArgs::TouchEventArgs()
 {
 	InputType = ARInput::Press;
-	TouchLocations = NULL;
+	TouchLocations = cv::Point2i(0,0);
 }
 
 PhysicalButtonEventArgs::PhysicalButtonEventArgs()

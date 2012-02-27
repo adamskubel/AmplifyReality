@@ -64,4 +64,20 @@ private:
 	cv::Point2i center;
 };
 
+class PointCompare_Ascending
+{
+public:
+	PointCompare_Ascending(cv::Point2i _center)
+	{
+		center = _center;
+	}
+	bool operator()(const cv::Point2i pt0, const cv::Point2i pt1)
+	{
+		return (ipow(pt0.x-center.x,2) + ipow(pt0.y-center.y,2)) < (ipow(pt1.x-center.x,2) + ipow(pt1.y-center.y,2)) ;
+	}
+private:
+	cv::Point2i center;
+};
+
+
 #endif

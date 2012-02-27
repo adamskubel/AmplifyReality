@@ -44,16 +44,19 @@ UIElement * Button::GetElementAt(cv::Point2i point)
 {
 	if (!isEnabled || !IsVisible())
 	{
-		LOGV(LOGTAG_INPUT,"Button disabled, aborting hit test");
+		LOGV(LOGTAG_INPUT,"Button[%s] is %s, aborting hit test",Name.c_str(),(!isEnabled) ? "disabled" : "not visible");
 		return NULL;
 	}
-	LOGD(LOGTAG_INPUT,"Button: Testing point (%d,%d)",point.x,point.y);
 	if (buttonBoundaries.contains(point))
 	{
-		LOGD(LOGTAG_INPUT,"Button: Point is inside!");
+		LOGD(LOGTAG_INPUT,"Button[%s]: Point (%d,%d) is inside!",Name.c_str(), point.x,point.y);
 		return this;
 	}
-	return NULL;
+	else
+	{
+		LOGV(LOGTAG_INPUT,"Button[%s] : Point (%d,%d) is not within button",Name.c_str(), point.x,point.y);
+		return NULL;
+	}
 }
 
 void Button::HandleInput(TouchEventArgs args)

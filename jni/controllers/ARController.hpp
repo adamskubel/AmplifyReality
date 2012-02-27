@@ -64,7 +64,7 @@ private:
 	void getImages(Engine* engine);
 	void locateCodes(Engine* engine, FrameItem * item);	
 	void readGyroData(Engine * engine, FrameItem * item);
-	void initializeARView();
+	void initializeARView(Engine * engine);
 	void initializeUI(Engine * engine);
 	
 	void SetState(ControllerStates::ControllerState state);
@@ -105,6 +105,8 @@ private:
 	float fpsAverage;
 	struct timespec lastFrameTime;
 	int drawingLevel;
+
+	float currentQRSize;
 
 	bool paused;
 

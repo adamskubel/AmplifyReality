@@ -542,7 +542,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 										{
 											//LOGV(LOGTAG_QR,"Compare check failed");
 											if (FP_DEBUG_ENABLED && debugLevel > 0)
-												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::Orange,2));
+												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::HotPink,2));
 										}
 									}
 									else

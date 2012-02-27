@@ -856,8 +856,8 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 			debugVector.push_back(new DebugCircle(insideCornerVector[i],4,Colors::Gold));
 		}
 	}
-	//Sort by distance to pattern center, farthest first
-	sort(insideCornerVector.begin(),insideCornerVector.end(),PointCompare(pattern->pt));
+	//Sort by distance to pattern center, closest first
+	sort(insideCornerVector.begin(),insideCornerVector.end(),PointCompare_Ascending(pattern->pt));
 	
 
 	//Test keypoints for validity. If this test fails, then return.

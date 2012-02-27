@@ -126,7 +126,7 @@ static void LogMat_Tmp(float * matArray)
 
 void QuadBackground::SetMatrices(OpenGL * openGL)
 {	
-	LOGV(LOGTAG_OPENGL,"Prepare BG, width=%d, height=%d",imageWidth,imageHeight);
+	//LOGV(LOGTAG_OPENGL,"Prepare BG, width=%d, height=%d",imageWidth,imageHeight);
 
 	OpenGLRenderData renderData = openGL->renderData;
 	
@@ -156,11 +156,11 @@ void QuadBackground::SetMatrices(OpenGL * openGL)
 	glUniformMatrix4fv(renderData.projectionMatrixLocation,1,GL_FALSE,camT.ptr<float>(0));
 
 	
-	LOGV(LOGTAG_OPENGL,"ImageHeight=%d,TextureHeight=%d,QuadHeight=%f",imageHeight,textureHeight,texturedQuad->height);	
+	//LOGV(LOGTAG_OPENGL,"ImageHeight=%d,TextureHeight=%d,QuadHeight=%f",imageHeight,textureHeight,texturedQuad->height);	
 	float imageHeightOnTexture = ((float)imageHeight/(float) textureHeight)* texturedQuad->height;
 	float yScale = -(float)orthoHeight/(float)imageHeightOnTexture;	
 	float yTranslation = (imageHeightOnTexture-texturedQuad->height);
-	LOGV(LOGTAG_OPENGL,"Scaling background: scale=%f, Ytranslation=%f",yScale,yTranslation);	
+	//LOGV(LOGTAG_OPENGL,"Scaling background: scale=%f, Ytranslation=%f",yScale,yTranslation);	
 	Mat modelMatrix = Mat::eye(4,4,CV_32F);
 
 	OpenGLHelper::scale(modelMatrix,Point3f(-yScale,-yScale,1));		

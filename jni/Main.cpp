@@ -15,6 +15,7 @@ static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
 static std::string connectionString;
 static bool connectedToServer;
+static bool softKeyboardOpen;
 
 
 //static JNIEnv * javaEnvironment;
@@ -102,6 +103,7 @@ extern "C"
 		pthread_mutex_unlock(&incomingMutex);
 	}
 
+	//GetConnectionString()
 	JNIEXPORT jstring JNICALL 
 		Java_com_amplifyreality_AmplifyRealityActivity_GetConnectionString(JNIEnv * env, jobject  obj)
 	{
@@ -111,7 +113,15 @@ extern "C"
 		return env->NewStringUTF(connectionString.c_str());
 	}
 
-	
+
+	//SetKeyboardState(bool)
+	JNIEXPORT void JNICALL Java_com_amplifyreality_AmplifyRealityActivity_SetKeyboardState(JNIEnv * env, jobject  obj, jboolean keyboardOpen)
+	{
+		softKeyboardOpen = (keyboardOpen != 0);
+	}
+
+
+
 }
 
 
@@ -135,6 +145,7 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 {
 	ARUserData * data = (ARUserData*) app->userData;
 	Engine* engine = data->engine;
+	LOGD(LOGTAG_INPUT,"Handling OS cmd: %d",cmd);
 
 	switch (cmd)
 	{
@@ -151,21 +162,12 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 	case APP_CMD_TERM_WINDOW:
 		shutdownEngine(engine);
 		break;
-	case APP_CMD_GAINED_FOCUS:
-		//Enable all sensors, start animation
-	/*	if (engine->sensorCollector != NULL)
-		{
-			engine->sensorCollector->EnableSensors(false,true,false);
-		}*/
+	case APP_CMD_GAINED_FOCUS:	
 		engine->animating = 1;
 		break;
 	case APP_CMD_LOST_FOCUS:
-		//Disable all sensors and stop animation
-		if (engine->sensorCollector != NULL)
-		{
-			engine->sensorCollector->DisableSensors();
-		}
 		engine->animating = 0;
+		//shutdownEngine(engine);
 		break;
     }
 }
@@ -173,6 +175,12 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
 {
 	Engine* engine = (Engine*) ((ARUserData*) app->userData)->engine;
+
+	//LOGV(LOGTAG_INPUT,"Main: ContentRect[%d,%d,%d,%d]",app->contentRect.left,app->contentRect.top,app->contentRect.right,app->contentRect.bottom);
+
+		//AConfiguration_setKeysHidden(app->config,ACONFIGURATION_KEYSHIDDEN_NO);
+	/*engine->androidConfiguration = app->config;*/
+	//LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
 	return engine->inputHandler->HandleInputEvent(app,inputEvent);
 }
 
@@ -193,11 +201,13 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	//Store state in engine
 	engine.app = state;
 	
+	//engine.androidConfiguration = state->config;
+
 	//Camera preview size is hardcoded for now
 	//TODO: Read from VC
 	engine.imageWidth = CAMERA_IMAGE_WIDTH;
 	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
-
+	
 	//Initialize objects
 	try
 	{
@@ -217,6 +227,11 @@ void shutdownEngine(Engine* engine)
 	LOGI(LOGTAG_MAIN,"Shutting down");
 	engine->animating = 0;
 	
+	/*if (engine->sensorCollector != NULL)
+	{
+		engine->sensorCollector->disablesensors();
+	}
+	*/
 	if (engine->imageCollector != NULL)
 	{
 		engine->imageCollector->teardown();
@@ -251,9 +266,11 @@ void android_main(struct android_app* state)
 	pthread_mutex_init(&incomingMutex,NULL);
 	pthread_mutex_init(&outgoingMutex,NULL);
 
+	//Initialize JNI-friendly variables
 	jniDataVector.clear();
 	connectedToServer = false;
 	connectionString = "test";
+	softKeyboardOpen = false;
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
@@ -271,9 +288,11 @@ void android_main(struct android_app* state)
 
 	state->userData = &myData;
 
-	
+	bool lastKeyboardState = softKeyboardOpen;
 
-	while (1)
+	
+	bool running = true;
+	while (running)
 	{
 		// Read all pending events.
 		int ident;
@@ -288,8 +307,8 @@ void android_main(struct android_app* state)
 			if (source != NULL)
 			{
 				source->process(state, source);
-			}
-			
+			}		
+
 			//Process sensor events
 			if (ident == LOOPER_ID_USER)
 			{
@@ -302,12 +321,28 @@ void android_main(struct android_app* state)
 				LOGI(LOGTAG_MAIN,"Engine thread destroy requested!");
 				shutdownEngine(&mainEngine);
 				return;
-			}
+			}			
+			//LOGV(LOGTAG_INPUT,"EventLoop: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(source->app->config),  AConfiguration_getKeyboard(source->app->config));	
 		}
 
+		
+		//mainEngine.androidConfiguration = source->app->config;
+		//int32_t keyboardConfig =;
+		//AConfiguration * testConfig = AConfiguration_new();
+		//int diffResult = AConfiguration_diff(testConfig, state->config);
+		//LOGV(LOGTAG_INPUT,"DiffResult=%d",diffResult);
+		//LOGV(LOGTAG_INPUT,"Engine: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(mainEngine.androidConfiguration),  AConfiguration_getKeyboard(mainEngine.androidConfiguration));			
+		//LOGV(LOGTAG_INPUT,"Main: ContentRect[%d,%d,%d,%d]",state->contentRect.left,state->contentRect.top,state->contentRect.right,state->contentRect.bottom);
+		//LOGV(LOGTAG_INPUT,"WindowSize=[%d,%d]",ANativeWindow_getWidth(state->window),ANativeWindow_get(state->window));
+
+
+		if (softKeyboardOpen != lastKeyboardState)
+		{
+			mainEngine.inputHandler->SoftKeyboardChanged(softKeyboardOpen);
+			lastKeyboardState = softKeyboardOpen;
+		}
 
 		//Check for messages in JNI queue
-
 		if ( pthread_mutex_trylock(&incomingMutex) == 0)
 		{
 			mainEngine.communicator->SetConnected(connectedToServer);
@@ -361,8 +396,12 @@ void android_main(struct android_app* state)
 				shutdownEngine(&mainEngine);
 			}
 		}
+		else
+		{
+			//LOGW(LOGTAG_MAIN,"Exiting due to internal user command.");
+			//running = false;
+		}
 	}
-
 	myRunner.~AmplifyRunner();
 	shutdownEngine(&mainEngine);
 

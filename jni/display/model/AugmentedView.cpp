@@ -12,7 +12,8 @@ AugmentedView::AugmentedView(cv::Mat _cameraMatrix)
 	LOGI(LOGTAG_POSITION, "Created AugmentedView");
 	canDraw = false;
 
-
+	testObject = new ARObject(OpenGLHelper::CreateSolidColorCube(40,Colors::OrangeRed));
+	AddObject(testObject);
 }
 
 //Delete the camera matrix and the vector of AR objects
@@ -56,6 +57,13 @@ static void ResetGLSettings()
 
 }
 
+void AugmentedView::HandleTouchInput(void * sender, TouchEventArgs args)
+{
+	inputPoints.push_back(args.TouchLocations);
+	LOGV(LOGTAG_ARINPUT,"Added touch point(%d,%d)",args.TouchLocations.x,args.TouchLocations.y);
+}
+
+
 void AugmentedView::Render(OpenGL * openGL)
 {
 	if (!canDraw)
@@ -70,6 +78,48 @@ void AugmentedView::Render(OpenGL * openGL)
 		
 	
 	OpenGLSettings();
+
+	Mat invProjection = projection.inv();
+
+	while (!inputPoints.empty())
+	{
+		
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"Projection",&projection);
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"Inv. Projection",&invProjection);
+		
+		float data[] = {inputPoints.back().x,inputPoints.back().y,1.0f,1.0f};
+		data[0] = (((data[0])/(openGL->screenWidth/2.0f)) - 1)/projection.at<float>(0,0);
+		data[1]= -(((data[1])/(openGL->screenHeight/2.0f)) - 1)/projection.at<float>(0,0);
+				
+		Mat screenPoint = Mat(4,1,CV_32F,data);
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"ScaledScreenPoint",&screenPoint);
+
+		Mat diff = invProjection * screenPoint;
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"Diff",&diff);
+				
+		Mat cameraPos = invProjection.col(3);		
+		cameraPos *= 1.0f/ cameraPos.at<float>(3,0);
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"CameraPosition",&cameraPos);
+
+
+		diff *= 1.0f/(diff.at<float>(3,0));
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"DiffNorm",&diff);
+		
+		float scaleZ = cameraPos.at<float>(2,0)/diff.at<float>(2,0);
+		
+		Mat farPoint = cameraPos - (diff * scaleZ);
+		LOG_Mat(ANDROID_LOG_DEBUG,LOGTAG_ARINPUT,"FarPointOrigin",&farPoint);
+
+
+
+		if (testObject != NULL)
+			testObject->position = Point3f(farPoint.at<float>(0,0),farPoint.at<float>(1,0),farPoint.at<float>(2,0));
+		else
+			LOGW(LOGTAG_AUGMENTEDVIEW,"Test object is null");
+
+
+		inputPoints.pop_back();
+	}
 
 	LOGV(LOGTAG_OPENGL,"Drawing %d ARObjects",objectVector.size());
 	for (int i=0;i<objectVector.size();i++)
@@ -114,14 +164,20 @@ void AugmentedView::Update(FrameItem * item)
 	canDraw = true;
 }
 
+//Field of view in degrees
+void AugmentedView::SetFOV(float fov)
+{
+	fieldOfView = fov;
+}
+
 
 void AugmentedView::SetCameraPosition(OpenGLRenderData & renderData)
 {	
 	LOGD_Mat(LOGTAG_POSITION,"Camera position",position);
 	LOGD_Mat(LOGTAG_POSITION,"Camera rotation",rotation);
 	
-	Mat projection = Mat::eye(4,4,CV_32F);
-	OpenGLHelper::gluPerspective(projection,40.0f,1.7f,20.0f, 600.0f);
+	projection = Mat::eye(4,4,CV_32F);
+	OpenGLHelper::gluPerspective(projection,fieldOfView,1.7f,20.0f, 600.0f);
 	
 	if (position->size().area() >= 3 && rotation->size().area() >= 3)
 	{				
@@ -129,9 +185,9 @@ void AugmentedView::SetCameraPosition(OpenGLRenderData & renderData)
 		
 		//LOGV(LOGTAG_OPENGL,"With rotation (%f,%f,%f)",object->rotation.x,object->rotation.y,object->rotation.z);
 
-		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,0), Point3f(1.0f, 0.0f, 0.0f));
-		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,1), Point3f(0.0f, 1.0f, 0.0f));
-		OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,2), Point3f(0.0f, 0.0f, 1.0f));
+		//OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,0), Point3f(1.0f, 0.0f, 0.0f));
+		//OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,1), Point3f(0.0f, 1.0f, 0.0f));
+		//OpenGLHelper::rotate(projection,(float)rotation->at<double>(0,2), Point3f(0.0f, 0.0f, 1.0f));
 	}
 	
 	Mat pt = Mat(projection.t());

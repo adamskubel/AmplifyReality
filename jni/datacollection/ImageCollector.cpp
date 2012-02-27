@@ -15,7 +15,10 @@ bool ImageCollector::IsReady()
 	{
 		return true;
 	}
-	return false;
+	else
+	{
+		return false;
+	}
 }
 
 ImageCollector::ImageCollector(int width, int height)
