@@ -143,6 +143,7 @@ namespace FastQR
 		Point2i pt0,pt1,pt2;
 		int length;
 		float cosine;
+		float angleToHorizontal;
 
 	};
 }

@@ -7,32 +7,28 @@
 #ifndef AROBJECT_HPP_
 #define AROBJECT_HPP_
 
+using namespace cv;
 
 class ARObject
 {
 public:
 	GLObject * glObject;
 
-	ARObject(GLObject * _glObject);
-	ARObject(GLObject * _glObject, cv::Point3f position);
-	ARObject(GLObject * _glObject, cv::Point3f position,cv::Point3f rotation);
-	ARObject(GLObject * _glObject, cv::Point3f position,cv::Point3f rotation, cv::Point3f scale);
+	ARObject(GLObject * _glObject, Point3f position = Point3f(0,0,0),Point3f rotation = Point3f(0,0,0), Point3f scale = Point3f(1,1,1));
 	~ARObject();
 
-	cv::Point3f position;
-	cv::Point3f rotation;
-	cv::Point3f scale;
+	Point3f position;
+	Point3f rotation;
+	Point3f scale;
 
 	float BoundingSphereRadius;
 
-	static ARObject FromObjFile(objLoader & objData);
-	
 };
 
 class ARObjectDistanceSort_Ascending
 {
 public:
-	ARObjectDistanceSort_Ascending(cv::Point3f point)
+	ARObjectDistanceSort_Ascending(Point3f point)
 	{
 		refPoint = point;
 	}
@@ -43,6 +39,6 @@ public:
 	}
 
 private:
-	cv::Point3f refPoint;
+	Point3f refPoint;
 };
 #endif

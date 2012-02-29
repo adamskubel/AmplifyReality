@@ -513,11 +513,13 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 									//LOGD(LOGTAG_QR,"Creating new pattern[%d,%d]",avgXSize,avgYSize);
 									//Create a new pattern
 									FinderPattern * newPattern = new FinderPattern(finderPatternCenter,Size2i(avgXSize,avgYSize));
+									Size2f patternSearchSize = Size2f(avgXSize,avgYSize);
 
 									vector<Point2i> corners;
 									struct timespec fastStart,fastEnd;
 									SET_TIME(&fastStart);
 									fastQRFinder->LocateFPCorners(inputImg,newPattern,corners,debugVector);
+//									fastQRFinder->CheckAlignmentPattern(inputImg,finderPatternCenter,patternSearchSize,corners,debugVector);
 									SET_TIME(&fastEnd);
 									double fastFPTime_Local = calc_time_double(fastStart,fastEnd);
 									fastFPTime += fastFPTime_Local;
@@ -530,7 +532,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 											finderPatterns.push_back(newPattern);
 											if (FP_DEBUG_ENABLED && debugLevel > 0)
 											{
-												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1));
+												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1,true));
 												for (int i=0;i<corners.size();i++)
 												{
 													if (FP_DEBUG_ENABLED && debugLevel > 0)

@@ -49,6 +49,15 @@ public:
 	//float maxVariance;
 };
 
+class ThreePointLineCompare_Cosine_Ascending
+{
+public:
+	bool operator()(const FastQR::ThreePointLine & line0, const FastQR::ThreePointLine & line1)
+	{
+		return line0.cosine < line1.cosine;
+	}
+};
+
 
 
 
@@ -68,8 +77,8 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f","FAST");
 	config->AddNewParameter("FlannSearchParams",32,32,32,64,"%2.0f","FAST");
 		
-	config->AddNewParameter("FAST Debug Level","FASTDebug",0,1,-2,4,"%2.0f","Debug");
-	config->AddNewParameter("FAST AP Debug Level","FASTAPDebug",0,1,-2,4,"%2.0f","Debug");
+	config->AddNewParameter("FAST Debug Level","FASTDebug",0,1,-4,4,"%2.0f","Debug");
+	config->AddNewParameter("FAST AP Debug Level","FASTAPDebug",0,1,-4,4,"%2.0f","Debug");
 	
 	config->AddNewParameter("Post-NonMaxSupress Size","MaxThreshSize",2,1,0,25,"%2.0f","FAST");
 	config->AddNewParameter("Post-NonMaxSupress Count","MaxThreshCount",2,1,0,25,"%2.0f","FAST");
@@ -533,6 +542,103 @@ static void processFinderPatternResults(vector<FastQR::ThreePointLine> & resultV
 	}
 }
 
+static void processFinderPatternResults2(vector<FastQR::ThreePointLine> & resultVector, Point2i patternCenter, vector<FastQR::ThreePointLine> & sortedLines, vector<Drawable*> & debugVector, int debugLevel)
+{
+
+	//Calculate all the angles to horizontal
+	for (int i=0;i<resultVector.size();i++)
+	{
+		//resultVector[i].angleToHorizontal = atanf(((float)resultVector[i].pt1.y)/((float)resultVector[i].pt1.x));
+		FastQR::ThreePointLine line = resultVector[i];
+		Point2f endPoint = Point2f(line.pt0.x-line.pt2.x,line.pt0.y-line.pt2.y);
+		resultVector[i].angleToHorizontal = atanf(endPoint.y/endPoint.x);
+	}
+
+	multimap<int,FastQR::ThreePointLine> lineMap;
+	
+	float minAngleDiff = 10.0f * (PI/180.0f);
+
+	Scalar friendlyColors[]  = {Colors::Red,Colors::Blue,Colors::DarkGoldenrod, Colors::AliceBlue,Colors::Aqua,Colors::DarkGray, Colors::DarkGreen};
+	int colorIndex = 0, colorSize = 7;
+	for (int i=0;i<resultVector.size();i++)
+	{
+		FastQR::ThreePointLine line = resultVector[i];
+		int parallelCount = 0;
+		for (int j=0;j<resultVector.size();j++)
+		{
+			if (i==j) continue;
+			FastQR::ThreePointLine line2 = resultVector[j];
+
+
+			if (abs(line2.angleToHorizontal-line.angleToHorizontal) < minAngleDiff ||
+				abs(abs(line2.angleToHorizontal-line.angleToHorizontal) - PI) < minAngleDiff)
+			{
+
+				if (debugLevel > 1)
+				{
+					colorIndex = (colorIndex+1)%3;
+					debugVector.push_back(new DebugLine(line.pt1,line.pt2,friendlyColors[colorIndex],2));
+					debugVector.push_back(new DebugLine(line.pt1,line.pt0,friendlyColors[colorIndex],2));
+					debugVector.push_back(new DebugLine(line2.pt1,line2.pt2,friendlyColors[colorIndex],2));
+					debugVector.push_back(new DebugLine(line2.pt1,line2.pt0,friendlyColors[colorIndex],2));
+				}
+
+				LOGV(LOGTAG_QRFAST,"Pass! Angle1=%f,Angle2=%f",line.angleToHorizontal,line2.angleToHorizontal);
+				parallelCount++;
+			}			
+			else
+			{				
+				LOGV(LOGTAG_QRFAST,"Fail! Angle1=%f,Angle2=%f",line.angleToHorizontal,line2.angleToHorizontal);
+			}
+		}
+		lineMap.insert(pair<int,FastQR::ThreePointLine>(parallelCount,line));
+	}
+
+	pair<multimap<int,FastQR::ThreePointLine>::iterator,multimap<int,FastQR::ThreePointLine>::iterator> itPair = lineMap.equal_range(1);
+	
+	itPair = lineMap.equal_range(1);
+	
+	
+	int count = 0;
+	for (; itPair.first != itPair.second;itPair.first++)
+	{
+		FastQR::ThreePointLine line = (*itPair.first).second;
+		
+		if (count++ == 4)
+			break;
+		
+		int d1 = GetSquaredDistance(line.pt0,patternCenter);
+		int d2 = GetSquaredDistance(line.pt2,patternCenter);
+
+		if (d2 > d1)
+		{
+			Point2i tmp = line.pt2;
+			line.pt2 = line.pt0;
+			line.pt0 = tmp;
+		}
+		if (debugLevel == 1)
+		{
+			debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Lime,2));
+			debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Lime,2));
+		}	
+		sortedLines.push_back(line);
+	}
+
+	itPair = lineMap.equal_range(2);
+
+	for (; itPair.first != itPair.second;itPair.first++)
+	{
+		FastQR::ThreePointLine line = (*itPair.first).second;
+		if (debugLevel > 1)
+		{
+			debugVector.push_back(new DebugLine(line.pt1,line.pt2,Colors::Pink,2));
+			debugVector.push_back(new DebugLine(line.pt1,line.pt0,Colors::Pink,2));
+		}	
+	}
+
+}
+
+
 static bool keyPointTest(vector<Point2i> & innerPoints, FinderPattern * pattern, int maxInnerPoints)
 {	
 	float minInnerPointRadius = pow(MIN(pattern->patternSize.width,pattern->patternSize.height)/3.0f,2);
@@ -845,15 +951,15 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 
 	for (int i=0;i<outsideCornersVector.size();i++)
 	{
-		if (debugLevel > 2)
-			debugVector.push_back(new DebugCircle(outsideCornersVector[i],4,Colors::Red));
+		if (debugLevel > 2 || debugLevel == -2)
+			debugVector.push_back(new DebugCircle(outsideCornersVector[i],3,Colors::Red,-1));
 	}
 
 	for (int i=0;i<insideCornerVector.size();i++)
 	{	
-		if (debugLevel > 2)
+		if (debugLevel > 2 || debugLevel == -2)
 		{
-			debugVector.push_back(new DebugCircle(insideCornerVector[i],4,Colors::Gold));
+			debugVector.push_back(new DebugCircle(insideCornerVector[i],3,Colors::Gold,-1));
 		}
 	}
 	//Sort by distance to pattern center, closest first
@@ -980,7 +1086,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 		closePointsEnd = closePointsVector.end();
 
 		float MaxCosine = -0.8f;
-		float lowestCosine = -0.6f;
+		float lowestCosine = -0.4f;
 
 		Point2i bestPoint;
 		int bestPointDistance;
@@ -1052,7 +1158,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 
 	vector<FastQR::ThreePointLine> sortedVector;
 	SET_TIME(&start);
-	processFinderPatternResults(resultVector,pattern->pt, sortedVector,debugVector,debugLevel);
+	processFinderPatternResults2(resultVector,pattern->pt, sortedVector,debugVector,debugLevel);
 	SET_TIME(&end);
 	LOG_TIME_PRECISE("FP Corner Analysis",start,end);
 
