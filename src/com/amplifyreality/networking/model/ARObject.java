@@ -18,6 +18,14 @@ public class ARObject
 	{
 		Position = new Vector3();
 	}
+	
+	public ARObject(String Name, Vector3 Position, Vector3 Rotation, Vector3 Scale)
+	{
+		this.Name = Name;
+		this.Position = Position;
+		this.Rotation = Rotation;
+		this.Scale = Scale;
+	}
 
 	@Element
 	public Vector3 Position;

@@ -1,13 +1,16 @@
-#include "LogDefinitions.h"
-#include "display/opengl/GLObject.hpp"
-#include "display/objloader/objLoader.h"
-#include "util/GeometryUtil.hpp"
-
 
 #ifndef AROBJECT_HPP_
 #define AROBJECT_HPP_
 
+#include "LogDefinitions.h"
+#include "display/opengl/GLObject.hpp"
+#include "display/objloader/objLoader.h"
+#include "util/GeometryUtil.hpp"
+#include "model/network/NetworkMessages.hpp"
+
 using namespace cv;
+
+
 
 class ARObject
 {
@@ -23,6 +26,20 @@ public:
 
 	float BoundingSphereRadius;
 
+	std::string objectID;
+
+	static std::string generateObjectMessage();
+
+};
+
+class ARObjectMessage : public OutgoingMessage
+{
+public:
+	ARObjectMessage(ARObject * object);
+	jstring GetDescription(JNIEnv * env);
+	jobject getJavaObject(JNIEnv * env);
+private:
+	ARObject * arObject;
 };
 
 class ARObjectDistanceSort_Ascending

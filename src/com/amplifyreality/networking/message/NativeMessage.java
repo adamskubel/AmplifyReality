@@ -3,6 +3,7 @@ package com.amplifyreality.networking.message;
 import android.util.Log;
 
 import com.amplifyreality.networking.exceptions.UnknownClientActionException;
+import com.amplifyreality.networking.model.ARObject;
 import com.amplifyreality.networking.model.ClientRequest;
 
 public class NativeMessage
@@ -60,6 +61,12 @@ public class NativeMessage
 				
 				return null;
 			}
+		}
+		else if (action.equals("ARObjectUpdate"))
+		{
+			ARObject updateObject = (ARObject)data;
+			Log.i(LOGTAG_NETWORKING, "Got ARObject update. ID=" + updateObject.Name);
+			return updateObject;
 		}
 		throw new UnknownClientActionException();
 	}

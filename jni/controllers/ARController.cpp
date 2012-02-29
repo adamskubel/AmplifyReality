@@ -373,7 +373,7 @@ void ARController::ProcessFrame(Engine * engine)
 		{			
 			augmentedView->SetFOV(debugUI->GetParameter("FOV"));
 			//Update the 3D AR layer, but only if position certainty is non-zero
-			augmentedView->Update(item);
+			augmentedView->Update(engine,item);
 		}
 	}
 	else

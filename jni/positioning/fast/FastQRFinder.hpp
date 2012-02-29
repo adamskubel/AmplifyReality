@@ -172,6 +172,7 @@ private:
 	static int GetDistanceFast(int dx, int dy);
 	static int GetSquaredDistance(Point2i pt0, Point2i pt1);
 	static int GetDistanceFast(Point2i pt0, Point2i pt1);
+	static vector<pair<int,Point2i> >  getClosestInSet(Point2i point, Mat & pointMatrix, flann::Index * innerPointIndex, int searchSize,int searchParams);
 	
 	//Clustering
 	static bool GetNodesInRadius(FastQR::Node* pt, double dblRadius, int nMinPts, int maxPts, vector<FastQR::Node*>& rgpNodesFound, flann::Index * kdIndex, vector<FastQR::Node*> & vecNodes);

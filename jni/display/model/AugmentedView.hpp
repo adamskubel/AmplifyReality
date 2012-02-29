@@ -34,7 +34,7 @@ Uses input from locationing to determine where to display objects.
 class AugmentedView 
 {
 public:
-	void Update(FrameItem * item);
+	void Update(Engine * engine, FrameItem * item);
 	void Render(OpenGL * openGL);
 
 	AugmentedView(cv::Mat cameraMatrix);
@@ -57,6 +57,8 @@ private:
 	SelectedObject * selectedObject;
 
 	struct timespec lastSelectionTime;
+
+	map<std::string,ARObjectMessage*> updateObjectMap;
 	
 
 };

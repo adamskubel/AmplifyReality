@@ -180,7 +180,7 @@ int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
 
 		//AConfiguration_setKeysHidden(app->config,ACONFIGURATION_KEYSHIDDEN_NO);
 	//engine->androidConfiguration = app->config;
-	LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
+	//LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
 	return engine->inputHandler->HandleInputEvent(app,inputEvent);
 }
 
@@ -369,7 +369,7 @@ void android_main(struct android_app* state)
 			LOGD(LOGTAG_NETWORKING,"Unable to lock incoming mutex");
 		}
 		
-		if (mainEngine.communicator->HasOutgoingMessages())
+		if (mainEngine.communicator->IsConnected() && mainEngine.communicator->HasOutgoingMessages())
 		{
 			if ( pthread_mutex_trylock(&outgoingMutex) == 0)
 			{

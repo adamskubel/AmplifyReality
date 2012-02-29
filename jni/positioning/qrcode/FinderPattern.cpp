@@ -53,6 +53,8 @@ void FinderPattern::SortCorners()
 			patternCorners[2] = tmpCorners[0];
 			patternCorners[3] = tmpCorners[2];		
 		}
+		
+		LOGD(LOGTAG_QR,"Finished sorting corners");
 	}
 }
 

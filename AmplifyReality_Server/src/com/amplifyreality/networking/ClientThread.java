@@ -15,6 +15,7 @@ import com.amplifyreality.AmplifyRealityActivity;
 import com.amplifyreality.networking.exceptions.InvalidHeaderMessageException;
 import com.amplifyreality.networking.message.ClientMessage;
 import com.amplifyreality.networking.message.ClientXMLMessage;
+import com.amplifyreality.networking.model.ARObject;
 import com.amplifyreality.networking.model.ClientRequest;
 import com.amplifyreality.networking.model.DataHeader;
 import com.amplifyreality.networking.model.Realm;
@@ -223,6 +224,13 @@ public class ClientThread implements MessageListener
 					ClientRequest request = serializer.read(ClientRequest.class, data);
 					LOGGER.info("Deserialization complete");
 					ProcessClientRequest(request);
+				}
+				else if (className.equals(ARObject.class.getCanonicalName()))
+				{
+					LOGGER.info("Deserializing as ARObject update");
+					ARObject arObject = serializer.read(ARObject.class, data);
+					LOGGER.info("Deserialization complete");
+					
 				}
 			} catch (Exception e)
 			{

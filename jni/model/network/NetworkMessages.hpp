@@ -1,6 +1,8 @@
 #ifndef BASE_MESSAGE_HPP_
 #define BASE_MESSAGE_HPP_
 
+#include <jni.h>
+
 using namespace std;
 
 
@@ -22,17 +24,13 @@ public:
 		return env->NewStringUTF("Base");
 	}
 
-	//virtual jstring GetDataString(JNIEnv * env)
-	//{
-	//	return env->NewStringUTF("BaseString");
-	//}
-
 	virtual jobject getJavaObject(JNIEnv * env)
 	{
 		return env->NewStringUTF("null");
 	}
 
 };
+
 
 class StringMessage : public IncomingMessage, public OutgoingMessage
 {
@@ -61,13 +59,7 @@ public:
 	{
 		return env->NewStringUTF("String");
 	}
-
-	//jstring GetDataString(JNIEnv * env)
-	//{
-	//	return env->NewStringUTF(StringData->c_str());
-	//}
-
-		
+			
 	jobject getJavaObject(JNIEnv * env)
 	{
 		return  env->NewStringUTF(StringData->c_str());

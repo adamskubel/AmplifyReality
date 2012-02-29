@@ -10,24 +10,44 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 	minimumAlignmentPatternScore = config->GetIntegerParameter("MinimumAPScore");
 	alignDebugLevel = config->GetIntegerParameter("AlignDebug");
 	int verticalResolution = config->GetIntegerParameter("YResolution");
+	float fastRegionScale = config->GetFloatParameter("APFastScale");
 	
 	Rect searchRegion;
 	Point2i guess;
 	if (newCode->GuessAlignmentPosition(guess,searchRegion))
 	{
-		if (alignDebugLevel > 0)
-			debugVector.push_back(new DebugRectangle(searchRegion,Colors::GreenYellow,1));
+		if (alignDebugLevel > 1)
+			debugVector.push_back(new DebugCircle(guess,12,Colors::SkyBlue,1,true));
+
+		//Test guessed position with FAST directly before proceeding with edge-based search
+		vector<Point2i> patternPoints;
+		fastQRFinder->CheckAlignmentPattern(inputImg,guess,Size2f(searchRegion.width,searchRegion.height),patternPoints,debugVector);
+		for (int i=0;i<patternPoints.size();i++)
+		{
+			if (alignDebugLevel > 0)
+				debugVector.push_back(new DebugCircle(patternPoints.at(i),4,Colors::Fuchsia,2));
+		}
+		if (patternPoints.size() == 4)
+		{
+			if (alignDebugLevel > 0)
+				debugVector.push_back(new DebugRectangle(searchRegion,Colors::MediumSlateBlue,1));
+			newCode->SetAlignmentCorners(patternPoints);
+			return;
+		}
 
 		LOGD(LOGTAG_QR,"SearchRegion[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
 		ConstrainRectangle(edgeArray,searchRegion);
 		LOGD(LOGTAG_QR,"ConstrainedSearchRegion[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
-
+		if (alignDebugLevel > 0)
+			debugVector.push_back(new DebugRectangle(searchRegion,Colors::Coral,1));
 	}
 	else
 	{
 		if (alignDebugLevel > 0)
 			debugVector.push_back(new DebugRectangle(searchRegion,Colors::Red,1));
-		
+		if (alignDebugLevel > 1)
+			debugVector.push_back(new DebugCircle(guess,12,Colors::SkyBlue,1,true));
+
 		LOGD(LOGTAG_QR,"SearchRegion2[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
 		ConstrainRectangle(edgeArray,searchRegion);
 		LOGD(LOGTAG_QR,"ConstrainedSearchRegion2[%d,%d,%d,%d]",searchRegion.x,searchRegion.y,searchRegion.width,searchRegion.height);
@@ -35,8 +55,6 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 	
 	int finderPatternSize = round(newCode->getAvgPatternSize());
 
-	if (alignDebugLevel > 1)
-		debugVector.push_back(new DebugCircle(guess,12,Colors::SkyBlue,1,true));
 		
 	FindEdgesClosed(inputImg,searchRegion,edgeArray,edgeThreshold,nonMaxEnabled,detectorSize,verticalResolution);
 	
@@ -119,13 +137,15 @@ void QRFinder::FindAlignmentPattern(Mat & inputImg, QRCode * newCode, vector<Dra
 
 								int alignPatternSize = MAX(apXSize,apYSize);
 								
-								vector<Point2i> patternPoints;
-								fastQRFinder->CheckAlignmentPattern(inputImg,Point2i(tempXCenter,tempYCenter),Size2f(apXSize,apYSize),patternPoints,debugVector);
+								vector<Point2i> patternPoints;								
+
+								Size2f patternSizeRect = Size2f(apXSize * fastRegionScale,apYSize * fastRegionScale);
+								fastQRFinder->CheckAlignmentPattern(inputImg,Point2i(tempXCenter,tempYCenter),patternSizeRect,patternPoints,debugVector);
 
 								for (int i=0;i<patternPoints.size();i++)
 								{
 									if (alignDebugLevel > 0)
-										debugVector.push_back(new DebugCircle(patternPoints.at(i),6,Colors::Lime,2));
+										debugVector.push_back(new DebugCircle(patternPoints.at(i),4,Colors::Lime,2));
 								}
 
 								if (patternPoints.size() == 4)

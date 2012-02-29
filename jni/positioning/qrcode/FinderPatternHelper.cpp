@@ -337,11 +337,21 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 	
 	int bw[6] = { 0 };
 	int k = 0;
-	//LOGV(LOGTAG_QR,"Beginning search. y[%d->%d], x[%d->%d]",yStart,maxRow,xStart,maxColumn);
 	//LOGV(LOGTAG_QR,"ImgSize=[%d,%d] EdgeSize=[%d,%d]",inputImg.rows,inputImg.cols,edgeArray.rows,edgeArray.cols);
 
-	for (int y = yStart; y < maxRow; y += verticalResolution)
+	int yDirection = 1;
+	int yCenter = yStart + (maxRow - yStart)/2;
+	int y = yStart, absOffset = 0;
+
+	LOGV(LOGTAG_QR,"Beginning search. y[%d->%d], Center=%d, x[%d->%d]",yStart,maxRow,yCenter,xStart,maxColumn);
+	
+	while (y < maxRow && y >= yStart)
 	{	
+		y = yCenter + absOffset * yDirection;
+
+		if (yDirection == 1) absOffset += verticalResolution;	//Increment every other frame		
+		yDirection = -yDirection;								//Change direction every frame
+
 		k = 0;
 		bw[0] = bw[1] = bw[2] = bw[3] = bw[4] = bw[5] = 0;
 

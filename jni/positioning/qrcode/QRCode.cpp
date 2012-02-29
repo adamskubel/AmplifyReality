@@ -59,6 +59,25 @@ float QRCode::getAvgPatternSize()
 }
 
 
+static Point2f getIntersectionPoint(Point2f p1, Point2f p2, Point2f p3, Point2f p4)
+{
+	float data[] = { p2.x - p1.x, -(p4.x-p3.x), p2.y - p1.y, -(p4.y-p3.y)};
+	Mat m = Mat(2,2,CV_32F,data);
+	Mat p = Mat(2,1,CV_32F);
+	p.at<float>(0,0) = p3.x - p1.x;
+	p.at<float>(1,0) = p3.y - p1.y;
+
+	Mat mInv = Mat(m.inv());
+
+	Mat answer = Mat(2,1,CV_32F);
+	answer = mInv * p;
+
+	float s = answer.at<float>(0,0);
+	//float t = answer.at<float>(1,0); 
+
+	return Point2f(p1.x + (p2.x-p1.x)*s, p1.y + (p2.y-p1.y)*s);
+}
+
 bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 {
 	const float APError = 0.1f;
@@ -92,43 +111,55 @@ bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 			}
 
 			//Get AP-aligning corners
+			if (finderPatterns[1]->patternCorners.size()  < 4 || finderPatterns[2]->patternCorners.size() < 4)
+			{
+				int fpSize = (int)round(finderPatterns[0]->size/2.0f);
+				result.x = (finderPatterns[1]->pt.x - finderPatterns[0]->pt.x) + finderPatterns[2]->pt.x - fpSize;
+				result.y = (finderPatterns[1]->pt.y - finderPatterns[0]->pt.y) + finderPatterns[2]->pt.y - fpSize;		
+				alignmentPattern = result;
+
+				int startX = result.x - fpSize, endX = result.x + fpSize;
+				int startY = result.y- fpSize, endY = result.y + fpSize;
+
+				searchArea = Rect(Point2i(startX,startY),Point2i(endX,endY));
+
+				return false;
+			}
+
 			Point2i upperRight0 = finderPatterns[1]->patternCorners[3];
 			Point2i upperRight1 = finderPatterns[1]->patternCorners[2];
 
 			Point2i lowerLeft0 = finderPatterns[2]->patternCorners[1];
 			Point2i lowerLeft1 = finderPatterns[2]->patternCorners[2];
 
-			/*LOGV(LOGTAG_QR,"Calculating AP position. Corner1=(%d,%d), Corner2=(%d,%d)",upperRight0.x,upperRight0.y,upperRight1.x,upperRight1.y);
-			LOGV(LOGTAG_QR,"Calculating AP position. Corner3=(%d,%d), Corner4=(%d,%d)",lowerLeft0.x,lowerLeft0.y,lowerLeft1.x,lowerLeft1.y);*/
+			LOGV(LOGTAG_QR,"Calculating AP position. Corner1=(%d,%d), Corner2=(%d,%d)",upperRight0.x,upperRight0.y,upperRight1.x,upperRight1.y);
+			LOGV(LOGTAG_QR,"Calculating AP position. Corner3=(%d,%d), Corner4=(%d,%d)",lowerLeft0.x,lowerLeft0.y,lowerLeft1.x,lowerLeft1.y);
 
-			Point2i diff;
+			Point2i diff1;
+			Point2i ap0 = ExtendLine(upperRight0,upperRight1,diff1,FinderPatternAlignmentRatioLow);
+			Point2i ap2 = ExtendLine(upperRight0,upperRight1,diff1,FinderPatternAlignmentRatioHigh);
 
-			Point2i ap0 = ExtendLine(upperRight0,upperRight1,diff,FinderPatternAlignmentRatioLow);
-			//Point2i ap1 = ExtendLine(upperRight0,upperRight1,diff,FinderPatternAlignmentRatioCenter);
-			Point2i ap2 = ExtendLine(upperRight0,upperRight1,diff,FinderPatternAlignmentRatioHigh);
-			int d1 = GetSquaredDistance(ap0,ap2);
+			Point2i diff2;
+			Point2i ap3 = ExtendLine(lowerLeft0,lowerLeft1,diff2,FinderPatternAlignmentRatioLow);
+			Point2i ap5 = ExtendLine(lowerLeft0,lowerLeft1,diff2,FinderPatternAlignmentRatioHigh);
 
-			Point2i ap3 = ExtendLine(lowerLeft0,lowerLeft1,diff,FinderPatternAlignmentRatioLow);
-			//Point2i ap4 = ExtendLine(lowerLeft0,lowerLeft1,diff,FinderPatternAlignmentRatioCenter);
-			Point2i ap5 = ExtendLine(lowerLeft0,lowerLeft1,diff,FinderPatternAlignmentRatioHigh);
-			int d2 = GetSquaredDistance(ap3,ap5);
+			int dx1 = abs(ap0.x - ap2.x);
+			int dx2 = abs(ap3.x - ap5.x);
 
-			float dist = MAX(d1,d2);
+			int dy1 = abs(ap0.y - ap2.y);
+			int dy2 = abs(ap3.y - ap5.y);
 
+			int dx = MAX(dx1,dx2);
+			int dy = MAX(dy1,dy2);
+			
+			dx = idiv(dx,2);
+			dy = idiv(dy,2);
 
-			dist=(sqrt(dist));
-			dist *= 0.7f; //* 1.4f in case diagonal, then half
-			int distI = (int)round(dist);
-
-			Point2i center(0,0);
-			center += ap0;
-			center += ap2;
-			center += ap3;
-			center += ap5;
-
-			center = Point2i(idiv(center.x,4),idiv(center.y,4));
-			result = center;
-			searchArea = Rect(Point2i(center.x - distI, center.y - distI), Point2i(center.x + distI, center.y + distI));
+			LOGV(LOGTAG_QR,"Finding intersection point");
+			Point2f center = getIntersectionPoint(upperRight0,upperRight1,lowerLeft0,lowerLeft1);
+			LOGV(LOGTAG_QR,"Intersection point is (%f,%f)",center.x,center.y);
+			result = Point2i((int)round(center.x),(int)round(center.y));
+			searchArea = Rect(Point2i(center.x - dx, center.y - dy), Point2i(center.x + dx, center.y + dy));
 			return true;
 		}
 	}

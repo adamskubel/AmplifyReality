@@ -41,11 +41,6 @@ void AugmentedView::AddObject(ARObject * arObject)
 	LOGI(LOGTAG_POSITION, "Added new ARObject to AugmentedView");
 }
 
-static std::string GenerateARObjectEvent(ARObject * object)
-{
-
-}
-
 static void OpenGLSettings()
 {	
 	glDepthMask(true);
@@ -224,6 +219,9 @@ void AugmentedView::Render(OpenGL * openGL)
 			selectedObject->arObject->position = objPosition; //Offset by camera position
 			LOGD(LOGTAG_ARINPUT,"Updated Object Position(%f,%f,%f)",selectedObject->arObject->position.x,selectedObject->arObject->position.y,selectedObject->arObject->position.z);
 
+			//Send command to server notifying that object has new position
+			updateObjectMap.insert(pair<string,ARObjectMessage*>(selectedObject->arObject->objectID,new ARObjectMessage(selectedObject->arObject)));
+
 			delete selectedObject;
 			selectedObject = NULL;
 		}
@@ -248,15 +246,6 @@ void AugmentedView::Render(OpenGL * openGL)
 		LOGD(LOGTAG_ARINPUT,"Time spacing too short for unselect. Diff=%lf",timediff);
 	}
 
-	//if (selectedObject != NULL)
-	//{
-	//	Mat positionDelta = (*position) - (selectedObject->startPosition);
-	//	Mat rotationDelta = (*rotation) - selectedObject->startRotation;
-	//	selectedObject->arObject->position = selectedObject->originalPosition + Point3f(positionDelta.at<float>(0,0),positionDelta.at<float>(0,1),positionDelta.at<float>(0,2));
-	//	selectedObject->arObject->rotation = selectedObject->originalRotation + Point3f(rotationDelta.at<float>(0,0),rotationDelta.at<float>(0,1),rotationDelta.at<float>(0,2));
-	//}
-
-
 	objectVector.push_back(testObject);	
 
 	LOGV(LOGTAG_OPENGL,"Drawing %d ARObjects",objectVector.size());
@@ -271,19 +260,18 @@ void AugmentedView::Render(OpenGL * openGL)
 		
 		if (selectedObject != NULL && selectedObject->arObject == object)
 		{			
-			Point3f cameraPosition = getCameraPosition(projection);//(position->at<double>(0,0),position->at<double>(0,1),position->at<double>(0,2));
+			Point3f cameraPosition = getCameraPosition(projection);
 			
-			LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",selectedObject->originalPosition.x,selectedObject->originalPosition.y,selectedObject->originalPosition.z);
+			//LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",selectedObject->originalPosition.x,selectedObject->originalPosition.y,selectedObject->originalPosition.z);
 
-			LOGD(LOGTAG_ARINPUT,"CameraPosition(%f,%f,%f)",cameraPosition.x,cameraPosition.y,cameraPosition.z);
+			//LOGD(LOGTAG_ARINPUT,"CameraPosition(%f,%f,%f)",cameraPosition.x,cameraPosition.y,cameraPosition.z);
 			Point3f objectPosition = selectedObject->originalPosition + cameraPosition; //Offset by camera position
-			LOGV(LOGTAG_ARINPUT,"SelectedObjPosition(%f,%f,%f)",objectPosition.x,objectPosition.y,objectPosition.z);
+			//LOGV(LOGTAG_ARINPUT,"SelectedObjPosition(%f,%f,%f)",objectPosition.x,objectPosition.y,objectPosition.z);
 			OpenGLHelper::translate(modelMatrix,objectPosition);
 
 			OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
 			OpenGLHelper::rotate(modelMatrix,object->rotation.y, Point3f(0.0f, 1.0f, 0.0f));
 			OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));
-
 		}
 		else
 		{
@@ -318,8 +306,16 @@ void AugmentedView::Render(OpenGL * openGL)
 	canDraw = false;
 }
 
-void AugmentedView::Update(FrameItem * item)
+void AugmentedView::Update(Engine * engine, FrameItem * item)
 {
+	if (engine->communicator->IsConnected())
+	{
+		for (map<string,ARObjectMessage*>::iterator it = updateObjectMap.begin();it != updateObjectMap.end();it++)
+		{
+			engine->communicator->SendMessage((*it).second);
+		}
+	}
+	
 	rotation = item->rotationMatrix;
 	position = item->translationMatrix;
 	canDraw = true;
