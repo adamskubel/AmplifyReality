@@ -1,7 +1,11 @@
 package com.amplifyreality.networking;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -10,9 +14,11 @@ import com.amplifyreality.AmplifyRealityActivity;
 import com.amplifyreality.networking.exceptions.InvalidHeaderMessageException;
 import com.amplifyreality.networking.exceptions.UnknownClientActionException;
 import com.amplifyreality.networking.message.ClientMessage;
+import com.amplifyreality.networking.message.ClientStringMessage;
 import com.amplifyreality.networking.message.ClientXMLMessage;
 import com.amplifyreality.networking.message.NativeMessage;
 import com.amplifyreality.networking.model.ARObject;
+import com.amplifyreality.networking.model.ClientRequest;
 import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.DataHeader;
 import com.amplifyreality.networking.model.WavefrontObj;
@@ -20,16 +26,21 @@ import com.amplifyreality.networking.model.WavefrontObj;
 import android.util.Log;
 import java.util.concurrent.LinkedBlockingQueue;
 
+
 public class ARClient
 {
 
 	static String LOGTAG_NETWORKING = "AmplifyR-Networking_Java";
 
+	//Defaults
 	String host = "192.168.1.9";
 	int port = 12312;
+	
 	volatile boolean listening = false;
 
 	private LinkedBlockingQueue<Object[]> outgoingQueue;
+
+	private LinkedBlockingQueue<Integer> authenticationResultQueue;
 
 	Socket mySocket;
 	BufferedReader reader;
@@ -38,8 +49,7 @@ public class ARClient
 	{
 		reader = null;
 		outgoingQueue = new LinkedBlockingQueue<Object[]>();
-		Connect();
-
+		authenticationResultQueue = new LinkedBlockingQueue<Integer>();
 	}
 
 	public ARClient(String host, int port)
@@ -47,7 +57,6 @@ public class ARClient
 		this.host = host;
 		this.port = port;
 		reader = null;
-		Connect();
 	}
 
 	private void SendNativeMessages(Object[] msgs)
@@ -128,6 +137,7 @@ public class ARClient
 
 	private void StartListening()
 	{
+		Log.i(LOGTAG_NETWORKING, "Waiting for server messages");
 		Thread t = new Thread(new Runnable()
 		{
 			@Override
@@ -162,9 +172,19 @@ public class ARClient
 							} catch (InvalidHeaderMessageException e)
 							{
 								dataHeader = null; // Ignore line, reset header to null
+								
+								Log.d(LOGTAG_NETWORKING,"Inputline=" + inputLine);
+								if (authenticationResultQueue != null && inputLine.equals("AuthPass"))
+								{
+									authenticationResultQueue.add(1);
+								}
+								else if (authenticationResultQueue != null && inputLine.equals("AuthFail"))
+								{
+									authenticationResultQueue.add(-1);
+								}
+								
 								AmplifyRealityActivity.OnMessage(inputLine, null); // Process as string
 							}
-							// Log.i(LOGTAG_NETWORKING, "Server says: " + inputLine);
 						} else
 						{
 							ProcessData(dataHeader, reader);
@@ -193,7 +213,7 @@ public class ARClient
 
 		// No XML definition, so process as a string
 		if (dataHeader.XmlDataType == null)
-		{
+		{			
 			AmplifyRealityActivity.OnMessage(data, null);
 		} else
 		// Deserialize
@@ -203,10 +223,11 @@ public class ARClient
 				String className = dataHeader.XmlDataType;
 
 				Serializer serializer = new Persister();
-				if (className.equals(ARObject.class.getCanonicalName()))
+				if (className.equals(ARObject.class.getCanonicalName())) //Update notification
 				{
 					ARObject arObject = serializer.read(ARObject.class, data);
 					Log.i(LOGTAG_NETWORKING, "Received ARObject: " + arObject.toString());
+					AmplifyRealityActivity.OnMessage("ARObjectUpdate",arObject);					
 				} else if (className.equals(Realm.class.getCanonicalName()))
 				{
 					Realm realm = serializer.read(Realm.class, data);
@@ -229,36 +250,108 @@ public class ARClient
 
 	}
 
-	private void Connect()
+	public int Connect(String connectionString, String user, String password)
 	{
-		Thread t = new Thread(new Runnable()
-		{
-			@Override
-			public void run() 
-			{
-				try
-				{
-					Log.i(LOGTAG_NETWORKING,"HostString=" + AmplifyRealityActivity.GetConnectionString());
-										
-					Log.i(LOGTAG_NETWORKING, "Connecting to server");
-					mySocket = new Socket(host, port);
-					Log.i(LOGTAG_NETWORKING, "Socket created");
-					AmplifyRealityActivity.SetConnected(true);
+		if (listening)
+			return 2;
+		
+		InetAddress connectHost = null;
+		int connectPort = 0;
+		Log.i(LOGTAG_NETWORKING, "HostString=" + connectionString + " User = " + String.valueOf(user));
+		String[] hostPortArray = connectionString.split(":");
+		
+		if (hostPortArray.length < 2)
+		{	
+			return -1;
+		}
+		
 
-					listening = true;
-					
-					RequestData();
-					StartListening();
-					
-	
-				} catch (Exception e)
-				{
-					Log.e(LOGTAG_NETWORKING, "Connection error", e);
-					Cleanup();
-				}
+		try
+		{
+			connectPort = Integer.parseInt(hostPortArray[1]);
+			connectHost = InetAddress.getByName(hostPortArray[0]);
+		} catch (UnknownHostException ex)
+		{
+			Log.i(LOGTAG_NETWORKING, "Error parsing hostname", ex);
+			return -1;
+		} catch (NumberFormatException nfe)
+		{
+			Log.i(LOGTAG_NETWORKING, "Error parsing port", nfe);
+			return -1;
+		}			
+
+		Log.i(LOGTAG_NETWORKING, "Hostname=" + connectHost.toString());
+		Log.i(LOGTAG_NETWORKING, "HostPort=" + connectPort);
+
+		try
+		{
+
+			Log.i(LOGTAG_NETWORKING, "Connecting to server");
+			InetSocketAddress address = new InetSocketAddress(connectHost, connectPort);
+			mySocket = new Socket();
+			mySocket.connect(address,5000);
+			Log.i(LOGTAG_NETWORKING, "Socket created. Connected = " + mySocket.isConnected());
+						
+			if (!mySocket.isConnected())
+			{
+				Cleanup();
+				return 2;
+			
 			}
-		});
-		t.start();
+			
+			listening = true;
+			StartListening();
+			
+			(new ClientXMLMessage(new Persister(),new ClientRequest("Authenticate",user+":"+password))).SendMessage(mySocket.getOutputStream());
+
+			Log.i(LOGTAG_NETWORKING, "Waiting for authentication result. Timeout in 15 ms");
+			
+			//Timeout
+			new Thread(new Runnable()
+			{
+				public void run()
+				{
+					try
+					{
+						Thread.sleep(15000);
+					} catch (InterruptedException e)
+					{
+						e.printStackTrace();
+					}
+					authenticationResultQueue.add(3);
+				}
+			}).start();
+			
+			Integer result = authenticationResultQueue.take();
+
+			Log.i(LOGTAG_NETWORKING, "Auth result = " + result);
+			
+
+			RequestData();
+			
+			if (result == 1)
+				return 0;
+			
+			Shutdown();
+			if (result == 3) //Timeout			
+				return 2;						
+			else
+				return 3;
+			
+		}  catch (IllegalArgumentException illegalArg)
+		{
+			Log.e(LOGTAG_NETWORKING, "Illegal Arguments during connection", illegalArg);
+			Cleanup();
+			return -1;
+		}
+
+		catch (Exception e)
+		{
+			Log.e(LOGTAG_NETWORKING, "Connection error", e);
+			Cleanup();
+			return 2;
+		}
+
 	}
 
 	// Synchronous shutdown
@@ -269,6 +362,7 @@ public class ARClient
 
 	private void Cleanup()
 	{
+		listening = false;
 		try
 		{
 			if (mySocket != null)

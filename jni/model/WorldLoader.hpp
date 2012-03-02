@@ -27,7 +27,7 @@ public:
 	~WorldLoader();
 	void LoadRealm(std::string code);
 	void Update(Engine * engine);
-
+	
 	WorldStates::WorldState GetState();
 
 	void ResourcesReady(void *);
@@ -47,6 +47,7 @@ private:
 
 	ResourceManager * resourceManager;
 	void BuildRealm();
+
 
 };
 

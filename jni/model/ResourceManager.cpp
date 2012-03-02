@@ -37,6 +37,13 @@ bool ResourceManager::AlreadyRequested(string resourceName)
 
 bool ResourceManager::FindResource(string resourceName)
 {
+	//Predefined resources
+	if (resourceName.compare("Cube") == 0)
+	{
+		LOGD(LOGTAG_IO,"Using predefined resource '%s'", resourceName.c_str());
+		return true;
+	}
+
 	if (resourceMap.find(resourceName) == resourceMap.end())
 	{
 		if (!AlreadyRequested(resourceName))

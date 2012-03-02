@@ -76,7 +76,6 @@ void TabDisplay::LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize)
 		collapseButton->DoLayout(tabButtonRect);
 	}
 	
-	int ySpaceOffset = 3;
 	for (int i=0;i< TabChildren.size();i++)
 	{
 		int j = (collapseEnabled) ? i+1 : i;
@@ -91,7 +90,7 @@ void TabDisplay::LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize)
 		TabChildren[i]->TabJoinRect = Rect(tabButtonRect.x + xSpaceOffset + border, tabButtonRect.y + tabButtonRect.height - border,tabButtonRect.width - ((border+xSpaceOffset)*2),border+ySpaceOffset);
 	}
 		
-	tabLineSeperatorRectangle = Rect(boundaryRectangle.x,boundaryRectangle.y + buttonSize.height + ySpaceOffset,boundaryRectangle.width,3);
+	tabLineSeperatorRectangle = Rect(boundaryRectangle.x,boundaryRectangle.y + buttonSize.height + ySpaceOffset,boundaryRectangle.width,ySpaceOffset);
 	
 }
 
@@ -99,7 +98,7 @@ void TabDisplay::DoLayout(Rect boundaryRectangle)
 {
 	Size2i buttonSize = DefaultButtonSize;
 	lastBoundaryRectangle = boundaryRectangle;
-	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y+buttonSize.height,boundaryRectangle.width,boundaryRectangle.height-buttonSize.height);	
+	contentRect = Rect(boundaryRectangle.x,boundaryRectangle.y+buttonSize.height+ySpaceOffset+ySpaceOffset,boundaryRectangle.width,boundaryRectangle.height-buttonSize.height);	
 
 	LayoutTabButtons(boundaryRectangle,buttonSize);
 

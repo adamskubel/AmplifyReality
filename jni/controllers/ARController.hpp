@@ -95,6 +95,7 @@ private:
 		
 	bool isExpired, isInitialized;
 
+	UIElementCollection * window;
 	ControllerStates::ControllerState controllerState;
 
 	PositionSelector * positionSelector;
@@ -105,7 +106,7 @@ private:
 	float fpsAverage;
 	struct timespec lastFrameTime;
 	int drawingLevel;
-
+	bool autoGrab;
 	float currentQRSize;
 
 	bool paused;

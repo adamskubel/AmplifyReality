@@ -28,7 +28,7 @@ public class Logging
 				{
 					if (arg0.getLevel() == Level.SEVERE || arg0.getLevel() == Level.WARNING)
 						System.err.println(arg0.getLevel().getName() + ":" + arg0.getMessage());
-					else
+					else 
 						System.out.println(arg0.getLevel().getName() + ":" + arg0.getMessage());
 					
 					if (arg0.getThrown() != null)

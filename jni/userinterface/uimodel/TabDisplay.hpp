@@ -39,6 +39,8 @@ public:
 	void SetButtonSize(Size2i size);
 
 private:
+	static const int ySpaceOffset = 3;
+
 	int currentTab;
 	Rect contentRect, lastBoundaryRectangle;
 	void LayoutTabButtons(Rect boundaryRectangle, Size2i buttonSize);

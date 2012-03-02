@@ -2,7 +2,7 @@
 
 #define LOGTAG_AUGMENTEDVIEW "AugmentedView"
 
-AugmentedView::AugmentedView(cv::Mat _cameraMatrix)
+AugmentedView::AugmentedView(UIElementCollection * window, cv::Mat _cameraMatrix)
 {
 	cameraMatrix = new Mat();
 	_cameraMatrix.copyTo(*cameraMatrix);
@@ -14,16 +14,28 @@ AugmentedView::AugmentedView(cv::Mat _cameraMatrix)
 
 	Scalar selectColor = Colors::DodgerBlue;
 	selectColor[3] = 80;
-	selectionIndicator = new ARObject(OpenGLHelper::CreateSolidColorCube(40,selectColor));
+	selectionIndicator = new ARObject(OpenGLHelper::CreateSolidColorCube(1,selectColor));
 	selectedObject = NULL;
 	SET_TIME(&lastSelectionTime);
 	testObject = new ARObject(OpenGLHelper::CreateSolidColorCube(10,Colors::OrangeRed));
-	//AddObject(testObject);
+
+	tabs = new TabDisplay(true);
+	tabs->DoLayout(Rect(0,0,_cameraMatrix.cols,_cameraMatrix.rows));
+	window->AddChild(tabs);
+
+	GridLayout * myGrid = new GridLayout(cv::Size2i(5,4));
+	tabs->AddTab("AR",myGrid);
+
+	Button * cancelSelection = new Button("Cancel");
+	cancelSelection->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
+	myGrid->AddChild(cancelSelection,Point2i(4,3));		
+
 }
 
 //Delete the camera matrix and the vector of AR objects
 AugmentedView::~AugmentedView()
 {
+	delete tabs;
 	delete cameraMatrix;
 	delete rotation;
 	delete position;
@@ -70,7 +82,14 @@ void AugmentedView::HandleTouchInput(void * sender, TouchEventArgs args)
 	}
 }
 
-
+void AugmentedView::ButtonPressed(void * sender, EventArgs args)
+{
+	if (selectedObject != NULL)
+	{
+		delete selectedObject;
+		selectedObject = NULL;
+	}
+}
 
 
 static void getPickingRay(Point2i point, OpenGL * openGL, Mat projection, Point3f & near, Point3f & far, ARObject * testObject, float fieldOfView)
@@ -91,10 +110,10 @@ static void getPickingRay(Point2i point, OpenGL * openGL, Mat projection, Point3
 
 	Mat screenPoint = Mat(4,1,CV_32F,data);
 	Mat cameraPos; screenPoint.copyTo(cameraPos);
-	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"ScaledScreenPoint",&screenPoint);
+	//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"ScaledScreenPoint",&screenPoint);
 
 	Mat diff = invProjection * screenPoint;
-	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"Diff",&diff);
+	//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"Diff",&diff);
 
 	//Mat cameraPos = invProjection.col(3);		
 	//cameraPos *= 1.0f/ cameraPos.at<float>(3,0);
@@ -103,15 +122,15 @@ static void getPickingRay(Point2i point, OpenGL * openGL, Mat projection, Point3
 	cameraPos.at<float>(2,0) = 0.0f;
 	cameraPos = invProjection * cameraPos;
 	cameraPos *= 1.0f/ cameraPos.at<float>(3,0);
-	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"CameraPosition",&cameraPos);
+	//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"CameraPosition",&cameraPos);
 
 
 	diff *= 1.0f/(diff.at<float>(3,0));
-	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"DiffNorm",&diff);
+	//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"DiffNorm",&diff);
 
 	float scaleZ = 600.0f/diff.at<float>(2,0);	
 	Mat farMatrix = cameraPos - (diff * scaleZ);	
-	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"FarPoint",&farMatrix);
+	//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"FarPoint",&farMatrix);
 
 	near = Point3f(cameraPos.at<float>(0,0),cameraPos.at<float>(1,0),cameraPos.at<float>(2,0));
 	far = Point3f(farMatrix.at<float>(0,0),farMatrix.at<float>(1,0),farMatrix.at<float>(2,0));
@@ -120,7 +139,7 @@ static void getPickingRay(Point2i point, OpenGL * openGL, Mat projection, Point3
 	{
 		Mat originIntersection =cameraPos - (cameraPos.at<float>(2.0)/diff.at<float>(2,0))*diff;
 		testObject->position = Point3f(originIntersection.at<float>(0,0),originIntersection.at<float>(1,0),originIntersection.at<float>(2,0));
-		LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"FarPointOrigin",&originIntersection);
+		//LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"FarPointOrigin",&originIntersection);
 	}
 
 }
@@ -184,6 +203,11 @@ void AugmentedView::Render(OpenGL * openGL)
 			{
 				hitObjects.push_back(objectVector[i]);
 			}
+			else
+			{
+				LOGV(LOGTAG_ARINPUT,"Did not collide with object %s at position %f,%f,%f with sphere of radius %f (distance=%f)",
+					objectVector[i]->objectID.c_str(),p0.x,p0.y,p0.z,objectVector[i]->BoundingSphereRadius,distance);
+			}
 		}
 
 		if (hitObjects.size() > 0)
@@ -202,7 +226,6 @@ void AugmentedView::Render(OpenGL * openGL)
 			currentPoints.pop_back();
 		}
 	}
-	//LOGD(LOGTAG_ARINPUT,"CurrentPointsSize=%d"
 
 	struct timespec now;
 	SET_TIME(&now);
@@ -214,8 +237,8 @@ void AugmentedView::Render(OpenGL * openGL)
 		//Unselect object if selected twice
 		if (selectedObject != NULL && selectedObject->arObject == newSelection->arObject)
 		{		
-			Point3f cameraPosition = getCameraPosition(projection);//(position->at<double>(0,0),position->at<double>(0,1),position->at<double>(0,2));
-			Point3f objPosition =  selectedObject->originalPosition + cameraPosition;
+			Point3f cameraPosition = getCameraPosition(projection);
+			Point3f objPosition =  selectedObject->objectPositionDelta + cameraPosition;
 			selectedObject->arObject->position = objPosition; //Offset by camera position
 			LOGD(LOGTAG_ARINPUT,"Updated Object Position(%f,%f,%f)",selectedObject->arObject->position.x,selectedObject->arObject->position.y,selectedObject->arObject->position.z);
 
@@ -230,15 +253,12 @@ void AugmentedView::Render(OpenGL * openGL)
 			delete selectedObject;
 			selectedObject = newSelection;
 						
-			Point3f cameraPosition = getCameraPosition(projection);//(position->at<double>(0,0),position->at<double>(0,1),position->at<double>(0,2));
-			//LOGD(LOGTAG_ARINPUT,"CameraPosition(%f,%f,%f)",cameraPosition.x,cameraPosition.y,cameraPosition.z);
-			
+			Point3f cameraPosition = getCameraPosition(projection);			
 			Point3f cameraOffset = selectedObject->arObject->position - cameraPosition;
 			//Initial offset between object and camera
-			selectedObject->originalPosition = cameraOffset;
+			selectedObject->objectPositionDelta = cameraOffset;
 
 			LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",cameraOffset.x,cameraOffset.y,cameraOffset.z);
-			//selectedObject->startRotation = *rotation;s
 		}
 		lastSelectionTime = now;
 	}else if (newSelection != NULL)
@@ -260,42 +280,35 @@ void AugmentedView::Render(OpenGL * openGL)
 		
 		if (selectedObject != NULL && selectedObject->arObject == object)
 		{			
-			Point3f cameraPosition = getCameraPosition(projection);
-			
-			//LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",selectedObject->originalPosition.x,selectedObject->originalPosition.y,selectedObject->originalPosition.z);
-
-			//LOGD(LOGTAG_ARINPUT,"CameraPosition(%f,%f,%f)",cameraPosition.x,cameraPosition.y,cameraPosition.z);
-			Point3f objectPosition = selectedObject->originalPosition + cameraPosition; //Offset by camera position
-			//LOGV(LOGTAG_ARINPUT,"SelectedObjPosition(%f,%f,%f)",objectPosition.x,objectPosition.y,objectPosition.z);
-			OpenGLHelper::translate(modelMatrix,objectPosition);
-
-			OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
-			OpenGLHelper::rotate(modelMatrix,object->rotation.y, Point3f(0.0f, 1.0f, 0.0f));
-			OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));
+			Point3f cameraPosition = getCameraPosition(projection);			
+			selectedObject->arObject->position = selectedObject->objectPositionDelta + cameraPosition; 
+			//OpenGLHelper::translate(modelMatrix,objectPosition);
 		}
-		else
-		{
+		/*else
+		{*/
 			OpenGLHelper::translate(modelMatrix,Point3f(object->position.x,object->position.y,object->position.z));
 			OpenGLHelper::rotate(modelMatrix,object->rotation.x, Point3f(1.0f, 0.0f, 0.0f));
 			OpenGLHelper::rotate(modelMatrix,object->rotation.y, Point3f(0.0f, 1.0f, 0.0f));
 			OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));
-		}
-
-		OpenGLHelper::scale(modelMatrix,object->scale);
-
-		Mat mt = Mat(modelMatrix.t());
-		glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
+		//}
 				
-		
-
+		//Use seperate scale for selection indicator
 		if (selectedObject != NULL && selectedObject->arObject == object)
 		{
+			Mat tmpModelMatrix; modelMatrix.copyTo(tmpModelMatrix);
+			float selectorSize = object->BoundingSphereRadius*2.25f;
+			OpenGLHelper::scale(tmpModelMatrix,Point3f(selectorSize,selectorSize,selectorSize));
+
+			Mat mt = Mat(tmpModelMatrix.t());
+			glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
 			openGL->DrawGLObject(selectionIndicator->glObject);
 		}
 
-		openGL->DrawGLObject(object->glObject);
+		OpenGLHelper::scale(modelMatrix,object->scale);
+		Mat mt = Mat(modelMatrix.t());
+		glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
 		
-
+		openGL->DrawGLObject(object->glObject);
 	}	
 	//Get rid of test object
 	objectVector.pop_back();
@@ -306,18 +319,30 @@ void AugmentedView::Render(OpenGL * openGL)
 	canDraw = false;
 }
 
-void AugmentedView::Update(Engine * engine, FrameItem * item)
+void AugmentedView::SetTransformations(Mat * translationMatrix, Mat * rotationMatrix)
 {
-	if (engine->communicator->IsConnected())
-	{
-		for (map<string,ARObjectMessage*>::iterator it = updateObjectMap.begin();it != updateObjectMap.end();it++)
-		{
-			engine->communicator->SendMessage((*it).second);
-		}
-	}
 	
-	rotation = item->rotationMatrix;
-	position = item->translationMatrix;
+	rotation = rotationMatrix;
+	position = translationMatrix;
+}
+
+void AugmentedView::Update(Mat * rgbaImage, Engine * engine)
+{
+	if (!updateObjectMap.empty())
+	{
+		if (engine->communicator != NULL && engine->communicator->IsConnected())
+		{
+			for (map<string,ARObjectMessage*>::iterator it = updateObjectMap.begin();it != updateObjectMap.end();it++)
+			{
+				LOGD(LOGTAG_ARINPUT,"Sending update for object %s",(*it).first.c_str());
+				engine->communicator->SendMessage((*it).second);
+			}			
+		}
+		updateObjectMap.clear();		
+	}
+
+	tabs->Draw(rgbaImage);
+
 	canDraw = true;
 }
 

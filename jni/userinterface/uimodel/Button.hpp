@@ -16,8 +16,8 @@ class Button : public GraphicalUIElement
 {
 
 public:
-	Button(std::string label, cv::Scalar FillColor, cv::Scalar TextColor = Colors::Black);
-	Button(std::string label, cv::Rect buttonBoundaries, cv::Scalar FillColor, cv::Scalar TextColor = Colors::Black);
+	Button(std::string label, cv::Scalar FillColor = UI_BUTTON_COLOR, cv::Scalar TextColor = UI_BUTTON_TEXT_COLOR);
+	Button(std::string label, cv::Rect buttonBoundaries, cv::Scalar FillColor = UI_BUTTON_COLOR, cv::Scalar TextColor = UI_BUTTON_TEXT_COLOR);
 	~Button();
 	void AddClickDelegate(ClickEventDelegate myDelegate);
 	UIElement* GetElementAt(Point2i p);	

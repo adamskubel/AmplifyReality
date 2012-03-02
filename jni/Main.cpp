@@ -14,12 +14,14 @@ pthread_mutex_t incomingMutex, outgoingMutex;
 static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
 static std::string connectionString;
-static bool connectedToServer;
+//static bool connectedToServer;
 static bool softKeyboardOpen;
+static jobject arClientObject;
+static JNIEnv * currentEnv;
 
 
 //static JNIEnv * javaEnvironment;
-//static JavaVM * javaVM;
+static JavaVM * javaVM;
 //static jobject clientObject;
 
 //static volatile bool javaEnvInitialized = false;
@@ -45,7 +47,7 @@ extern "C"
 		{			
 			LOGD(LOGTAG_JNI,"Received wavefront object");
 			jniDataVector.push_back(WavefrontModel::FromJNI(env,dataObject));
-		}
+		}		
 		else
 		{	
 			LOGD(LOGTAG_JNI,"String message added.");
@@ -68,7 +70,7 @@ extern "C"
 		}
 
 
-
+		LOGD(LOGTAG_JNI,"Preparing to send message");
 		jclass wrapperClass = env->FindClass("com/amplifyreality/networking/message/NativeMessage");
 		jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
 		
@@ -92,35 +94,24 @@ extern "C"
 		return returnArray;
 	}
 
-	
+
+	jint JNI_OnLoad(JavaVM* vm, void* reserved)
+	{		
+		javaVM = vm;
+		LOGI(LOGTAG_JNI,"JNI_OnLoad called");
+		return JNI_VERSION_1_6;
+	}
 
 	JNIEXPORT void JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_SetConnected(JNIEnv * env, jobject  obj, jboolean connected)
+		Java_com_amplifyreality_AmplifyRealityActivity_SetClientObject(JNIEnv * env, jobject  obj, jobject _arClientObject)
 	{
 		pthread_mutex_lock(&incomingMutex);
-		LOGD(LOGTAG_JNI,"Setting connected state to %d",connected);
-		connectedToServer =  (connected != 0);
+		LOGD(LOGTAG_JNI,"Setting client object");
+		arClientObject = _arClientObject;
+		currentEnv = env;
 		pthread_mutex_unlock(&incomingMutex);
 	}
-
-	//GetConnectionString()
-	JNIEXPORT jstring JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_GetConnectionString(JNIEnv * env, jobject  obj)
-	{
-		pthread_mutex_lock(&incomingMutex);
-		LOGD(LOGTAG_JNI,"Returning connection string:%s",connectionString.c_str());
-		pthread_mutex_unlock(&incomingMutex);
-		return env->NewStringUTF(connectionString.c_str());
-	}
-
-
-	//SetKeyboardState(bool)
-	JNIEXPORT void JNICALL Java_com_amplifyreality_AmplifyRealityActivity_SetKeyboardState(JNIEnv * env, jobject  obj, jboolean keyboardOpen)
-	{
-		softKeyboardOpen = (keyboardOpen != 0);
-	}
-
-
+	
 
 }
 
@@ -260,15 +251,16 @@ void shutdownEngine(Engine* engine)
 //	LOGD(LOGTAG_JNI,"Thread created.");
 //}
 
+
 void android_main(struct android_app* state)
 {	
 	LOG_INTRO();
 	pthread_mutex_init(&incomingMutex,NULL);
 	pthread_mutex_init(&outgoingMutex,NULL);
-
+	currentEnv = NULL;
 	//Initialize JNI-friendly variables
 	jniDataVector.clear();
-	connectedToServer = false;
+	//connectedToServer = false;
 	connectionString = "test";
 	softKeyboardOpen = false;
 
@@ -322,42 +314,29 @@ void android_main(struct android_app* state)
 				shutdownEngine(&mainEngine);
 				return;
 			}			
-			//LOGV(LOGTAG_INPUT,"EventLoop: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(source->app->config),  AConfiguration_getKeyboard(source->app->config));	
 		}
-
-		
-		//mainEngine.androidConfiguration = source->app->config;
-		//int32_t keyboardConfig =;
-		//AConfiguration * testConfig = AConfiguration_new();
-		//int diffResult = AConfiguration_diff(testConfig, state->config);
-		//LOGV(LOGTAG_INPUT,"DiffResult=%d",diffResult);
-		//LOGV(LOGTAG_INPUT,"Engine: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(mainEngine.androidConfiguration),  AConfiguration_getKeyboard(mainEngine.androidConfiguration));			
-		//LOGV(LOGTAG_INPUT,"Main: ContentRect[%d,%d,%d,%d]",state->contentRect.left,state->contentRect.top,state->contentRect.right,state->contentRect.bottom);
-		//LOGV(LOGTAG_INPUT,"WindowSize=[%d,%d]",ANativeWindow_getWidth(state->window),ANativeWindow_get(state->window));
-
-
+			
 		if (softKeyboardOpen != lastKeyboardState)
 		{
 			mainEngine.inputHandler->SoftKeyboardChanged(softKeyboardOpen);
 			lastKeyboardState = softKeyboardOpen;
 		}
 
+
+		if (javaVM != NULL)
+			mainEngine.communicator->Update(javaVM);
+
 		//Check for messages in JNI queue
 		if ( pthread_mutex_trylock(&incomingMutex) == 0)
 		{
-			mainEngine.communicator->SetConnected(connectedToServer);
-			if (connectionString.length() == 0)
-			{
-				connectionString = mainEngine.communicator->GetConnectionString();
-			}
-
+			if (mainEngine.communicator->GetState() == CommunicatorStates::Starting && arClientObject != NULL)
+				mainEngine.communicator->SetClientObject(arClientObject);
+			
 			int count = 0;
 			while (!jniDataVector.empty())
 			{
 				count++;
 				mainEngine.communicator->AddIncomingMessage(jniDataVector.back());
-				//LOGD(LOGTAG_MAIN,"Deleting JNI message. Count = %d",count);
-				//delete jniDataVector.back();
 				jniDataVector.pop_back();
 			}
 			if (count > 0)
@@ -383,7 +362,7 @@ void android_main(struct android_app* state)
 		}
 	
 
-		if (mainEngine.animating)
+		if (mainEngine.animating == 1)
 		{
 			try
 			{
@@ -396,14 +375,16 @@ void android_main(struct android_app* state)
 				shutdownEngine(&mainEngine);
 			}
 		}
-		else
+		
+		//Check if state has changed during animation loop
+		if (mainEngine.animating == 0)
 		{
 			LOGW(LOGTAG_MAIN,"Exiting due to internal user command.");
-			running = false;
+			ANativeActivity_finish(state->activity);
 		}
 	}
 	myRunner.~AmplifyRunner();
 	shutdownEngine(&mainEngine);
-	ANativeActivity_finish(state->activity);
+	//ANativeActivity_finish(state->activity);
 }
 

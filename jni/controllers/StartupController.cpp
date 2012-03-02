@@ -6,8 +6,10 @@ StartupController::StartupController()
 	exitNext = false;
 	isExpired = false;
 	doCalibration = false;
+	connectNext = false;
 	frameCount = 0;
 	dir = 1;
+	changeSize = Size2i(0,0);
 }
 
 StartupController::~StartupController()
@@ -52,6 +54,51 @@ void StartupController::ProcessFrame(Engine * engine)
 		statusLabel->SetText("Ready!");
 	}
 	
+	if (changeSize.width != 0 && changeSize.height != 0)
+	{
+		LOGI(LOGTAG_MAIN, "Changing resolution to [%d,%d]",changeSize.width,changeSize.height);
+		engine->imageHeight = changeSize.height;
+		engine->imageWidth = changeSize.width;
+		engine->imageCollector->SetResolution(changeSize);				
+		changeSize.width = 0;
+		changeSize.height = 0;
+	}
+
+
+	switch(engine->communicator->GetState())
+	{
+	case CommunicatorStates::Ready:
+		networkStatusLabel->SetText("Ready to connect");		
+		break;
+	case CommunicatorStates::ConnectingNext:
+		networkStatusLabel->SetText("Connecting....");
+		break;
+	case CommunicatorStates::AuthFailed:
+		networkStatusLabel->SetText("Authentication failed!");
+		break;
+	case CommunicatorStates::ConnectFailed:
+		networkStatusLabel->SetText("Connection failed!");
+		break;
+	case CommunicatorStates::Starting:
+		networkStatusLabel->SetText("Starting up...");
+		break;
+	case CommunicatorStates::Connected:
+		networkStatusLabel->SetText("Connected!");
+		break;
+	case CommunicatorStates::InvalidHost:
+		networkStatusLabel->SetText("Invalid connection string");
+		break;
+	}
+	
+	if (connectNext && engine->communicator->CanConnect())
+	{
+		connectNext = false;
+		std::string hostNameText =hostName->GetText();
+		LOGD(LOGTAG_NETWORKING,"Hostname text = %s",hostNameText.c_str());
+		engine->communicator->ConnectTo(hostNameText,userName->GetText(),password->GetText());
+		networkStatusLabel->SetText("Connecting..");
+	}
+
 
 	Scalar bgColor = Colors::MidnightBlue;	
 	if (frameCount > 50) frameCount = 50;	
@@ -102,6 +149,7 @@ void StartupController::Initialize(Engine * engine)
 	if (isInitialized)
 		return;
 
+	engine->imageCollector->SetAutograb(false);
 	TabDisplay * tabs = new TabDisplay(false, Size2i(200,90));
 	engine->inputHandler->SetRootUIElement(tabs);
 	drawObjects.push_back(tabs);
@@ -129,9 +177,16 @@ void StartupController::Initialize(Engine * engine)
 
 	calibrateButton = new Button("Calibrate",Colors::MediumSeaGreen);
 	calibrateButton->Name = "Calibrate";
-	calibrateButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::startButtonPress>(this));	
-	settingsGrid->AddChild(calibrateButton,Point2i(2,1),Size(1,1));
+	calibrateButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::startButtonPress>(this));		
+	settingsGrid->AddChild(calibrateButton,Point2i(0,2),Size(1,1));
 	tabs->AddTab("Settings",settingsGrid);
+
+	vector<Size2i> resolutions = engine->imageCollector->GetResolutions();
+	if (resolutions.size() > 0)
+	{	
+		settingsGrid->AddChild(CreateResolutionButtons(resolutions),Point2i(0,0),Size(4,1));
+	}
+
 
 
 	//Network Configuration
@@ -140,27 +195,37 @@ void StartupController::Initialize(Engine * engine)
 	Label * hostName_label = new Label("Connection string (host[:port])",Point2i(0,0),Colors::Black,Colors::White);
 	hostName = new TextBox(engine->ScreenSize(),DEFAULT_HOST);
 	engine->inputHandler->AddTextListener(hostName);
+	networkStatusLabel = new Label("[x]",Point2i(0,0),Colors::Black, Colors::White);
+	networkConfigGrid->AddChild(networkStatusLabel,Point2i(0,0),Size(4,1));
 
-	networkConfigGrid->AddChild(hostName_label,Point2i(0,2),Size(2,1));
-	networkConfigGrid->AddChild(hostName,Point2i(2,2),Size(2,1));
+
+	Button * connectButton = new Button("Connect",Colors::Green);
+	connectButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::ConnectButtonPressed>(this));
+	networkConfigGrid->AddChild(connectButton,Point2i(1,4),Size(2,1));
+
+	networkConfigGrid->AddChild(hostName_label,Point2i(0,1),Size(2,1));
+	networkConfigGrid->AddChild(hostName,Point2i(2,1),Size(2,1));
 	
 	Label * userName_label = new Label("Username",Point2i(0,0),Colors::Black,Colors::White);
 	userName = new TextBox(engine->ScreenSize(), DEFAULT_USER);
 	engine->inputHandler->AddTextListener(userName);
 
-	networkConfigGrid->AddChild(userName_label,Point2i(0,3),Size(2,1));
-	networkConfigGrid->AddChild(userName,Point2i(2,3),Size(2,1));
+	networkConfigGrid->AddChild(userName_label,Point2i(0,2),Size(2,1));
+	networkConfigGrid->AddChild(userName,Point2i(2,2),Size(2,1));
 	
 	Label * password_Label = new Label("Password",Point2i(0,0),Colors::Black,Colors::White);
 	password = new TextBox(engine->ScreenSize(),DEFAULT_PASS);
+	password->obfuscateMode = true;
+	password->SetText(DEFAULT_PASS);
 	engine->inputHandler->AddTextListener(password);
 
-	networkConfigGrid->AddChild(password_Label,Point2i(0,4),Size(2,1));
-	networkConfigGrid->AddChild(password,Point2i(2,4),Size(2,1));
+	networkConfigGrid->AddChild(password_Label,Point2i(0,3),Size(2,1));
+	networkConfigGrid->AddChild(password,Point2i(2,3),Size(2,1));
 		
 	tabs->DoLayout(Rect(0,0,engine->ScreenSize().width,engine->ScreenSize().height));
 
 	tabs->SetTab(0);
+
 
 	
 
@@ -177,6 +242,24 @@ void StartupController::Initialize(Engine * engine)
 	frameCount = 0;
 
 }
+
+GridLayout * StartupController::CreateResolutionButtons(vector<Size2i> & resolutions)
+{
+	Size2i gridSize = Size2i(resolutions.size(),1);
+	GridLayout * resolutionGrid = new GridLayout(gridSize);
+
+	for (int i=0;i<resolutions.size();i++)
+	{
+		char labelString[100];
+		sprintf(labelString,"%d x %d",resolutions[i].width,resolutions[i].height);
+		Button * newButton = new Button(labelString);
+		newButton->Tag = new Size2i(resolutions[i].width,resolutions[i].height);
+		resolutionGrid->AddChild(newButton,Point2i(i,0));
+		newButton->AddClickDelegate(ClickEventDelegate::from_method<StartupController,&StartupController::ResolutionButtonPressed>(this));	
+	}
+	return resolutionGrid;
+}
+
 void StartupController::Teardown(Engine * engine)
 {
 	engine->inputHandler->SetRootUIElement(NULL);
@@ -184,6 +267,18 @@ void StartupController::Teardown(Engine * engine)
 	engine->inputHandler->RemoveTextListener(userName);
 	engine->inputHandler->RemoveTextListener(password);
 }	
+
+void StartupController::ResolutionButtonPressed(void * sender, EventArgs args)
+{
+	Button * pressed = (Button*)sender;	
+	changeSize = *((Size2i*)pressed->Tag);
+}
+
+void StartupController::ConnectButtonPressed(void * sender, EventArgs args)
+{
+	connectNext = true;
+}
+
 
 void StartupController::startButtonPress(void * sender, EventArgs args)
 {
@@ -216,6 +311,8 @@ void StartupController::SetExpired()
 Controller * StartupController::GetSuccessor(Engine * engine)
 {
 	LOGI(LOGTAG_MAIN,"StartupController expired");
+		
+	engine->imageCollector->SetAutograb(true);
 	Teardown(engine);
 	if (doCalibration)
 	{

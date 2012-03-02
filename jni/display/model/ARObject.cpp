@@ -21,20 +21,34 @@ ARObjectMessage::ARObjectMessage(ARObject * _arObject)
 }
 
 static jobject getPointAsJNIVector(JNIEnv * env, Point3f point)
-{
+{	
+	//LOGD(LOGTAG_JNI,"Finding vector3 jclass");
 	jclass wrapperClass = env->FindClass("com/amplifyreality/networking/model/Vector3");
+	//LOGD(LOGTAG_JNI,"Finding vector3 init method");
 	jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(FFF)V");
-	return env->NewObject(wrapperClass,initMethod,point.x,point.y,point.z);
+	return env->NewObject(wrapperClass,initMethod,(jfloat)point.x,(jfloat)point.y,(jfloat)point.z);
 }
 
 jobject ARObjectMessage::getJavaObject(JNIEnv * env)
 {
-	jclass wrapperClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
-	jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(java/lang/String;com/amplifyreality/networking/model/Vector3;com/amplifyreality/networking/model/Vector3;com/amplifyreality/networking/model/Vector3;)V");
+	jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
+	jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
 	
 	jstring name = env->NewStringUTF(arObject->objectID.c_str());
-	jobject objectUpdate = env->NewObject(wrapperClass,initMethod,name, getPointAsJNIVector(env,arObject->position),getPointAsJNIVector(env,arObject->rotation),getPointAsJNIVector(env,arObject->scale));
-
+	//LOGD(LOGTAG_JNI,"Creating java ARObject. InitMethod=%d",initMethod);
+	jobject positionVector = getPointAsJNIVector(env,arObject->position);
+	jobject rotationVector = getPointAsJNIVector(env,arObject->rotation);
+	//LOGD(LOGTAG_JNI,"Vectors complete");
+	jobject objectUpdate = NULL;
+	//try
+	//{
+		objectUpdate = env->NewObject(arObjectClass,initMethod,name,positionVector,rotationVector);
+	//}
+	//catch (std::exception & e)
+	//{
+	//	LOGW(LOGTAG_JNI,"Error creating ARObject: %s", e.what());
+	//}
+	//LOGD(LOGTAG_JNI,"ARObject created");
 	return objectUpdate;
 }
 

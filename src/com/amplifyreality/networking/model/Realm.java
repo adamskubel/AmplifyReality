@@ -1,8 +1,10 @@
 package com.amplifyreality.networking.model;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 import org.simpleframework.xml.*;
+import com.amplifyreality.util.Logging;
 
 import android.util.Log;
 
@@ -11,16 +13,30 @@ import android.util.Log;
 public class Realm implements RealmPositionWatcher
 {
 
+	private final static Logger LOGGER = Logging.CreateLogger(Realm.class);
+
+	public volatile boolean isUpdated = false;
+	
 	@Attribute
 	public String Name;
 
+	@Attribute
+	public float QRUnitSize;
+	
 	@ElementMap
 	public Map<String, ARObject> objectMap;
 
 	List<RealmPositionWatcher> clients;
-
+	
 	public Realm()
 	{
+		
+	}
+
+	public Realm(String Name, float QRUnitSize)
+	{
+		this.QRUnitSize = QRUnitSize;
+		this.Name = Name;
 		objectMap = new HashMap<String, ARObject>();
 	}
 
@@ -29,54 +45,27 @@ public class Realm implements RealmPositionWatcher
 		clients.add(watcher);
 	}
 	
-	public void RemoteClient(RealmPositionWatcher watcher)
-	{
-		
-	}
 
 	@Override
-	public void PositionUpdate(String objectId, Vector3 newPosition)
+	public void UpdateObject(String objectId, ARObject newObjectProperties)
 	{
-		ARObject arObject = objectMap.get(objectId);
-		if (arObject == null)
-			return;
-		
-		arObject.Position = newPosition;
-		
-		for (RealmPositionWatcher watcher : clients)
+		if (!objectMap.containsKey(objectId))
 		{
-			watcher.PositionUpdate(objectId, newPosition);
-		}
-	}
-
-	@Override
-	public void RotationUpdate(String objectId, Vector3 newRotation)
-	{
-		ARObject arObject = objectMap.get(objectId);
-		if (arObject == null)
+			LOGGER.info("Attempted to update non-existent object. Name="+ objectId);
 			return;
-		
-		arObject.Rotation = newRotation;
-		
-		for (RealmPositionWatcher watcher : clients)
-		{
-			watcher.RotationUpdate(objectId, newRotation);
 		}
-	}
-
-	@Override
-	public void ScaleUpdate(String objectId, Vector3 newScale)
-	{
+		
 		ARObject arObject = objectMap.get(objectId);
-		if (arObject == null)
-			return;
+			
+		arObject.Update(newObjectProperties);	
 		
-		arObject.Scale = newScale;
+		isUpdated = true;
 		
-		for (RealmPositionWatcher watcher : clients)
-		{
-			watcher.ScaleUpdate(objectId, newScale);
-		}
+		if (clients != null && clients.size() > 0)
+			for (RealmPositionWatcher watcher : clients)
+			{
+				watcher.UpdateObject(objectId, newObjectProperties);
+			}
 	}
 	
 	@Override

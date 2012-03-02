@@ -2,7 +2,7 @@
 
 SelectBoxItem::SelectBoxItem(std::string label) : Button(label,Colors::Green)
 {
-
+	Name = label;
 }
 
 
@@ -48,7 +48,7 @@ void SelectBox::SetSelected(SelectBoxItem * item)
 	selected = item;
 	
 	if (selected != NULL)
-		selected->SetFillColor(Colors::CornflowerBlue);
+		selected->SetFillColor(UI_BUTTON_ALT_STATE_COLOR);
 }
 
 void SelectBox::ItemSelected(void * sender, EventArgs args)
@@ -67,7 +67,7 @@ void SelectBox::ItemSelected(void * sender, EventArgs args)
 			selected->SetFillColor(backgroundColor);
 		
 		selected = item;
-		selected->SetFillColor(Colors::CornflowerBlue);
+		selected->SetFillColor(UI_BUTTON_ALT_STATE_COLOR);
 	}
 }
 

@@ -130,10 +130,12 @@ class WavefrontGLObject : public GLObject
 	GLfloat *colorArray;
 	GLfloat *textureArray;
 	GLubyte *indexArray;
+	GLfloat *normalArray;
 	
 	bool hasTexture;
 
 	int numFaces;
+	int numNormals;
 
 public:
 
@@ -208,6 +210,7 @@ public:
 		}
 
 
+
 		glEnableVertexAttribArray(renderData.vertexArrayLocation);
 		glEnableVertexAttribArray(renderData.colorArrayLocation);
 
@@ -225,8 +228,9 @@ public:
 
 		for (int i=0;i<loader.vertexCount;i++)
 		{
+			cv::Scalar faceColor = Colors::RandomColor();
 			double * vertex = (loader.vertexList[i])->e;
-			object->AddVertex(cv::Point3f((float)vertex[0],(float)vertex[1],(float)vertex[2]),Colors::RandomColor(),i);
+			object->AddVertex(cv::Point3f((float)vertex[0],(float)vertex[1],(float)vertex[2]),faceColor,i);
 			LOGV(LOGTAG_OPENGL,"Added vertex [%lf,%lf,%lf]",vertex[0],vertex[1],vertex[2]);
 		}
 
@@ -234,7 +238,7 @@ public:
 		{
 			int * vertexIndices = (loader.faceList[i])->vertex_index;
 			GLubyte triangle[3] = {vertexIndices[0],vertexIndices[1],vertexIndices[2]};
-
+			
 			object->AddFace(triangle,i);
 			LOGV(LOGTAG_OPENGL,"Added triangle [%u,%u,%u]",triangle[0],triangle[1],triangle[2]);
 		}

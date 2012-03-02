@@ -80,6 +80,7 @@
     <ClCompile Include="..\jni\Main.cpp" />
     <ClCompile Include="..\jni\model\FrameItem.cpp" />
     <ClCompile Include="..\jni\model\network\ARCommunicator.cpp" />
+    <ClCompile Include="..\jni\model\network\ARObjectDefinition.cpp" />
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />

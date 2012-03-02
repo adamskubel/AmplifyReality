@@ -22,10 +22,13 @@ public:
 	void setCorrectionMatrices(Mat* cameraMatrix, Mat* distortionMatrix);
 	void getImage(cv::Mat ** imageMatrix, ImageType type);
 	void getGrayCameraImage(cv::Mat & grayImage);
-	void getCameraImages(cv::Mat & rgbImage, cv::Mat & grayImage);
+	void getColorCameraImage(cv::Mat & rgbImage);
 	ImageCollector(int width, int height);
 	void newFrame();
 	void teardown();
+	void SetResolution(Size2i resolution);
+	vector<Size2i> GetResolutions();
+	void SetAutograb(bool autoGrab);
 
 	bool IsReady();
 
@@ -35,11 +38,14 @@ private:
 	Mat *cameraMatrix, *distortionMatrix;
 	bool rgbaUpdated, grayUpdated, grayOptMode;
 	int width, height;
+	bool autoGrab;
 	VideoCapture * myCapture;
 
 	void undistortImage(Mat * inputImage, Mat* outputImage);
 	void generateImage(ImageType type);
 	bool canUndistort();
+
+	vector<Size2i> resolutionVector;
 
 };
 

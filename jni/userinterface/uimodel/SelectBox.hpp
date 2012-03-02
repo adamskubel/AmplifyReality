@@ -16,7 +16,7 @@ public:
 class SelectBox : public GridLayout
 {
 public:
-	SelectBox(int itemsToDisplay = 2,cv::Scalar textColor = Colors::Black, cv::Scalar backgroundColor = Colors::Transparent);
+	SelectBox(int itemsToDisplay = 2,cv::Scalar textColor = UI_BUTTON_TEXT_COLOR, cv::Scalar backgroundColor = UI_BUTTON_COLOR);
 	void AddItem(SelectBoxItem * newItem);
 	void SetSelectedIndex(int selectedIndex);
 	void SetSelected(SelectBoxItem * selectedItem);

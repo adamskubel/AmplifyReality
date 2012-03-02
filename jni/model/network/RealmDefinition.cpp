@@ -22,12 +22,15 @@ RealmDefinition * RealmDefinition::FromJNIEnv(JNIEnv * env, jobject realmObject)
 		jint listSize = env->CallIntMethod(arrayList,sizeMethod);
 
 		jfieldID nameField = env->GetFieldID(realmClass,"Name","Ljava/lang/String;");
-		jstring nameObject = (jstring)env->GetObjectField(realmObject,nameField);		
+		jstring nameObject = (jstring)env->GetObjectField(realmObject,nameField);	
+		
+		jfieldID qrUnitField = env->GetFieldID(realmClass,"QRUnitSize","F");
+		jfloat qrSize = env->GetFloatField(realmObject,qrUnitField);		
 
 		RealmDefinition * newRealm = new RealmDefinition( std::string(env->GetStringUTFChars(nameObject,JNI_FALSE)));
 
-		LOGI(LOGTAG_JNI,"Created realm with name = %s",newRealm->Name.c_str());
-
+		LOGI(LOGTAG_JNI,"Created realm with name = %s, qrSize=%f",newRealm->Name.c_str(),qrSize);
+		newRealm->qrSize = qrSize;
 
 		for (int i=0;i<listSize;i++)
 		{

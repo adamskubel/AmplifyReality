@@ -93,6 +93,13 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("FAST Threshold","FastThresh",10,5,1,400,"%3.0f","FAST");
 	config->AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f","FAST");
 
+	config->AddNewParameter("UseSubPix",1,1,0,1,"%1.0f","FAST");
+
+	config->AddNewParameter("SubPixWindow",5,1,1,20,"%3.0f","FAST");
+	config->AddNewParameter("SubPixDeadZone",1,1,-1,20,"%3.0f","FAST");
+	config->AddNewParameter("SubPixMaxCount",60,10,1,300,"%3.0f","FAST");
+	config->AddNewParameter("SubPixEpsilon",0.02,0.01,0,3,"%3.2f","FAST");
+
 	
 
 	flannTime = 10;
@@ -341,6 +348,79 @@ static bool checkExclusionZone(Mat searchPoint, flann::Index *& searchExclusionI
 	//LOGV(LOGTAG_QRFAST,"Point is not in any exclusion zone");
 	return false;
 }
+
+static void cornerHarris(Mat & src, vector<KeyPoint> & features, int threshold)
+{
+  Mat dst, dst_norm, dst_norm_scaled;
+ 
+  dst = Mat::zeros(src.size(), CV_32FC1 );
+
+  /// Detector parameters
+  int blockSize = 2;
+  int apertureSize = 3;
+  double k = 0.04;
+
+  /// Detecting corners
+  cornerHarris( src, dst, blockSize, apertureSize, k, BORDER_DEFAULT );
+
+  /// Normalizing
+  normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
+  convertScaleAbs( dst_norm, dst_norm_scaled );
+
+  /// Drawing a circle around corners
+  for( int j = 0; j < dst_norm.rows ; j++ )  
+  { 
+	  for( int i = 0; i < dst_norm.cols; i++ )
+	  {
+		  if( (int) dst_norm.at<float>(j,i) > 200 )
+		  {
+			  features.push_back(KeyPoint(i,j,180,20));
+		  }
+	  }
+  }
+  //LOGV(LOGTAG_QRFAST,"Harris found %d features");
+
+}
+
+static void HarrisWindow(Mat & inputImg, vector<KeyPoint> & features, Rect window, int threshold, bool nonMax)
+{	
+	try
+	{	
+		int xOffset = window.x, yOffset = window.y;
+		int windowWidth = window.width, windowHeight = window.height;
+		
+			//Check that window is within boundaries
+		if (xOffset < 0 || xOffset >= inputImg.cols)
+		{	xOffset = 0;}
+		if (yOffset < 0 || yOffset >= inputImg.rows)
+		{	yOffset = 0; }
+		if (xOffset + windowWidth < 0 || xOffset + windowWidth > inputImg.cols)
+		{	windowWidth = inputImg.cols-xOffset;}
+		if (yOffset +  windowHeight < 0 || yOffset + windowHeight > inputImg.rows)
+		{	windowHeight = inputImg.rows-yOffset;}
+					
+		Mat tMat = Mat(windowHeight,windowWidth,inputImg.type());
+		for (int i=0; i < windowHeight;i++)
+		{
+			const unsigned char* Mi = inputImg.ptr<unsigned char>(i+yOffset);
+			Mi = Mi + xOffset*inputImg.step[1];
+
+			unsigned char * copyTo = tMat.ptr<unsigned char>(i);
+			memcpy(tMat.ptr<unsigned char>(i),Mi,windowWidth);
+		}
+		cornerHarris(tMat,features,threshold);
+		for (int i=0;i<features.size();i++)
+		{
+			features.at(i).pt.x += xOffset;
+			features.at(i).pt.y += yOffset;
+		}
+	}
+	catch (std::exception &e)
+	{
+		LOGE("FastWindow exception: %s",e.what());
+	}
+}
+
 
 static void FastWindow(Mat & inputImg, vector<KeyPoint> & features, Rect window, int threshold, bool nonMax)
 {	
@@ -729,6 +809,7 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 	int searchIterations = config->GetParameter("MaxThreshCount");
 	int scoreSearchSize = config->GetParameter("MaxThreshSize_AP");
 	float maxThreshScale = config->GetFloatParameter("MaxThreshScale");	
+	bool subPix = config->GetBooleanParameter("UseSubPix");
 
 	Rect fastRect = Rect(center.x-(patternSize.width/2.0f),center.y-(patternSize.height/2.0f),patternSize.width, patternSize.height);
 
@@ -829,6 +910,37 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		}
 	}
 
+	if (subPix && patternPoints.size() >= 4)
+	{
+		int subPixWindowSize = config->GetIntegerParameter("SubPixWindow");
+		int subPixDeadZoneSize = config->GetIntegerParameter("SubPixDeadZone");
+		int subPixMaxCount = config->GetIntegerParameter("SubPixMaxCount");
+		double subPixEpsilon = (double)(config->GetFloatParameter("SubPixEpsilon"));
+
+		vector<Point2f> floatCorners;
+		for (int i=0;i<patternPoints.size();i++)
+		{
+			if (debugLevel == 1)
+			{
+				debugVector.push_back(new DebugCircle(patternPoints[i],8,Colors::Lime,1,true));
+			}
+			floatCorners.push_back(Point2f(patternPoints[i].x,patternPoints[i].y));
+		}
+
+		cornerSubPix(img,floatCorners,Size2i(subPixWindowSize,subPixWindowSize),Size2i(subPixDeadZoneSize,subPixDeadZoneSize),TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, subPixMaxCount, subPixEpsilon));
+
+		patternPoints.clear();
+		for (int i=0;i<floatCorners.size();i++)
+		{
+			Point2i refinedPoint = Point2i((int)round(floatCorners[i].x),(int)round(floatCorners[i].y));
+			if (debugLevel == 1)
+			{
+				debugVector.push_back(new DebugCircle(refinedPoint,8,Colors::Fuchsia,1,true));
+			}
+			patternPoints.push_back(refinedPoint);
+		}
+	}
+
 
 	//if (debugLevel > 0)
 	//{
@@ -882,6 +994,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	int threshold = config->GetParameter("FastThresh");
 	int maxInnerPoints = config->GetIntegerParameter("MaxInnerPoints");
 	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
+	bool subPix = config->GetBooleanParameter("UseSubPix");
 	float maxCosine = config->GetFloatParameter("MaxCosine");
 	int outerMostSearchK = config->GetIntegerParameter("K-NN");
 
@@ -891,6 +1004,11 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	Rect window = Rect(pattern->pt.x - searchRegion/2.0f, pattern->pt.y-searchRegion/2.0f, searchRegion,searchRegion);
 	float flannRadius = pow(MIN(pattern->patternSize.width,pattern->patternSize.height)/2.0f,2);
 	
+
+	if (debugLevel == 1)
+	{
+		debugVector.push_back(new DebugRectangle(window,Colors::Azure,1));
+	}
 	//FAST corner detection
 	vector<KeyPoint> keypoints;
 
@@ -901,14 +1019,37 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	SET_TIME(&end);
 	LOG_TIME_PRECISE("FAST",start,end);
 	
+	if ( debugLevel == -4)
+	{
+		for (int i=0;i<keypoints.size();i++)
+		{	
+			debugVector.push_back(new DebugCircle(Point2i(keypoints[i].pt.x,keypoints[i].pt.y),2,Colors::DeepSkyBlue,-1));
+		}
+	}
+	
 	
 	vector<Point2i> insideCornerVector, outsideCornersVector;
-
-	//If didn't do nonmax during FAST, perform here using maps
-
-	int scoreSearchSize = config->GetParameter("MaxThreshSize");
-	int searchIterations = config->GetParameter("MaxThreshCount");
-	MapBasedSuppression(keypoints,outsideCornersVector,insideCornerVector,Size2i(scoreSearchSize,scoreSearchSize),searchIterations);
+	
+	if (!nonMaxSuppress)
+	{
+		int scoreSearchSize = config->GetParameter("MaxThreshSize");
+		int searchIterations = config->GetParameter("MaxThreshCount");
+		MapBasedSuppression(keypoints,outsideCornersVector,insideCornerVector,Size2i(scoreSearchSize,scoreSearchSize),searchIterations);
+	}
+	else
+	{
+		for (int i=0;i<keypoints.size();i++)
+		{	
+			if (keypoints[i].angle > 180)
+			{
+				insideCornerVector.push_back(Point2i(keypoints[i].pt.x,keypoints[i].pt.y));
+			}
+			else
+			{
+				outsideCornersVector.push_back(Point2i(keypoints[i].pt.x,keypoints[i].pt.y));
+			}
+		}
+	}
 
 
 	//No features to track, so return
@@ -1003,11 +1144,45 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 		}
 		else
 		{
+
+			
 			corners.push_back(bestPoint);
 			if (debugLevel == 1)
-				debugVector.push_back(new DebugCircle(corners.back(),6,Colors::GreenYellow,2));
+				debugVector.push_back(new DebugCircle(corners.back(),8,Colors::GreenYellow,1,true));
 		}
 				
+	}
+
+	if (subPix && corners.size() >= 4)
+	{
+		int subPixWindowSize = config->GetIntegerParameter("SubPixWindow");
+		int subPixDeadZoneSize = config->GetIntegerParameter("SubPixDeadZone");
+		int subPixMaxCount = config->GetIntegerParameter("SubPixMaxCount");
+		double subPixEpsilon = (double)(config->GetFloatParameter("SubPixEpsilon"));
+
+		//LOGD(LOGTAG_QRFAST,"Finding corner sub pixels for %d corners", corners.size());
+		vector<Point2f> floatCorners;
+		for (int i=0;i<corners.size();i++)
+		{
+			floatCorners.push_back(Point2f(corners[i].x,corners[i].y));
+		}
+		struct timespec subCornerStart,subCornerEnd;
+		SET_TIME(&subCornerStart);
+
+		cornerSubPix(img,floatCorners,Size2i(subPixWindowSize,subPixWindowSize),Size2i(subPixDeadZoneSize,subPixDeadZoneSize),TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, subPixMaxCount, subPixEpsilon));
+		SET_TIME(&subCornerEnd);
+		LOG_TIME_PRECISE("Corner sub pixels",subCornerStart,subCornerEnd);
+
+		corners.clear();
+		for (int i=0;i<floatCorners.size();i++)
+		{
+			Point2i refinedPoint = Point2i((int)round(floatCorners[i].x),(int)round(floatCorners[i].y));
+			if (debugLevel == 1)
+			{
+				debugVector.push_back(new DebugCircle(refinedPoint,8,Colors::Fuchsia,1,true));
+			}
+			corners.push_back(refinedPoint);
+		}
 	}
 
 }

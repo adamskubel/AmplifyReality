@@ -19,17 +19,21 @@ public:
 	void DoLayout(Rect rectangle);
 	UIElement * GetElementAt(Point2i point);
 	void SetFocus(bool focus);
+	
 	void SetText(std::string text);
+	std::string GetText();
+
 	void LostFocus();
 	void AddFocusChangedListener(ITextListener * focusListener);
 	void RemoveFocusChangedListener(ITextListener * focusListener);
+	
+	bool obfuscateMode;
 
 private:
 	Label * textLabel;
 	bool isFocused, isPressed, keyboardOpen;
 	Rect boundaryRectangle, keyboardOpenRectangle;
 	std::string currentText;
-	bool obfuscateMode;
 	void RefreshLabelText();
 	vector<ITextListener*> focusListenerVector;
 

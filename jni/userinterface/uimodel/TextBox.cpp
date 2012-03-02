@@ -47,6 +47,8 @@ TextBox::TextBox(Size2i imageSize, std::string startText)
 	SetText(startText);
 }
 
+
+
 void TextBox::HandleInput(TouchEventArgs args)
 {
 	if (args.InputType == ARInput::Press)
@@ -93,6 +95,11 @@ void TextBox::SetText(std::string text)
 {
 	currentText = text;
 	RefreshLabelText();
+}
+
+std::string TextBox::GetText()
+{
+	return currentText;
 }
 
 void TextBox::AddFocusChangedListener(ITextListener * focusListener)

@@ -36,23 +36,27 @@ public:
 	void exitApplication(void * sender, EventArgs args);
 
 	void Render(OpenGL * openGL);
-
+	void ResolutionButtonPressed(void * sender, EventArgs args);
+	void ConnectButtonPressed(void * sender, EventArgs args);
 	bool IsExpired();
 	void SetExpired();
 
 private:
+	GridLayout * CreateResolutionButtons(vector<Size2i> & resolutions);
 	bool doCalibration;
 	Button * startButton, * calibrateButton;
-	Label * statusLabel;
+	Label * statusLabel, * networkStatusLabel;
 	vector<IDeletable*> deleteVector;
 	vector<Drawable*> drawObjects;
 	GridLayout * grid;
 	Mat * rgbaImage;
-	bool isInitialized, isExpired, exitNext;
+	bool isInitialized, isExpired, exitNext, connectNext;
 	QuadBackground * quadBackground;
 	TextBox * password, * userName, * hostName;
 	int frameCount;
 	int dir;
+	
+	Size2i changeSize;
 
 	
 };

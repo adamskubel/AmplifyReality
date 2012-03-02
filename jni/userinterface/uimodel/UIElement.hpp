@@ -43,6 +43,9 @@ public:
 	virtual void HandleInput(TouchEventArgs eventArgs) {};
 	std::string Name;
 
+	void * Tag;
+	
+
 };
 
 #endif

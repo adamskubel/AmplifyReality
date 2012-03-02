@@ -6,6 +6,22 @@
 #include "model/network/StringMessage.hpp"
 #include "model/network/WavefrontModel.hpp"
 
+
+
+namespace CommunicatorStates
+{
+	enum CommunicatorState
+	{
+		Starting,
+		Ready,
+		ConnectingNext,
+		Connected,
+		ConnectFailed,
+		AuthFailed,
+		InvalidHost
+	};
+}
+
 class ARCommunicator
 {
 public:
@@ -15,14 +31,19 @@ public:
 	bool HasOutgoingMessages();
 	void AddIncomingMessage(IncomingMessage * message);
 	bool FilterMessages(std::string filter, std::vector<IncomingMessage*> & newMsgs);
-	void SetConnected(bool connected);
 	bool IsConnected();
-	std::string GetConnectionString();
-	void SetConnectionString(std::string connectionString);
+	void ConnectTo(std::string connectionString, std::string userName, std::string password);
+	void SetClientObject(jobject arClientObject);
+	void Update(JavaVM * jvm);
+	CommunicatorStates::CommunicatorState GetState();
+
+	bool CanConnect();
 
 private:	
-	std::string connectionString;
-	bool isConnected;
+	jobject arClientObject;
+	std::string connectionString, userName, password;
+	//bool isConnected, tryConnect, connectFailed;
+	CommunicatorStates::CommunicatorState state;
 	//Message queues used to communicate with outside
 	std::vector<IncomingMessage*> incomingMessageQueue;
 	std::vector<OutgoingMessage*> outgoingMessageQueue;	

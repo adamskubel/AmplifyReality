@@ -8,6 +8,7 @@ struct OpenGLRenderData
 public:
 	GLuint vertexArrayLocation;
 	GLuint colorArrayLocation;
+	GLuint normalArrayLocation;
 	GLuint textureArrayLocation;
 
 	GLuint projectionMatrixLocation;
@@ -19,6 +20,8 @@ public:
 	GLuint textureLocation;
 
 	GLuint useTextureFlagLocation;
+
+	GLuint ambientColorLocation, specularColorLocation, diffuseColorLocation;
 };
 
 #endif

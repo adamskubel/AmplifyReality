@@ -81,7 +81,7 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 void PositionSelector::LowpassFilter(PositioningResults * current, PositioningResults * previous)
 {
 	float alpha = config->GetParameter("T-Alpha");
-	current->Position = current->Position * alpha + previous->Position * (1-alpha);
+	current->Position = current->Position * alpha + previous->Position * (1.0f-alpha);
 		
 	alpha = config->GetParameter("R-Alpha");
 	current->Rotation = current->Rotation * alpha + previous->Rotation * (1-alpha);
@@ -89,30 +89,7 @@ void PositionSelector::LowpassFilter(PositioningResults * current, PositioningRe
 
 void PositionSelector::FirstOrderPrediction(FrameItem * item)
 {
-	//vector<FrameItem *> validFrames = vector<FrameItem*>();
-	////Collect all the frames that have positions found using QRCodes	
-	//for (int i=0;i<previousItems.size();i++)
-	//{
-	//	if (pastResults.at(i)->positioningMethod == PositioningMethods::QRCode)
-	//	{
-	//		validFrames.push_back(previousItems.at(i));
-	//	}
-	//}
-	////If enough frames were found, calculate the velocities between them
-	//if (validFrames.size() > 2)
-	//{
-	//	vector<Mat> velocities;
-	//	for (int i=0;i<validFrames.size() - 1;i++)
-	//	{
-	//		//velocities.push_back(CalculateVelocity(validFrames.at(i),validFrames.at(i+1)));
-	//	}
-	//	//Average velocities
-	//	for (int i=0;i<velocities.size();i++)
-	//	{
-
-	//	}
-	//
-	//}
+	
 }
 
 //Calculate the difference over time between two points

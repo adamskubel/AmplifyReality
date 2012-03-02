@@ -54,6 +54,7 @@ public:
 	{
 		return Size2i(glRender->screenWidth,glRender->screenHeight);
 	}
+
 };
 
 

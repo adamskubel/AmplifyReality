@@ -6,8 +6,6 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Ta
 	GridDimensions = Size2i(3,2);
 	
 	GridLayout * myGrid = new GridLayout(Size2i(3,6));		
-	stateLabel = new Label("[State]",Point2i(0,0),Colors::Blue,Colors::White);
-	myGrid->AddChild(stateLabel,Point2i(0,0));
 	PageDisplay * page0 = new PageDisplay();
 	page0->AddChild(myGrid);
 	AddTab("Data",page0); 
@@ -25,8 +23,7 @@ ARControllerDebugUI::ARControllerDebugUI(Engine * engine, Point2i position) : Ta
 	drawModeSelect->AddItem(new SelectBoxItem("Binary"));
 	drawModeSelect->AddSelectionChangedDelegate(SelectionChangedEventDelegate::from_method<ARControllerDebugUI,&ARControllerDebugUI::DrawmodeSelectionChanged>(this));
 	drawModeSelect->SetSelectedIndex(1);
-	//AddInNextPosition(drawModeSelect,3);
-
+	AddInNextPosition(drawModeSelect,"Tracking");
 	currentDrawMode = DrawModes::GrayImage;	
 
 	SetTab(0);
@@ -238,28 +235,13 @@ void ARControllerDebugUI::DrawmodeSelectionChanged(void * sender, SelectionChang
 {
 	if (args.NewSelection != NULL)
 	{
-		std::string label = ((SelectBoxItem*)args.NewSelection)->Name;
-		LOGD(LOGTAG_INPUT,"Processing selection changed, new label = %s",label.c_str());
-		if (label.compare("Color") == 0)
+		string selectionName = ((SelectBoxItem*)args.NewSelection)->Name;
+		LOGD(LOGTAG_INPUT,"Processing selection changed, name = %s",selectionName.c_str());
+		if (selectionName.compare("Color") == 0)
 			currentDrawMode = DrawModes::ColorImage;
-		else if(label.compare("Gray") == 0)
+		else if(selectionName.compare("Gray") == 0)
 			currentDrawMode = DrawModes::GrayImage;
-		else if (label.compare("Binary") == 0)
-			currentDrawMode = DrawModes::BinaryImage;
 	}
-}
-
-void ARControllerDebugUI::SetFPS(float fps)
-{
-	/*char fpsString[100];
-	sprintf(fpsString,"FPS=%3.1f",fps);
-	fpsLabel->SetText(fpsString);*/
-}
-
-
-void ARControllerDebugUI::SetStateDisplay(string stateDescription)
-{
-	stateLabel->SetText(stateDescription);
 }
 
 void ARControllerDebugUI::SetRotation(Mat * mat)
@@ -269,9 +251,4 @@ void ARControllerDebugUI::SetRotation(Mat * mat)
 void ARControllerDebugUI::SetTranslation(Mat * mat)
 {
 	translationLabel->SetData(mat);
-}
-
-void ARControllerDebugUI::SetPositionCertainty(float certainty)
-{
-	//certaintyIndicator->SetCertainty(certainty);
 }

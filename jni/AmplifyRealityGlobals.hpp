@@ -16,6 +16,7 @@
 	#define USE_CALCULATED_CAMERA_MATRIX false
 
 	#define UI_BUTTON_COLOR Colors::LightSteelBlue
+	#define UI_BUTTON_TEXT_COLOR Colors::Black
 	#define UI_SPECIAL_BUTTON_COLOR Colors::DarkGray
 	#define UI_BUTTON_SIZE	Size2i(140,70)
 	#define UI_BUTTON_ALT_STATE_COLOR Colors::LightSeaGreen
@@ -25,7 +26,7 @@
 	
 	#define UI_ALPHA_ENABLED false
 
-	#define DEFAULT_HOST "192.168.1.9"
+	#define DEFAULT_HOST "192.168.1.9:12312"
 	#define DEFAULT_USER "AdamSkubel"
 	#define DEFAULT_PASS "myPassword"
 

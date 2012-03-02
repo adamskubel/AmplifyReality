@@ -1,0 +1,68 @@
+<realmManager>
+   <realmMap>
+      <entry>
+         <string>ThisIsAQRCode</string>
+         <realm Name="ThisIsAQRCode" QRUnitSize="3.0">
+            <objectMap class="java.util.HashMap">
+               <entry>
+                  <string>TestObj2</string>
+                  <ARObject Name="TestObj2" ModelName="cube.obj">
+                     <Position X="-98.15612" Y="24.811764" Z="17.292328"/>
+                     <Rotation X="-1.1" Y="2.1" Z="3.1"/>
+                     <Scale X="15.0" Y="20.0" Z="10.0"/>
+                     <BoundingSphereRadius>18.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>TestObj1</string>
+                  <ARObject Name="TestObj1" ModelName="cube.obj">
+                     <Position X="35.131157" Y="-0.4720459" Z="1.1197357"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="15.0" Y="10.0" Z="15.0"/>
+                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+            </objectMap>
+         </realm>
+      </entry>
+      <entry>
+         <string>TestRealm_2</string>
+         <realm Name="TestRealm_2" QRUnitSize="2.0">
+            <objectMap class="java.util.HashMap">
+               <entry>
+                  <string>TestObj2</string>
+                  <ARObject Name="TestObj2" ModelName="cube.obj">
+                     <Position X="-40.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="-1.1" Y="2.1" Z="3.1"/>
+                     <Scale X="15.0" Y="20.0" Z="10.0"/>
+                     <BoundingSphereRadius>18.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>TestObj1</string>
+                  <ARObject Name="TestObj1" ModelName="cube.obj">
+                     <Position X="40.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="15.0" Y="10.0" Z="15.0"/>
+                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+            </objectMap>
+         </realm>
+      </entry>
+   </realmMap>
+   <credentialMap>
+      <entry>
+         <string>TestUser2</string>
+         <string>G6PRbpiBlZ+MmpdihU9yxuYyHN1ENYoQpOk5AzEX6rk=</string>
+      </entry>
+      <entry>
+         <string>AdamSkubel</string>
+         <string>dlSbgn7EbnBf0DgxgT+lIXIzjw38vXEe1EuBqW2sUcY=</string>
+      </entry>
+      <entry>
+         <string>TestUser</string>
+         <string>5sPaWyBmNNfz81htdH/9s2tcZ1dXs4DGpf5cVwxxQ0k=</string>
+      </entry>
+   </credentialMap>
+</realmManager>

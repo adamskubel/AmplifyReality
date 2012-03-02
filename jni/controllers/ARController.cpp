@@ -82,27 +82,30 @@ ARController::~ARController()
 void ARController::initializeUI(Engine * engine)
 {
 	//Initialize UI
-	UIElementCollection * collection = new UIElementCollection();
+	window = new UIElementCollection();
 
 	LOGI(LOGTAG_ARCONTROLLER,"Creating debug UI");
 	debugUI = new ARControllerDebugUI(engine,Point2i(10,10));
-	collection->AddChild(debugUI);
+	window->AddChild(debugUI);
 	drawObjects.push_back(debugUI);
 	deletableObjects.push_back(debugUI);
+	
 
 
 	debugUI->AddNewParameter("T-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("R-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("FOV",40,1,10,180,"%3.0f","Tracking");
+	//debugUI->AddNewParameter("Autograb",0,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
+	debugUI->AddNewLabel("State","","Data");
 
 	currentQRSize = 1.5f;
 	debugUI->AddNewParameter("ARController","ARControllerDebug",0,1,-2,5,"%2.0f","Debug");
 	debugUI->AddNewParameter("QR Unit size (mm)","QRSize",currentQRSize,0.5f,1,100,"%3.0f","Tracking");
 	
 			
-	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),collection);
+	InputScaler * inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),window);
 		
 	engine->inputHandler->SetRootUIElement(inputScaler);
 		
@@ -110,7 +113,7 @@ void ARController::initializeUI(Engine * engine)
 	fpsLabel->DoLayout(Rect(engine->imageWidth - 40,10,30,15));
 
 
-	deletableObjects.push_back(collection);
+	deletableObjects.push_back(window);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(debugUI);
 
@@ -125,18 +128,12 @@ void ARController::Initialize(Engine * engine)
 
 	initializeUI(engine);
 
-	//Sensors - enable gyroscope
 	engine->sensorCollector->EnableSensors(false,false,false);
 	
-	//WorldLoader Instance
+	//Initialize stateful objects
 	worldLoader = new WorldLoader();
-
-	//Create QRFinder
 	qrFinder = new QRFinder(debugUI);
-	//Initialize decoder
 	qrDecoder = new QRDecoder(debugUI);
-
-	//Position Selector instance
 	positionSelector = new PositionSelector(debugUI);	
 	
 	//Initialize textured quad to render camera image
@@ -177,7 +174,7 @@ void ARController::initializeARView(Engine * engine)
 	LOGI(LOGTAG_ARCONTROLLER,"Initializing AR View");
 	//Create Augmented View
 	double data[] = DEFAULT_CAMERA_MATRIX;
-	augmentedView = new AugmentedView(Mat(3,3,CV_64F,&data));
+	augmentedView = new AugmentedView(window,Mat(3,3,CV_64F,&data));
 
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<AugmentedView,&AugmentedView::HandleTouchInput>(augmentedView));
 	
@@ -207,13 +204,11 @@ void ARController::readGyroData(Engine * engine, FrameItem * item)
 	debugUI->SetRotation(&rotationVector);
 }
 
-
 void ARController::SetState(ControllerStates::ControllerState newState)
 {
 	LOGD(LOGTAG_ARCONTROLLER,"State changed from %d -> %d",controllerState,newState);
 	controllerState = newState;
 }
-
 
 void ARController::ProcessFrame(Engine * engine)
 {
@@ -233,7 +228,7 @@ void ARController::ProcessFrame(Engine * engine)
 	fpsLabel->SetText(fpsString);
 
 	int debugLevel = debugUI->GetIntegerParameter("ARControllerDebug");
-
+	
 
 	//This section is the default per-frame operations
 	FrameItem * item = frameList->next();
@@ -256,9 +251,7 @@ void ARController::ProcessFrame(Engine * engine)
 	}
 		
 	vector<Drawable*> debugVector;
-
-
-
+		 
 	item->qrCode = qrFinder->LocateQRCodes(*grayImage, debugVector, ( frameList->size() > 1) ? frameList->getRelative(-1)->qrCode : NULL);	
 	
 	//What happens past here depends on the state
@@ -271,7 +264,7 @@ void ARController::ProcessFrame(Engine * engine)
 
 		if (worldState == WorldStates::LookingForCode)
 		{
-			debugUI->SetStateDisplay("Searching");
+			debugUI->SetLabelValue("State","Searching");
 			
 			if (item->qrCode != NULL && item->qrCode->isValidCode())
 			{	
@@ -300,7 +293,7 @@ void ARController::ProcessFrame(Engine * engine)
 					{
 						LOGI(LOGTAG_ARCONTROLLER,"Starting in offline mode.");
 
-						debugUI->SetStateDisplay("OfflineMode");
+						debugUI->SetLabelValue("State","OfflineMode");
 						initializeARView(engine);
 
 						ARObject * myCube1 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
@@ -326,15 +319,15 @@ void ARController::ProcessFrame(Engine * engine)
 		else if (worldState == WorldStates::WaitingForRealm || worldState == WorldStates::WaitingForResources)
 		{		
 			if (worldState == WorldStates::WaitingForRealm)
-				debugUI->SetStateDisplay("WaitRealm");
+				debugUI->SetLabelValue("State","WaitRealm");
 			else
-				debugUI->SetStateDisplay("WaitRsrc");
+				debugUI->SetLabelValue("State","WaitRsrc");
 
 		}
 		//The world is ready and loaded, so do normal AR processing
 		else if (worldState == WorldStates::WorldReady)
 		{
-			debugUI->SetStateDisplay("LoadCompl");
+			debugUI->SetLabelValue("State","LoadCompl");
 			initializeARView(engine);
 			LOGD(LOGTAG_ARCONTROLLER,"Populating ARView using loaded world");
 			worldLoader->PopulateARView(augmentedView);
@@ -347,13 +340,13 @@ void ARController::ProcessFrame(Engine * engine)
 		{
 			char stateString[100];
 			sprintf(stateString,"WrldState=%d",(int)worldState);
-			debugUI->SetStateDisplay(stateString);
+			debugUI->SetLabelValue("State",stateString);
 			LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
 		}
 	}
 	else if (controllerState == ControllerStates::Running)
 	{
-		debugUI->SetStateDisplay("Run");
+		debugUI->SetLabelValue("State","Run");
 
 		if (item->qrCode != NULL && item->qrCode->isValidCode())
 		{
@@ -367,20 +360,22 @@ void ARController::ProcessFrame(Engine * engine)
 
 		//Evaluate the position	
 		float resultCertainty = positionSelector->UpdatePosition(item);
-		debugUI->SetPositionCertainty(resultCertainty);
+		//debugUI->SetPositionCertainty(resultCertainty);
 
 		if (resultCertainty > 0 && augmentedView != NULL)
 		{			
 			augmentedView->SetFOV(debugUI->GetParameter("FOV"));
-			//Update the 3D AR layer, but only if position certainty is non-zero
-			augmentedView->Update(engine,item);
+			augmentedView->SetTransformations(item->translationMatrix,item->rotationMatrix);
 		}
+
+		augmentedView->Update(rgbImage,engine);
 	}
+
 	else
 	{
 		char stateString[100];
 		sprintf(stateString,"ContState=%d",(int)controllerState);
-		debugUI->SetStateDisplay(stateString);
+		debugUI->SetLabelValue("State",stateString);
 		LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
 	}
 
@@ -470,31 +465,32 @@ void ARController::getImages(Engine * engine)
 	//Retrieve image from the camera	
 	if (debugUI->currentDrawMode == DrawModes::ColorImage)
 	{		
+		SET_TIME(&start);
 		engine->imageCollector->newFrame();
-		engine->imageCollector->getCameraImages(*rgbImage, *grayImage);
+		engine->imageCollector->getColorCameraImage(*rgbImage);
+		SET_TIME(&end);
+		LOG_TIME_PRECISE("Color Image Capture", start, end);
+
+		SET_TIME(&start)
+		cvtColor(*rgbImage, *grayImage, CV_RGBA2GRAY, 1);
+		SET_TIME(&end);
+		LOG_TIME_PRECISE("RGBA->Gray", start, end);
 	} 
-	else if (debugUI->currentDrawMode == DrawModes::GrayImage || debugUI->currentDrawMode == DrawModes::BinaryImage)
+	else 
 	{
 		SET_TIME(&start);
 		engine->imageCollector->newFrame();
 		engine->imageCollector->getGrayCameraImage(*grayImage);
 		SET_TIME(&end);
-		LOG_TIME_PRECISE("Image Capture", start, end);
+		LOG_TIME_PRECISE("Gray Image Capture", start, end);
 
-		//Copy gray image to RGB image to be used by the following stages (rendering, debug overlay, etc)
 		SET_TIME(&start)
 		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("Gray->RGBA", start, end);
 	} 
 		
-	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
-	{
-		SET_TIME(&start)
-		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
-		SET_TIME(&end);
-		LOG_TIME("Binary->RGBA", start, end);
-	}
+	
 }
 
 

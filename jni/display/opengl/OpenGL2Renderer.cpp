@@ -178,16 +178,18 @@ void OpenGL::InitializeShaders()
 		}\
 		";	
 
+
 	//const char * lightShader =
 	//	"\
-	//	varying vec3 normal, lightDir, eyeVec;\
+	//	varying vec3 normal;\
+	//	attribute vec3 LightDir, LightPos;\
+	//	attribute vec4 AmbientColor;\
+	//	attribute vec4 DiffuseColor;\
+	//	attribute vec4 SpecularColor;\
 	//	\
 	//	void main (void)\
 	//	{\
-	//		vec4 final_color = \
-	//		(gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient) + \
-	//		(gl_LightSource[0].ambient * gl_FrontMaterial.ambient);\
-	//								\
+	//		vec4 final_color = AmbientColor;\
 	//		vec3 N = normalize(normal);\
 	//		vec3 L = normalize(lightDir);\
 	//		\
@@ -195,22 +197,76 @@ void OpenGL::InitializeShaders()
 	//		\
 	//		if(lambertTerm > 0.0)\
 	//		{\
-	//			final_color += gl_LightSource[0].diffuse * \
-	//						   gl_FrontMaterial.diffuse * \
-	//						   lambertTerm;	\
-	//			\
-	//			vec3 E = normalize(eyeVec);\
+	//			final_color += DiffuseColor * lambertTerm;\
+	//			vec3 E = normalize(lightPos);\
 	//			vec3 R = reflect(-L, N);\
-	//			float specular = pow( max(dot(R, E), 0.0), \
-	//							 gl_FrontMaterial.shininess );\
-	//			final_color += gl_LightSource[0].specular * \
-	//						   gl_FrontMaterial.specular * \
-	//						   specular;\
+	//			float specular = pow( max(dot(R, E), 0.0), 0.5f);\
+	//			final_color += SpecularColor * specular;\
 	//		}\
-	//	\
 	//		gl_FragColor = final_color;\
 	//	}\
 	//	";
+
+	
+	//const char * lightShader_vertex = 
+	//	"void main()\
+	//		{\
+	//		vec3 normal, lightDir;\
+	//		vec4 diffuse, ambient, globalAmbient;\
+	//		float NdotL;\
+	//		\
+	//		normal = normalize(gl_NormalMatrix * gl_Normal);\
+	//		lightDir = normalize(vec3(gl_LightSource[0].position));\
+	//		NdotL = max(dot(normal, lightDir), 0.0);\
+	//		diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;\
+	//		\
+	//		/* Compute the ambient and globalAmbient terms */\
+	//		ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;\
+	//		globalAmbient = gl_LightModel.ambient * gl_FrontMaterial.ambient;\
+	//		\
+	//		gl_FrontColor =  NdotL * diffuse + globalAmbient + ambient;\
+	//		\
+	//		gl_Position = ftransform();\
+	//	}\
+	//	";
+
+	//const char * lightShader_frag = 
+	//"varying vec4 diffuse,ambientGlobal, ambient;\
+	//varying vec3 normal,lightDir,halfVector;\
+	//varying float dist;\
+	//\
+	//\
+	//void main()\
+	//{\
+	//	vec3 n,halfV,viewV,ldir;\
+	//	float NdotL,NdotHV;\
+	//	vec4 color = ambientGlobal;\
+	//	float att;\
+	//	\
+	//	/* a fragment shader can't write a varying variable, hence we need\
+	//	a new variable to store the normalized interpolated normal */\
+	//	n = normalize(normal);\
+	//	\
+	//	/* compute the dot product between normal and normalized lightdir */\
+	//	NdotL = max(dot(n,normalize(lightDir)),0.0);\
+	//\
+	//	if (NdotL > 0.0) {\
+	//	\
+	//		att = 1.0 / (gl_LightSource[0].constantAttenuation +\
+	//				gl_LightSource[0].linearAttenuation * dist +\
+	//				gl_LightSource[0].quadraticAttenuation * dist * dist);\
+	//		color += att * (diffuse * NdotL + ambient);\
+	//	\
+	//		\
+	//		halfV = normalize(halfVector);\
+	//		NdotHV = max(dot(n,halfV),0.0);\
+	//		color += att * gl_FrontMaterial.specular * gl_LightSource[0].specular * \
+	//						pow(NdotHV,gl_FrontMaterial.shininess);\
+	//	}\
+	//\
+	//	gl_FragColor = color;\
+	//}\
+	//";
 
 	// Create the fragment shader object 
 	LOGD(LOGTAG_OPENGL,"Creating fragment shader");
@@ -268,6 +324,11 @@ void OpenGL::SetAttributeLocations()
 	renderData.vertexArrayLocation = glGetAttribLocation(uiProgramObject,"Position");
 	renderData.textureArrayLocation = glGetAttribLocation(uiProgramObject,"TexCoordIn");
 	renderData.colorArrayLocation =	glGetAttribLocation(uiProgramObject,"SourceColor");
+
+	/*renderData.diffuseColorLocation =	glGetAttribLocation(uiProgramObject,"DiffuseColor");
+	renderData.ambientColorLocation =	glGetAttribLocation(uiProgramObject,"AmbientColor");
+	renderData.specularColorLocation =	glGetAttribLocation(uiProgramObject,"SpecularColor");*/
+
 	renderData.modelMatrixLocation=  glGetUniformLocation(uiProgramObject,"ModelView");
 	renderData.projectionMatrixLocation = glGetUniformLocation(uiProgramObject,"Projection");
 	renderData.textureLocation = glGetUniformLocation(uiProgramObject, "Texture");
