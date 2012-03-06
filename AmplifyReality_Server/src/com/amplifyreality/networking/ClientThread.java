@@ -23,7 +23,7 @@ import com.amplifyreality.networking.model.RealmPositionWatcher;
 import com.amplifyreality.networking.model.WavefrontObj;
 import com.amplifyreality.util.Logging;
 
-public class ClientThread implements MessageListener,RealmPositionWatcher
+public class ClientThread implements MessageListener, RealmPositionWatcher
 {
 
 	volatile boolean listening;
@@ -45,7 +45,7 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 	{
 		WaitingForCode, Active;
 	}
-	
+
 	private Realm currentRealm;
 
 	private ClientStates clientState = ClientStates.WaitingForCode;
@@ -59,7 +59,6 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 		listening = true;
 		clientSocket = _clientSocket;
 
-		
 		LOGGER.info("Created new client. Remote address = " + clientSocket.getRemoteSocketAddress().toString());
 
 		// Listen for messages, and process them as they arrive.
@@ -89,7 +88,7 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 								dataHeader = DataHeader.CreateHeaderFromMessage(inputLine);
 							} catch (InvalidHeaderMessageException e)
 							{
-								dataHeader = null; 
+								dataHeader = null;
 							}
 						} else
 						{
@@ -174,16 +173,23 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 	{
 		if (clientState == ClientStates.Active)
 		{
-			currentRealm.UpdateObject(arObject.Name, arObject);
-			LOGGER.info("Updating ARObject with name=" + arObject.Name + ", newposition=" + arObject.Position.toString());
-		}	
+			if (arObject.Action != null && arObject.Action.equals("Update"))
+			{
+				currentRealm.UpdateObject(arObject.Name, arObject);
+				LOGGER.info("Updating ARObject with name=" + arObject.Name + ", newposition=" + arObject.Position.toString());
+			} else if (arObject.Action.equals("Create"))
+			{
+				currentRealm.AddNewObject(arObject.Name, arObject);
+				LOGGER.info("Creating ARObject with name=" + arObject.Name + ", modelname=" + arObject.ModelName);
+			}
+		}
 	}
 
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
 	{
 		char buffer[] = new char[dataHeader.NumBytes];
 		int result = bufferedReader.read(buffer, 0, dataHeader.NumBytes);
-//		LOGGER.info("Received " + result + " bytes from client.");
+		// LOGGER.info("Received " + result + " bytes from client.");
 		String data = new String(buffer);
 
 		// No XML definition, so process as a string
@@ -200,21 +206,19 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 
 				Serializer serializer = new Persister();
 
-
 				if (className.equals(ClientRequest.class.getCanonicalName()))
 				{
 					ClientRequest request = serializer.read(ClientRequest.class, data);
 					ProcessClientRequest(request);
-				}
-				else if (className.equals(ARObject.class.getCanonicalName()))
-				{					
+				} else if (className.equals(ARObject.class.getCanonicalName()))
+				{
 					ARObject arObject = serializer.read(ARObject.class, data);
-					ProcessARUpdate(arObject);					
+					ProcessARUpdate(arObject);
 				}
 			} catch (Exception e)
 			{
-				
-				LOGGER.log(Level.SEVERE, "Error parsing message from server. Data="+ data, e);
+
+				LOGGER.log(Level.SEVERE, "Error parsing message from server. Data=" + data, e);
 			}
 		}
 
@@ -225,7 +229,7 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 		try
 		{
 			LOGGER.info("Processing client request. Type=" + request.RequestType);
-			
+
 			if (request.RequestType.equals("Realm"))
 			{
 				Realm requestedRealm = realmManager.RequestRealm(request.RequestData);
@@ -234,6 +238,7 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 				clientState = ClientStates.Active;
 				SendMessage(new ClientXMLMessage(new Persister(), requestedRealm));
 				currentRealm = requestedRealm;
+				currentRealm.AddClient(this);
 			} else if (request.RequestType.equals("Resource"))
 			{
 				if (clientState == ClientStates.Active)
@@ -241,34 +246,31 @@ public class ClientThread implements MessageListener,RealmPositionWatcher
 					String objData = realmManager.GetObjFile(request.RequestData);
 					LOGGER.info("Sending resource with name " + request.RequestData);
 					SendMessage(new ClientXMLMessage(new Persister(), new WavefrontObj(request.RequestData, objData)));
-				}
-				else
+				} else
 				{
-					LOGGER.log(Level.WARNING,"Inactive client tried to access resource! Remote address is " + clientSocket.getRemoteSocketAddress());
+					LOGGER.log(Level.WARNING, "Inactive client tried to access resource! Remote address is " + clientSocket.getRemoteSocketAddress());
 				}
-			}
-			else if (request.RequestType.equals("Authenticate"))
+			} else if (request.RequestType.equals("Authenticate"))
 			{
 				String[] splitData = request.RequestData.split(":");
 				if (splitData.length < 2)
 				{
-					LOGGER.log(Level.INFO,"Failed to authenticate due to invalid auth message. Data="+request.RequestData);
+					LOGGER.log(Level.INFO, "Failed to authenticate due to invalid auth message. Data=" + request.RequestData);
 					SendMessage(new com.amplifyreality.networking.message.ClientStringMessage("AuthFail"));
 				}
 				String user = splitData[0];
 				String pass = splitData[1];
-				
+
 				if (!realmManager.authenticateUser(user, pass))
 				{
-					LOGGER.log(Level.INFO,"Failed to authenticate user = " + user);
+					LOGGER.log(Level.INFO, "Failed to authenticate user = " + user);
 					SendMessage(new com.amplifyreality.networking.message.ClientStringMessage("AuthFail"));
-				}
-				else
+				} else
 				{
-					LOGGER.log(Level.INFO,"Authenticated user = " + user);
+					LOGGER.log(Level.INFO, "Authenticated user = " + user);
 					SendMessage(new com.amplifyreality.networking.message.ClientStringMessage("AuthPass"));
 				}
-				
+
 			}
 		} catch (Exception e)
 		{

@@ -42,7 +42,20 @@ public class Realm implements RealmPositionWatcher
 
 	public void AddClient(RealmPositionWatcher watcher)
 	{
+		if (clients == null)
+			clients = new ArrayList<RealmPositionWatcher>();
 		clients.add(watcher);
+	}
+	
+	public void AddNewObject(String objectId, ARObject newObject)
+	{
+		if (objectMap.containsKey(objectId))
+		{
+			LOGGER.info("Attempted to create existing object. Name="+ objectId + ". Processing as update.");
+			UpdateObject(objectId,newObject);
+		}
+		
+		objectMap.put(objectId,newObject);
 	}
 	
 

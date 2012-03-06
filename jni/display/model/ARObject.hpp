@@ -35,11 +35,12 @@ public:
 class ARObjectMessage : public OutgoingMessage
 {
 public:
-	ARObjectMessage(ARObject * object);
+	ARObjectMessage(ARObject * object, bool createNew = false);
 	jstring GetDescription(JNIEnv * env);
 	jobject getJavaObject(JNIEnv * env);
 private:
 	ARObject * arObject;
+	bool createNew;
 };
 
 class ARObjectDistanceSort_Ascending

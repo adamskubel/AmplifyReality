@@ -39,7 +39,7 @@ Uses input from locationing to determine where to display objects.
 class AugmentedView 
 {
 public:
-	AugmentedView(UIElementCollection * window, cv::Mat cameraMatrix);
+	AugmentedView(UIElementCollection * window, Engine * engine, cv::Mat cameraMatrix);
 	~AugmentedView();
 
 	void SetTransformations(Mat * position, Mat * rotation);
@@ -58,7 +58,7 @@ private:
 	cv::Mat * rotation, * position;
 	std::vector<ARObject *> objectVector;
 	void SetCameraPosition(OpenGLRenderData & renderData);
-	bool canDraw;
+	bool canDraw, createNext;
 	vector<Point2i> inputPoints;
 	Mat projection;
 	float fieldOfView;
@@ -67,7 +67,7 @@ private:
 	TabDisplay * tabs;
 
 	struct timespec lastSelectionTime;
-
+	bool unselectNext;
 	map<std::string,ARObjectMessage*> updateObjectMap;
 	
 

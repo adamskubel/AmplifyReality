@@ -26,6 +26,9 @@ public class RealmManager
 {
 	private final static Logger LOGGER = Logging.CreateLogger(RealmManager.class);
 
+	public boolean needsPersist = false;
+	
+	
 	@ElementMap
 	private HashMap<String, Realm> realmMap;
 
@@ -81,25 +84,24 @@ public class RealmManager
 	}
 
 	public Realm RequestRealm(String code) throws Exception
-	{
-		// if (authenticateUser(user,password))
-		// {
+	{		
 		if (realmMap.containsKey(code))
+		{
 			return realmMap.get(code);
+		}
 		else
-			return CreateRealm(code);
-		// }
-		// else
-		// {
-		// throw new AuthenticationFailedException();
-		// }
+		{
+			Realm newRealm = CreateRealm(code);
+			realmMap.put(code,newRealm);
+			return newRealm;
+		}
 	}
 
 	public boolean NeedsPersist()
-	{
+	{			
 		if (realmMap.size() > 0)
 		{
-			boolean needsUpdate = false;
+			boolean needsUpdate = needsPersist;
 			for (Realm updateRealm : realmMap.values())
 			{
 				needsUpdate = needsUpdate || updateRealm.isUpdated;
@@ -108,7 +110,7 @@ public class RealmManager
 			return needsUpdate;
 		} else
 		{
-			return false;
+			return needsPersist;
 		}
 	}
 
@@ -133,7 +135,8 @@ public class RealmManager
 	public Realm CreateRealm(String code)
 	{
 		Realm newRealm = new Realm(code, 10.0f);
-
+		newRealm.isUpdated = true;
+		needsPersist = true;
 		LOGGER.info("Creating new realm, code = " + code);
 		return newRealm;
 	}

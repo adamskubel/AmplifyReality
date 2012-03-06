@@ -51,11 +51,11 @@ void Label::SetCenter(Point2i centerPoint)
 	if (centerY)
 		Position.y = centerPoint.y + size.height/2;
 
-	if (Position.x < 0 || Position.y < 0)
-	{
-		LOGW(LOGTAG_INPUT,"Attempted to place label outside of screen! (%d,%d)",Position.x,Position.y);
-		Position = Point2i(0,0);
-	}
+	//if (Position.x < 0 || Position.y < 0)
+	//{
+	//	LOGW(LOGTAG_INPUT,"Attempted to place label outside of screen! (%d,%d)",Position.x,Position.y);
+	//	Position = Point2i(0,0);
+	//}
 
 }
 

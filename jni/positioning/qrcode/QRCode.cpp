@@ -92,8 +92,10 @@ bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 		{			
 			int fpSize = (int)round(finderPatterns[0]->size/2.0f);
 			result.x = (finderPatterns[1]->pt.x - finderPatterns[0]->pt.x) + finderPatterns[2]->pt.x - fpSize;
-			result.y = (finderPatterns[1]->pt.y - finderPatterns[0]->pt.y) + finderPatterns[2]->pt.y - fpSize;		
+			result.y = (finderPatterns[2]->pt.y - finderPatterns[0]->pt.y) + finderPatterns[1]->pt.y - fpSize;		
 			alignmentPattern = result;
+
+			fpSize = (int)(round(fpSize * 1.5f));
 
 			int startX = result.x - fpSize, endX = result.x + fpSize;
 			int startY = result.y- fpSize, endY = result.y + fpSize;
@@ -117,6 +119,8 @@ bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 				result.x = (finderPatterns[1]->pt.x - finderPatterns[0]->pt.x) + finderPatterns[2]->pt.x - fpSize;
 				result.y = (finderPatterns[1]->pt.y - finderPatterns[0]->pt.y) + finderPatterns[2]->pt.y - fpSize;		
 				alignmentPattern = result;
+				
+				fpSize = (int)(round(fpSize * 1.5f));
 
 				int startX = result.x - fpSize, endX = result.x + fpSize;
 				int startY = result.y- fpSize, endY = result.y + fpSize;
@@ -149,8 +153,8 @@ bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 			int dy1 = abs(ap0.y - ap2.y);
 			int dy2 = abs(ap3.y - ap5.y);
 
-			int dx = MAX(dx1,dx2);
-			int dy = MAX(dy1,dy2);
+			int dx = ((float) MAX(dx1,dx2)) * 1.2f;
+			int dy = ((float)MAX(dy1,dy2)) * 1.2f;
 			
 			dx = idiv(dx,2);
 			dy = idiv(dy,2);
@@ -204,8 +208,12 @@ bool QRCode::isDecoded()
 	return isValidCode() && TextValue.length() > 0;
 }
 
-void QRCode::getTrackingPoints(vector<cv::Point2f> & points)
+void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector)
 {
+	float finderPatternSpacing = 29.0f * QRCodeDimension;
+	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
+	float finderPatternSize = 7.0f * QRCodeDimension;
+
 	if (trackingCorners.size() < 3)
 		sortCorners();
 
@@ -213,18 +221,39 @@ void QRCode::getTrackingPoints(vector<cv::Point2f> & points)
 	points.push_back(Point2f(trackingCorners.at(1).x,trackingCorners.at(1).y));
 	points.push_back(Point2f(alignmentPattern.x,alignmentPattern.y));
 	points.push_back(Point2f(trackingCorners.at(2).x,trackingCorners.at(2).y));	
-}
-
-void QRCode::getImagePoints(vector<Point3f> & qrVector)
-{
-	float finderPatternSpacing = 29.0f * QRCodeDimension;
-	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
 
 	qrVector.push_back(Point3f(0,0,0));
 	qrVector.push_back(Point3f(finderPatternSpacing,0,0));
 	qrVector.push_back(Point3f(alignmentPatternSpacing,alignmentPatternSpacing,0)); //alignment pattern
 	qrVector.push_back(Point3f(0,finderPatternSpacing,0));
+	
+	if (finderPatterns.size() == 3)
+	{
+		if (finderPatterns[0]->patternCorners.size() == 4)
+		{
+			points.push_back(finderPatterns[0]->patternCorners[1]);
+			qrVector.push_back(Point3f(0,finderPatternSpacing - finderPatternSize,0));
+						
+			points.push_back(finderPatterns[0]->patternCorners[2]);
+			qrVector.push_back(Point3f(finderPatternSize,finderPatternSpacing - finderPatternSize,0));
+
+			points.push_back(finderPatterns[0]->patternCorners[3]);
+			qrVector.push_back(Point3f(finderPatternSize,finderPatternSpacing,0));
+		}
+	}
+
 }
+
+//void QRCode::getImagePoints
+//{
+//	float finderPatternSpacing = 29.0f * QRCodeDimension;
+//	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
+//
+//	qrVector.push_back(Point3f(0,0,0));
+//	qrVector.push_back(Point3f(finderPatternSpacing,0,0));
+//	qrVector.push_back(Point3f(alignmentPatternSpacing,alignmentPatternSpacing,0)); //alignment pattern
+//	qrVector.push_back(Point3f(0,finderPatternSpacing,0));
+//}
 
 void QRCode::Draw(Mat * rgbaImage)
 {
@@ -257,6 +286,10 @@ void QRCode::Draw(Mat * rgbaImage)
 			drawPoints.push_back(trackingCorners[2]);
 			DebugPoly(drawPoints,Colors::Lime,2).Draw(rgbaImage);
 		}
+	}
+	else if (debugDrawingLevel > 0)
+	{
+		LOGD(LOGTAG_QR,"Code is invalid! FPSize=%d,Apx=%d,Apy=%d",finderPatterns.size(),alignmentPattern.x,alignmentPattern.y);
 	}
 
 	if (debugDrawingLevel > 1)

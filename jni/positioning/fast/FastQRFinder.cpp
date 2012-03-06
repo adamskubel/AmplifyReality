@@ -76,7 +76,7 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("FlannIndexType",1,1,0,2,"%1.0f","FAST",true);
 
 
-	config->AddNewParameter("AP: K Nearest","K-NN_AP",4,1,1,12,"%2.0f","FAST");
+	config->AddNewParameter("AP: K Nearest","K-NN_AP",5,1,1,12,"%2.0f","FAST");
 	config->AddNewParameter("FP: K Nearest","K-NN",6,1,1,12,"%2.0f","FAST");
 	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f","FAST",true);
 	config->AddNewParameter("MaxCosine",-0.6f,0.05f,-2.0f,2.0f,"%4.2f","FAST");
@@ -727,65 +727,168 @@ static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, v
 	LOG_TIME_PRECISE("Building FLANN index",start,end);
 }
 
-static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squarePoints, Point2i patternCenter)
+static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndices, vector<Point2i> & inputPoints, int itCount)
 {
-		
-	if (inputPoints.size() < 4)
+	if (itCount-- < 0)
+		return false;
+	
+	if (chosenIndices.size() == 4)
+		return true;
+
+	for (int j=0;j<inputPoints.size();j++)
+	{
+		if (j == currentIndex || j == lastIndex || chosenIndices.count(j) != 0)
+			continue;
+
+		//Check if we reached the first point (0)
+		float angle = FastTracking::angle(inputPoints[0],inputPoints[lastIndex],inputPoints[currentIndex]);
+		if (abs(angle) < 0.15f)
+		{
+			return true;
+		}
+
+		angle = FastTracking::angle(inputPoints[j],inputPoints[lastIndex],inputPoints[currentIndex]);
+		if (abs(angle) < 0.15f)
+		{
+			if (addNextVertex(j,currentIndex,chosenIndices,inputPoints,itCount))
+			{	
+				chosenIndices.insert(j);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squarePoints, Point2i patternCenter, Size2i patternSize)
+{
+	LOGD(LOGTAG_QR,"Validating square,points=%d",inputPoints.size());
+	if (inputPoints.size() < 4 || inputPoints.size() > 20)
 	{
 		return false;
 	}
-	else if (inputPoints.size() == 4) //Only 4 points, so probably a square
-	{
-		squarePoints = inputPoints;
-		return true;
-	}
 	vector<Point2i> testPoints = inputPoints;
 
-	//for (int i=0;i<inputPoints.size();i++)
-	//{
-	//	sort(testPoints.begin(),testPoints.end(),PointCompare_Ascending(inputPoints[i]));
-
-	//	//Skip first one, will be equal to test point, and thus zero distance
-	//	float angle = FastTracking::angle(testPoints[1],testPoints[2],inputPoints[i]);
-	//	anglePointMap.insert(pair<float,Point2i>(angle,inputPoints[i]));
-	//}
-
-	float minAngleDiff = 10.0f * (PI/180.0f);
-	
-	multimap<int,Point2i> parallelCountMap;
-
+	/*float avgLength = 0;
 	for (int i=0;i<inputPoints.size();i++)
 	{
-		int parallelCount = 0;
-		Point2i point = inputPoints[i];
-		Point2f endPoint = Point2f(point.x - patternCenter.x, point.y - patternCenter.y);
-		float angleToHorizontal = atanf(endPoint.y/endPoint.x);
 		for (int j=0;j<inputPoints.size();j++)
 		{
 			if (i==j) continue;
+			avgLength += sqrtf(GetSquaredDistance(inputPoints[i],inputPoints[j]));
 
-			Point2i point_inner = inputPoints[j];
-			endPoint = Point2f(point_inner.x - patternCenter.x, point_inner.y - patternCenter.y);
-			float angleToHorizontal_inner = atanf(endPoint.y/endPoint.x);
-
-			if (abs(angleToHorizontal_inner-angleToHorizontal) < minAngleDiff ||
-				abs(abs(angleToHorizontal_inner-angleToHorizontal) - PI) < minAngleDiff)
-			{
-				parallelCount++;
-			}	
 		}
-		parallelCountMap.insert(pair<int,Point2i>(parallelCount,point));
+	}
+	int sampleSize = inputPoints.size() * (inputPoints.size()-1);
+	avgLength = idiv(avgLength,sampleSize);
+	
+	float deviation = 0;
+	for (int i=0;i<inputPoints.size();i++)
+	{
+		for (int j=0;j<inputPoints.size();j++)
+		{
+			if (i==j) continue;
+			deviation += powf(avgLength - sqrtf(GetSquaredDistance(inputPoints[i],inputPoints[j])),2);
+
+		}
+	}
+	deviation = idiv(deviation,sampleSize);
+	deviation = sqrt(deviation);
+
+	if (deviation/avgLength > 0.5f)
+	{
+		LOGD(LOGTAG_QRFAST,"Deviation %f is too high");
+		return false;
+	}
+*/
+
+	int currentIndex = 0;
+	float minDistance = min(((float)patternSize.height * 0.9f),((float)patternSize.width * 0.9f));
+	set<int> chosenIndices;
+	chosenIndices.insert(0);
+
+	for (int i=1;i<inputPoints.size();i++)
+	{
+		if (addNextVertex(i,0,chosenIndices,inputPoints,40))
+		{
+			chosenIndices.insert(i);
+			break;
+		}
 	}
 
-	
-	pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> itPair = parallelCountMap.equal_range(1);
-		
-	for (; itPair.first != itPair.second;itPair.first++)
+	LOGD(LOGTAG_QR,"Index set size = %d", chosenIndices.size());
+
+	set<int>::iterator it = chosenIndices.begin();
+
+	squarePoints.clear();
+	for (;it != chosenIndices.end();it++)
 	{
-		squarePoints.push_back((*itPair.first).second);
-		if (squarePoints.size() == 4)
-			return true;
+		squarePoints.push_back(inputPoints.at(*it));
 	}
+
+	/*while (chosenIndices.size() < 4)
+	{
+		for (int i=0;i<inputPoints.size();i++)
+		{
+			if (chosenIndices.count(i) != 0)
+				continue;
+			float distanceToLast = GetSquaredDistance(inputPoints[currentIndex],inputPoints[i-1]);
+			if (sqrtf(distanceToLast) < minDistance)
+			{
+				LOGV(LOGTAG_QRFAST,"Point is too close to last point");
+				continue;
+			}
+
+			
+
+		}
+	}*/
+
+	//float minAngleDiff = 10.0f * (PI/180.0f);
+	//
+	//multimap<int,Point2i> parallelCountMap;
+	//float minDistance = min(((float)patternSize.height * 0.9f),((float)patternSize.width * 0.9f));
+
+	//for (int i=0;i<inputPoints.size();i++)
+	//{
+	//	
+	//	/*	float distanceToLast = GetSquaredDistance(inputPoints[i],inputPoints[i-1]);
+	//		if (sqrtf(distanceToLast) < minDistance)
+	//		{
+	//			LOGV(LOGTAG_QRFAST,"Point is too close to last point");
+	//			continue;
+	//		}
+	//	}*/
+	//	int parallelCount = 0;
+	//	Point2i point = inputPoints[i];
+	//	Point2f endPoint = Point2f(point.x - patternCenter.x, point.y - patternCenter.y);
+	//	float angleToHorizontal = atanf(endPoint.y/endPoint.x);
+	//	for (int j=0;j<inputPoints.size();j++)
+	//	{
+	//		if (i==j) continue;
+
+	//		Point2i point_inner = inputPoints[j];
+	//		endPoint = Point2f(point_inner.x - patternCenter.x, point_inner.y - patternCenter.y);
+	//		float angleToHorizontal_inner = atanf(endPoint.y/endPoint.x);
+
+	//		if (abs(angleToHorizontal_inner-angleToHorizontal) < minAngleDiff ||
+	//			abs(abs(angleToHorizontal_inner-angleToHorizontal) - PI) < minAngleDiff)
+	//		{
+	//			parallelCount++;
+	//		}	
+	//	}
+	//	parallelCountMap.insert(pair<int,Point2i>(parallelCount,point));
+	//}
+
+	//
+	//pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> itPair = parallelCountMap.equal_range(1);
+	//	
+	//for (; itPair.first != itPair.second;itPair.first++)
+	//{
+	//	squarePoints.push_back((*itPair.first).second);
+	//	if (squarePoints.size() == 4)
+	//		return true;
+	//}
 
 	//for (map<float,Point2i>::iterator it = anglePointMap.begin(); it != anglePointMap.end(); it++)
 	//{
@@ -794,6 +897,8 @@ static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squa
 	//		return true;
 	//}
 
+	if (squarePoints.size() == 4)
+			return true;
 	return false;
 }
 
@@ -868,13 +973,24 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		debugVector.push_back(new DebugCircle(center,3,Colors::Lime,2));	
 	}
 
+	float maxCenterSize = max((float)patternSize.width * 0.5f, (float)patternSize.height*0.5f);
+	vector<pair<int,Point2i> > outerPoints;
+
+	if (outsideCornersVector.size() > 0)
+	{
+		//Find the FP center
+		Mat outsideCornerMatrix;
+		flann::Index * outerIndex;
+		BuildFLANNIndex(outerIndex,1,outsideCornersVector,outsideCornerMatrix);
+		outerPoints =  getClosestInSet(center,outsideCornerMatrix,outerIndex,3,64, maxCenterSize);
+		
+	}
+	if (outerPoints.empty())
+	{
+		outerPoints.push_back(pair<int,Point2i>(0,center));
+	}
 	
-	//Find the FP center
-	Mat outsideCornerMatrix;
-	flann::Index * outerIndex;
-	BuildFLANNIndex(outerIndex,1,outsideCornersVector,outsideCornerMatrix);
-	vector<pair<int,Point2i> > outerPoints = getClosestInSet(center,outsideCornerMatrix,outerIndex,3,64);
-	
+
 	for (vector<pair<int,Point2i> >::iterator centerIt = outerPoints.begin(); centerIt != outerPoints.end(); centerIt++)
 	{
 		center = (*centerIt).second;
@@ -891,22 +1007,29 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		BuildFLANNIndex(cornerIndex,1,insideCornerVector,cornerMatrix);
 		vector<pair<int,Point2i> > testPoints = getClosestInSet(center,cornerMatrix,cornerIndex,apSearchSize,64);
 
-		for (vector<pair<int,Point2i> >::iterator it = testPoints.begin(); it != testPoints.end(); it++)
+		if (!testPoints.empty())
 		{
-			Point2i drawPoint = (*it).second;
-			if (debugLevel == 2) 
-				debugVector.push_back(new DebugCircle(drawPoint,3,Colors::Turquoise,-1));									
-		}
+			
+			if (debugLevel == 1)
+				debugVector.push_back(new DebugCircle(testPoints[0].second,8,Colors::Red,2,true));
 
-		vector<Point2i> pointsOnly;
-		for (int i=0;i<testPoints.size();i++)
-		{
-			pointsOnly.push_back(testPoints.at(i).second);
-		}
+			for (vector<pair<int,Point2i> >::iterator it = testPoints.begin(); it != testPoints.end(); it++)
+			{
+				Point2i drawPoint = (*it).second;
+				if (debugLevel == 2) 
+					debugVector.push_back(new DebugCircle(drawPoint,3,Colors::Turquoise,-1));									
+			}
 
-		if (validateSquare(pointsOnly,patternPoints, center))
-		{
-			break;
+			vector<Point2i> pointsOnly;
+			for (int i=0;i<testPoints.size();i++)
+			{
+				pointsOnly.push_back(testPoints.at(i).second);
+			}
+
+			if (validateSquare(pointsOnly,patternPoints, center, patternSize))
+			{
+				break;
+			}
 		}
 	}
 
@@ -951,7 +1074,7 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 }
 
 
-vector<pair<int,Point2i> > FastQRFinder::getClosestInSet(Point2i point, Mat & pointMatrix, flann::Index * innerPointIndex, int searchSize,int searchParams)
+vector<pair<int,Point2i> > FastQRFinder::getClosestInSet(Point2i point, Mat & pointMatrix, flann::Index * innerPointIndex, int searchSize,int searchParams, float maxDistance)
 {
 	Mat indexMatrix = Mat::ones(1, searchSize, CV_32S) * -1;
 	Mat distanceMatrix = Mat::zeros(1, searchSize, CV_32F);	
@@ -973,6 +1096,9 @@ vector<pair<int,Point2i> > FastQRFinder::getClosestInSet(Point2i point, Mat & po
 	{
 		rowPtr = pointMatrix.ptr<float>(indexPtr[i]);
 		float distance = distPtr[i];
+		if (maxDistance > 0 && distance >= maxDistance)
+			continue;
+
 		Point2i point = Point2i((int)(rowPtr[0]),(int)(rowPtr[1]));
 		pointVector.push_back(pair<int,Point2i>((int)distance,point));
 	}

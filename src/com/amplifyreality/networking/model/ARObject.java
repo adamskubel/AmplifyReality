@@ -22,6 +22,9 @@ public class ARObject
 	public ARObject()
 	{
 		Position = new Vector3();
+		Rotation = new Vector3();
+		Scale = new Vector3();
+		
 	}
 	
 	public ARObject(String Name, Vector3 Position, Vector3 Rotation)
@@ -30,12 +33,25 @@ public class ARObject
 		this.Name = Name;
 		this.Position = Position;
 		this.Rotation = Rotation;
-		Action = "Update";
+		this.Action = "Update";
+	}
+	
+	
+	public ARObject(String Name, String modelName, Vector3 Position, Vector3 Rotation)
+	{
+		Log.i("AmplifyR-JNI","Creating create-mode ARObject. Name=" + Name + "Position = " + Position + " Rotation=" + Rotation);
+		this.Name = Name;
+		this.ModelName = modelName;
+		this.Position = Position;
+		this.Rotation = Rotation;
+		this.Scale = new Vector3(1,1,1);
+		this.Action = "Create";
 	}
 
 	
 	public ARObject(String Name, Vector3 Position, Vector3 Rotation, Vector3 Scale, float BoundingSphereRadius)
 	{
+		Log.i("AmplifyR-JNI","Creating new ARObject. Name=" + Name + "Position = " + Position + " Rotation=" + Rotation + "Scale = " + Scale);
 		this.Name = Name;
 		this.Position = Position;
 		this.Rotation = Rotation;

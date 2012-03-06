@@ -116,9 +116,13 @@ char AndroidInputHandler::GetCharFromKeyCode(int32_t keyCode, bool & validKey, b
 		case AKEYCODE_SPACE:
 			return ' ';
 		case AKEYCODE_SEMICOLON:
-			return ';';
+			return (upperCase) ? ':' : ';';
 		case AKEYCODE_PERIOD:
 			return '.';
+		case AKEYCODE_SLASH:
+			return '/';
+		case AKEYCODE_BACKSLASH:
+			return '\\';		
 		default:
 			LOGV(LOGTAG_INPUT,"Unsupported keycode:%d",keyCode);
 			validKey = false;
@@ -187,6 +191,8 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 		//Only care about complete press, doesn't check for down occuring
 		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))
 		{		
+			int32_t metaState = AKeyEvent_getMetaState(inputEvent);
+			
 			bool handled = false;
 			for (int i=0;i<textListeners.size();i++)
 			{
@@ -198,9 +204,11 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 				//If not yet handled, process event
 				else
 				{
+					bool isUpper = AMETA_SHIFT_ON & metaState;
+
 					bool validChar = false;
 					KeyEventArgs keyEvent(eventKey);
-					keyEvent.KeyCharacter = GetCharFromKeyCode(eventKey,validChar,false);
+					keyEvent.KeyCharacter = GetCharFromKeyCode(eventKey,validChar,isUpper);
 					keyEvent.hasCharacter = validChar;
 					handled = textListeners.at(i)->HandleKeyEvent(keyEvent);
 				}
