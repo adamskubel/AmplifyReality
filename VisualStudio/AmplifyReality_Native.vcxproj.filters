@@ -798,6 +798,9 @@
     <ClInclude Include="..\jni\model\DebugShape.hpp">
       <Filter>Header Files\model\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\jni\util\JNIUtils.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\jni\Android.mk" />

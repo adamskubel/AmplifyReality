@@ -20,9 +20,9 @@ public class AmplifyRealityActivity extends NativeActivity
 	}
 	
 	public static native void OnMessage(String messageString, Object data);
-	public static native Object[] GetOutgoingMessages();
+//	public static native Object[] GetOutgoingMessages();
 	public static native String GetConnectionString();
-	public static native void SetClientObject(Object arClient);
+	public static native void SetClientObject(Object amplifyRealityActivity, Object arClient);
 		
 	ARClient client;
 	
@@ -32,8 +32,14 @@ public class AmplifyRealityActivity extends NativeActivity
 		super.onCreate(savedInstanceState);
 		Log.i("AmplifyR-JNI", "Creating client");
 		client = new ARClient();
-		
-		SetClientObject(client);		
+		SetClientObject(this, client);		
+	}
+	
+	
+	public boolean acceptingText()
+	{
+		InputMethodManager  m = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+		return m.isAcceptingText();
 	}
 	
 	@Override 

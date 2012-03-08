@@ -4,19 +4,15 @@
 #include <jni.h>
 #include <pthread.h>
 #include <errno.h>
-#include "model/network/RealmDefinition.hpp"
 #include "model/network/NetworkMessages.hpp"
-#include "model/network/WavefrontModel.hpp"
 #include "model/network/ARCommunicator.hpp"
-#include "model/concurrent/ThreadedClass.hpp"
+#include "util/JNIUtils.hpp"
 
 pthread_mutex_t incomingMutex, outgoingMutex;
 static vector<IncomingMessage*> jniDataVector;
 static vector<OutgoingMessage*> outgoingJNIDataVector;
-static std::string connectionString;
-//static bool connectedToServer;
 static bool softKeyboardOpen;
-static jobject arClientObject;
+static jobject arClientObject, myActivity;
 static JNIEnv * currentEnv;
 
 
@@ -58,41 +54,41 @@ extern "C"
 		LOGD(LOGTAG_NETWORKING,"JNI thread unlocked mutex");
 	}
 	
-	JNIEXPORT jobjectArray JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
-	{		
-		pthread_mutex_lock(&outgoingMutex);
+	//JNIEXPORT jobjectArray JNICALL 
+	//	Java_com_amplifyreality_AmplifyRealityActivity_GetOutgoingMessages(JNIEnv * env, jobject  obj)
+	//{		
+	//	pthread_mutex_lock(&outgoingMutex);
 
-		if (outgoingJNIDataVector.empty())
-		{
-			pthread_mutex_unlock(&outgoingMutex);
-			return env->NewObjectArray(1,env->FindClass("java/lang/Object"),NULL);
-		}
+	//	if (outgoingJNIDataVector.empty())
+	//	{
+	//		pthread_mutex_unlock(&outgoingMutex);
+	//		return env->NewObjectArray(1,env->FindClass("java/lang/Object"),NULL);
+	//	}
 
 
-		LOGD(LOGTAG_JNI,"Preparing to send message");
-		jclass wrapperClass = env->FindClass("com/amplifyreality/networking/message/NativeMessage");
-		jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
-		
-		jobjectArray returnArray = env->NewObjectArray(outgoingJNIDataVector.size(),wrapperClass,NULL);
-		
+	//	LOGD(LOGTAG_JNI,"Preparing to send message");
+	//	jclass wrapperClass = env->FindClass("com/amplifyreality/networking/message/NativeMessage");
+	//	jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
+	//	
+	//	jobjectArray returnArray = env->NewObjectArray(outgoingJNIDataVector.size(),wrapperClass,NULL);
+	//	
 
-		int i= 0;
-		while (!outgoingJNIDataVector.empty())
-		{	
-			jstring description = outgoingJNIDataVector.back()->GetDescription(env);
-			jobject dataObject = outgoingJNIDataVector.back()->getJavaObject(env);
+	//	int i= 0;
+	//	while (!outgoingJNIDataVector.empty())
+	//	{	
+	//		jstring description = outgoingJNIDataVector.back()->GetDescription(env);
+	//		jobject dataObject = outgoingJNIDataVector.back()->getJavaObject(env);
 
-			jobject returnObject = env->NewObject(wrapperClass,initMethod,description,dataObject);
-			env->SetObjectArrayElement(returnArray,i++,returnObject);
+	//		jobject returnObject = env->NewObject(wrapperClass,initMethod,description,dataObject);
+	//		env->SetObjectArrayElement(returnArray,i++,returnObject);
 
-		//	delete outgoingJNIDataVector.back();
-			outgoingJNIDataVector.pop_back();
-		}
-		
-		pthread_mutex_unlock(&outgoingMutex);
-		return returnArray;
-	}
+	//	//	delete outgoingJNIDataVector.back();
+	//		outgoingJNIDataVector.pop_back();
+	//	}
+	//	
+	//	pthread_mutex_unlock(&outgoingMutex);
+	//	return returnArray;
+	//}
 
 
 	jint JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -103,19 +99,16 @@ extern "C"
 	}
 
 	JNIEXPORT void JNICALL 
-		Java_com_amplifyreality_AmplifyRealityActivity_SetClientObject(JNIEnv * env, jobject  obj, jobject _arClientObject)
+		Java_com_amplifyreality_AmplifyRealityActivity_SetClientObject(JNIEnv * env, jobject  obj, jobject _myActivity, jobject _arClientObject)
 	{
 		pthread_mutex_lock(&incomingMutex);
 		LOGD(LOGTAG_JNI,"Setting client object");
+		myActivity = _myActivity;
 		arClientObject = _arClientObject;
 		currentEnv = env;
 		pthread_mutex_unlock(&incomingMutex);
 	}
-	
-
 }
-
-
 
 
 static void engineHandleCommand(struct android_app* app, int32_t cmd);
@@ -166,12 +159,6 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
 {
 	Engine* engine = (Engine*) ((ARUserData*) app->userData)->engine;
-
-	//LOGV(LOGTAG_INPUT,"Main: ContentRect[%d,%d,%d,%d]",app->contentRect.left,app->contentRect.top,app->contentRect.right,app->contentRect.bottom);
-
-		//AConfiguration_setKeysHidden(app->config,ACONFIGURATION_KEYSHIDDEN_NO);
-	//engine->androidConfiguration = app->config;
-	//LOGV(LOGTAG_INPUT,"Input: KeysHidden=%d,KeyboardConfig=%d", AConfiguration_getScreenLong(app->config),  AConfiguration_getKeyboard(app->config));	
 	return engine->inputHandler->HandleInputEvent(app,inputEvent);
 }
 
@@ -194,8 +181,7 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	
 	//engine.androidConfiguration = state->config;
 
-	//Camera preview size is hardcoded for now
-	//TODO: Read from VC
+	//Default image size
 	engine.imageWidth = CAMERA_IMAGE_WIDTH;
 	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
 	
@@ -244,14 +230,6 @@ void shutdownEngine(Engine* engine)
 	LOGI(LOGTAG_MAIN,"Shutdown complete.");
 }
 
-//void sendMessagesToJNI(vector<OutgoingMessage*> messages)
-//{
-//	LOGD(LOGTAG_JNI,"Creating java message thread");
-//	JavaMessageThread * thread = new JavaMessageThread(javaVM, clientObject, &incomingMutex, messages);
-//	LOGD(LOGTAG_JNI,"Thread created.");
-//}
-
-
 void android_main(struct android_app* state)
 {	
 	LOG_INTRO();
@@ -260,9 +238,6 @@ void android_main(struct android_app* state)
 	currentEnv = NULL;
 	//Initialize JNI-friendly variables
 	jniDataVector.clear();
-	//connectedToServer = false;
-	connectionString = "test";
-	softKeyboardOpen = false;
 
 	Engine mainEngine = Engine();
 	initializeEngine(state, mainEngine);
@@ -324,7 +299,26 @@ void android_main(struct android_app* state)
 
 
 		if (javaVM != NULL)
+		{
+			/*if (myActivity != NULL)
+			{
+				JNIEnv * env = GetJNIEnv(javaVM);
+				jclass activityClass = env->GetObjectClass(myActivity);
+				jmethodID inputAcceptMethod = env->GetMethodID(activityClass,"acceptingText","()Z");
+				if (inputAcceptMethod > 0)
+				{
+					jboolean isAccepting = env->CallBooleanMethod(myActivity,inputAcceptMethod);
+					LOGD(LOGTAG_JNI,"Accepting result = %u",isAccepting);
+				}
+				else
+				{
+					LOGD(LOGTAG_JNI,"AcceptingText methodID = %d",(int)inputAcceptMethod);
+				}
+			}*/
+
 			mainEngine.communicator->Update(javaVM);
+			mainEngine.communicator->SendMessages(javaVM);
+		}
 
 		//Check for messages in JNI queue
 		if ( pthread_mutex_trylock(&incomingMutex) == 0)
@@ -348,7 +342,7 @@ void android_main(struct android_app* state)
 			LOGD(LOGTAG_NETWORKING,"Unable to lock incoming mutex");
 		}
 		
-		if (mainEngine.communicator->IsConnected() && mainEngine.communicator->HasOutgoingMessages())
+		/*if (mainEngine.communicator->IsConnected() && mainEngine.communicator->HasOutgoingMessages())
 		{
 			if ( pthread_mutex_trylock(&outgoingMutex) == 0)
 			{
@@ -359,7 +353,7 @@ void android_main(struct android_app* state)
 			{
 				LOGD(LOGTAG_NETWORKING,"Unable to lock outgoing mutex");
 			}			
-		}
+		}*/
 	
 
 		if (mainEngine.animating == 1)

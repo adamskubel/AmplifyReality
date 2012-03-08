@@ -93,6 +93,7 @@ public class ARClient
 
 	public void QueueNativeMessages(Object[] msgs)
 	{
+		Log.d(LOGTAG_NETWORKING,"Native layer added " + msgs.length + " messages.");
 		outgoingQueue.add(msgs);
 	}
 
@@ -101,35 +102,55 @@ public class ARClient
 		Thread t = new Thread(new Runnable()
 		{
 			@Override
+//			public void run()
+//			{
+//				while (listening)
+//				{
+//					Object[] msgs = null;
+//					try
+//					{
+//						msgs = AmplifyRealityActivity.GetOutgoingMessages();
+//					}
+//					catch (Exception e)
+//					{
+//						Log.e(LOGTAG_NETWORKING, "Exception checking native layer", e);
+//						continue;
+//					}
+//					
+//					//Process messages
+//					SendNativeMessages(msgs);
+//					
+//					
+//					try
+//					{
+//						Thread.sleep(5000);
+//					} catch (InterruptedException e)
+//					{
+//						Log.e(LOGTAG_NETWORKING, "Interrupted while sleeping.", e);
+//					}
+//				}
+//				Cleanup();
+//			}
+			
 			public void run()
 			{
+				
 				while (listening)
 				{
-					Object[] msgs = null;
+					Object[] msgs;
 					try
 					{
-						msgs = AmplifyRealityActivity.GetOutgoingMessages();
-					}
-					catch (Exception e)
-					{
-						Log.e(LOGTAG_NETWORKING, "Exception checking native layer", e);
-						continue;
-					}
-					
-					//Process messages
-					SendNativeMessages(msgs);
-					
-					
-					try
-					{
-						Thread.sleep(5000);
+						msgs = outgoingQueue.take();
 					} catch (InterruptedException e)
 					{
-						Log.e(LOGTAG_NETWORKING, "Interrupted while sleeping.", e);
+						Log.e(LOGTAG_NETWORKING,"Error taking from queue",e);
+						continue;
 					}
+					SendNativeMessages(msgs);
 				}
-				Cleanup();
+				
 			}
+			
 
 		});
 		t.start();

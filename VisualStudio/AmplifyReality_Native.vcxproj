@@ -238,6 +238,7 @@
     <ClInclude Include="..\jni\userinterface\uimodel\GridLayout.hpp" />
     <ClInclude Include="..\jni\userinterface\uimodel\UIElementCollection.hpp" />
     <ClInclude Include="..\jni\util\GeometryUtil.hpp" />
+    <ClInclude Include="..\jni\util\JNIUtils.hpp" />
     <ClInclude Include="..\jni\zxing\BarcodeFormat.h" />
     <ClInclude Include="..\jni\zxing\Binarizer.h" />
     <ClInclude Include="..\jni\zxing\BinaryBitmap.h" />

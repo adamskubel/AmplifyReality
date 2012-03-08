@@ -27,7 +27,8 @@ class ARCommunicator
 public:
 	ARCommunicator();
 	void SendMessage(OutgoingMessage * message);
-	void GetOutgoingMessages(std::vector<OutgoingMessage*> & newMsgQueue);
+	//void GetOutgoingMessages(std::vector<OutgoingMessage*> & newMsgQueue);
+	void SendMessages(JavaVM * jvm);
 	bool HasOutgoingMessages();
 	void AddIncomingMessage(IncomingMessage * message);
 	bool FilterMessages(std::string filter, std::vector<IncomingMessage*> & newMsgs);

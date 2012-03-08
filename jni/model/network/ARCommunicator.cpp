@@ -104,14 +104,42 @@ void ARCommunicator::Update(JavaVM * jvm)
 	}
 }
 
-void ARCommunicator::GetOutgoingMessages(std::vector<OutgoingMessage*> & newMsgQueue)
+void ARCommunicator::SendMessages(JavaVM * javaVM) //std::vector<OutgoingMessage*> & newMsgQueue)
 {
-	while (outgoingMessageQueue.empty() == false)
-	{
-		newMsgQueue.push_back(outgoingMessageQueue.back());
+	if (outgoingMessageQueue.empty())
+		return;
+
+	JNIEnv * env = GetJNIEnv(javaVM);
+
+	LOGD(LOGTAG_JNI,"Preparing to send message");
+	jclass wrapperClass = env->FindClass("com/amplifyreality/networking/message/NativeMessage");
+	jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");
+
+	jobjectArray returnArray = env->NewObjectArray(outgoingMessageQueue.size(),wrapperClass,NULL);
+	
+	int i= 0;
+	while (!outgoingMessageQueue.empty())
+	{	
+		jstring description = outgoingMessageQueue.back()->GetDescription(env);
+		jobject dataObject = outgoingMessageQueue.back()->getJavaObject(env);
+
+		jobject returnObject = env->NewObject(wrapperClass,initMethod,description,dataObject);
+		env->SetObjectArrayElement(returnArray,i++,returnObject);
+
+		//delete outgoingMessageQueue.back();
 		outgoingMessageQueue.pop_back();
 	}
+
+	jclass arClientClass =  env->GetObjectClass(arClientObject);
+	jmethodID sendMethod = env->GetMethodID(arClientClass,"QueueNativeMessages","([Ljava/lang/Object;)V");
+	if (sendMethod == 0)
+	{
+		LOGW(LOGTAG_JNI,"Error! Unable to find method QueueNativeMessages");
+		throw exception();
+	}
+	env->CallVoidMethod(arClientObject,sendMethod,returnArray);
 }
+
 
 bool ARCommunicator::HasOutgoingMessages()
 {
