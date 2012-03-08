@@ -22,8 +22,8 @@ public:
 	QRCode(vector<FinderPattern*> _finderPatterns);
 	~QRCode();
 
-	void getTrackingPoints(vector<Point2f> & points);
-	void getImagePoints(vector<Point3f> & points);
+	void getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector);
+	//void getImagePoints(vector<Point3f> & points);
 
 
 	void Draw(Mat * rgbaImage);
@@ -32,6 +32,8 @@ public:
 	bool isDecoded();
 
 	float getAvgPatternSize();
+
+	bool isCodeValidSuccessor(QRCode * nextCode);
 
 	void SetAlignmentCorners(vector<Point2i> & alignmentCorners);
 	
@@ -43,9 +45,9 @@ public:
 
 	void SetDrawingLevel(int level);
 	float QRCodeDimension;
-
-private:
+	
 	Point2i codeCenter;
+private:
 	vector<Point2i> trackingCorners;
 	int debugDrawingLevel;
 

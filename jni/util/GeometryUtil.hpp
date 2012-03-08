@@ -46,11 +46,19 @@ static void ConstrainRectangle(cv::Mat & matrix, cv::Rect & rectangle)
 {
 	if (rectangle.x < 0)
 		rectangle.x = 0;	
+
+	if (rectangle.x >= matrix.cols)
+		rectangle.x = 0;
+
 	if ((rectangle.x+rectangle.width) >= matrix.cols)
 		rectangle.width = matrix.cols - rectangle.x - 1;
-		
+			
 	if (rectangle.y < 0)
 		rectangle.y = 0;	
+
+	if (rectangle.y >= matrix.rows)
+		rectangle.y = 0;
+
 	if ((rectangle.y + rectangle.height) >= matrix.rows)
 		rectangle.height = matrix.rows - rectangle.y - 1;
 

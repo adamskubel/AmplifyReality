@@ -283,7 +283,9 @@ public class ARClient
 		
 		if (hostPortArray.length < 2)
 		{	
-			return -1;
+			hostPortArray = connectionString.split(";");
+			if (hostPortArray.length < 2)
+				return -1;
 		}
 		
 

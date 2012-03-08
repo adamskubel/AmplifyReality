@@ -64,16 +64,17 @@ private:
 
 	vector<vector<Point3f> > * objectPoints;
 	vector<vector<Point2f> > * imagePoints;
-	int collectionCount;
+	int collectionCount, missCount;
 	bool isInitialized;
 	Size_<int> chessBoardSize;
 	Mat *distortionMatrix, * cameraMatrix;
+	double fovX;
 	Button * captureButton, * calculateButton;
 	QuadBackground * quadBackground;
 	vector<Point3f> generateChessboardPoints(Size_<int> boardDimensions, float squareSize);
 	NumberSpinner * sizeSpinner;
 	DataDisplay * cameraMatDisplay, * distortionMatDisplay;
-	Label * infoLabel;
+	Label * fovLabel, * principalLabel;
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 

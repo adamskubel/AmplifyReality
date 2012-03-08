@@ -5,11 +5,11 @@ int DebugCircle::instanceCount = 0;
 int QRCode::instanceCount = 0;
 int FinderPattern::instanceCount = 0;
 
-ARController::ARController(Mat cameraMatrix, Mat distortionMatrix)
+ARController::ARController(Mat cameraMatrix, Mat distortionMatrix, double fov)
 {	
 	double data[] = DEFAULT_CAMERA_MATRIX;
 	double data2[] = DEFAULT_DISTORTION_MATRIX;
-
+	startingFOV = (float)fov;
 	if (cameraMatrix.empty())
 	{
 		LOGI(LOGTAG_ARCONTROLLER,"Using predefined camera matrix.");		
@@ -92,9 +92,9 @@ void ARController::initializeUI(Engine * engine)
 	
 
 
-	debugUI->AddNewParameter("T-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
-	debugUI->AddNewParameter("R-Alpha",0.9f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
-	debugUI->AddNewParameter("FOV",40,1,10,180,"%3.0f","Tracking");
+	debugUI->AddNewParameter("T-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
+	debugUI->AddNewParameter("R-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
+	debugUI->AddNewParameter("FOV",startingFOV,1,10,180,"%3.0f","Tracking");
 	//debugUI->AddNewParameter("Autograb",0,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
@@ -152,6 +152,7 @@ void ARController::HandleButtonPress(void * sender, PhysicalButtonEventArgs args
 	if (args.ButtonCode == AKEYCODE_SEARCH)
 	{
 		drawingLevel++;
+		debugUI->SetVisible((drawingLevel == 2 || drawingLevel == 3));
 		drawingLevel = drawingLevel % 4; //0 = no drawing, 1 = debug draw only, 2 = UI only, 3 = all drawings
 	}
 	else if (args.ButtonCode == AKEYCODE_MENU)
@@ -174,7 +175,7 @@ void ARController::initializeARView(Engine * engine)
 	LOGI(LOGTAG_ARCONTROLLER,"Initializing AR View");
 	//Create Augmented View
 	double data[] = DEFAULT_CAMERA_MATRIX;
-	augmentedView = new AugmentedView(window,Mat(3,3,CV_64F,&data));
+	augmentedView = new AugmentedView(window,engine,Mat(3,3,CV_64F,&data));
 
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<AugmentedView,&AugmentedView::HandleTouchInput>(augmentedView));
 	
@@ -271,7 +272,13 @@ void ARController::ProcessFrame(Engine * engine)
 				struct timespec decodeStart,decodeEnd;
 				//Need binary image for this step
 				LOGD(LOGTAG_ARCONTROLLER,"Thresholding for decoding");
-				ImageProcessor::SimpleThreshold(grayImage, binaryImage);
+				Point2i codeCenter = item->qrCode->codeCenter;
+				int codeSizeGuess = item->qrCode->getAvgPatternSize() * 3;
+
+				Rect window=Rect(codeCenter.x - codeSizeGuess, codeCenter.y - codeSizeGuess, codeSizeGuess*2,codeSizeGuess*2);
+				ImageProcessor::WindowedThreshold(*grayImage, *binaryImage,window);
+
+				debugVector.push_back(new DebugRectangle(window,Colors::SkyBlue,1));
 
 				SET_TIME(&decodeStart);
 				qrDecoder->DecodeQRCode(*binaryImage,item->qrCode,debugVector);
@@ -305,7 +312,7 @@ void ARController::ProcessFrame(Engine * engine)
 						augmentedView->AddObject(myCube1);	
 						//augmentedView->AddObject(myCube2);	
 						//augmentedView->AddObject(myCube3);	
-						myCube1->BoundingSphereRadius = 30;
+						myCube1->BoundingSphereRadius = 23;
 						//myCube2->BoundingSphereRadius = 30;
 						//myCube3->BoundingSphereRadius = 30;
 
@@ -353,6 +360,7 @@ void ARController::ProcessFrame(Engine * engine)
 			LOGV(LOGTAG_QR,"Getting position");
 			currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
 			item->qrCode->QRCodeDimension = currentQRSize;
+			//if (
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);

@@ -22,11 +22,11 @@ public:
 	static void SimpleThreshold(Mat * grayImage, Mat * binaryImage);
 	static void FeedbackBinarization(FrameItem * item);
 	static void LocalizedThreshold(FrameItem * item);
+	static void WindowedThreshold(Mat & inputImg, Mat & outputImg, Rect window);
 
 private:
 	static void localThresholding(Mat & inputImg, Mat & outputImg, int windowWidth, int windowHeight);
 	static void calculateWindow(FrameItem item, int * windowWidth, int * windowHeight);
-	static void WindowedThreshold(Mat & inputImg, Mat & outputImg, Rect window);
 	static Rect createWindow(QRCode * qrCode);
 	static void GetPointAttributes(vector<Point2i> points, Point2i & centroid, int & distance);
 

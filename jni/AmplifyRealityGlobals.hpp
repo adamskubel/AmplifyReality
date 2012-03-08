@@ -26,7 +26,7 @@
 	
 	#define UI_ALPHA_ENABLED false
 
-	#define DEFAULT_HOST "192.168.1.9:12312"
+	#define DEFAULT_HOST "192.168.224.1:12312"
 	#define DEFAULT_USER "AdamSkubel"
 	#define DEFAULT_PASS "myPassword"
 

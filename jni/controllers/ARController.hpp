@@ -48,7 +48,7 @@ namespace ControllerStates
 class ARController : public Controller, private Drawable //,public OpenGLRenderable
 {
 public:
-	ARController(Mat camera = Mat(), Mat distortion = Mat());
+	ARController(Mat camera = Mat(), Mat distortion = Mat(), double fov = 50);
 	~ARController();
 	void ProcessFrame(Engine * engine);
 	void Initialize(Engine * engine);
@@ -103,7 +103,7 @@ private:
 	CircularList<FrameItem*> * frameList;
 
 	int frameCount;
-	float fpsAverage;
+	float fpsAverage, startingFOV;
 	struct timespec lastFrameTime;
 	int drawingLevel;
 	bool autoGrab;

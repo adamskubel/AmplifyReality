@@ -34,8 +34,12 @@ RealmDefinition * RealmDefinition::FromJNIEnv(JNIEnv * env, jobject realmObject)
 
 		for (int i=0;i<listSize;i++)
 		{
-			LOGI(LOGTAG_JNI,"Converting Java ARObject %d",i);
 			jobject arObject = env->CallObjectMethod(arrayList,getMethod,i);
+			if (arObject == NULL)
+			{
+				LOGI(LOGTAG_JNI,"Object %d was NULL!",i);
+			}
+			LOGI(LOGTAG_JNI,"Converting Java ARObject %d, val =%d",i,arObject);
 			newRealm->Children.push_back(ARObjectDefinition::FromJNIObject(env,arObject));
 		}
 		return newRealm;

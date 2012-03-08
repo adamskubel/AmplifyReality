@@ -15,8 +15,9 @@ ARObject::~ARObject()
 	delete glObject;
 }
 
-ARObjectMessage::ARObjectMessage(ARObject * _arObject)
+ARObjectMessage::ARObjectMessage(ARObject * _arObject, bool _createNew)
 {
+	createNew = _createNew;
 	arObject = _arObject;
 }
 
@@ -31,25 +32,35 @@ static jobject getPointAsJNIVector(JNIEnv * env, Point3f point)
 
 jobject ARObjectMessage::getJavaObject(JNIEnv * env)
 {
-	jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
-	jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
-	
-	jstring name = env->NewStringUTF(arObject->objectID.c_str());
-	//LOGD(LOGTAG_JNI,"Creating java ARObject. InitMethod=%d",initMethod);
-	jobject positionVector = getPointAsJNIVector(env,arObject->position);
-	jobject rotationVector = getPointAsJNIVector(env,arObject->rotation);
-	//LOGD(LOGTAG_JNI,"Vectors complete");
-	jobject objectUpdate = NULL;
-	//try
-	//{
+	if (createNew)
+	{
+		LOGD(LOGTAG_JNI,"Creating new ARObject, name = %s",arObject->objectID.c_str());
+
+		jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
+		jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
+
+		jstring name = env->NewStringUTF(arObject->objectID.c_str());
+		jobject positionVector = getPointAsJNIVector(env,arObject->position);
+		jobject rotationVector = getPointAsJNIVector(env,arObject->rotation);
+		jobject objectUpdate = NULL;
+		jstring modelName = env->NewStringUTF("Cube");
+
+		objectUpdate = env->NewObject(arObjectClass,initMethod,name,modelName,positionVector,rotationVector);
+		return objectUpdate;
+	}
+	else
+	{
+		jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
+		jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
+
+		jstring name = env->NewStringUTF(arObject->objectID.c_str());
+		jobject positionVector = getPointAsJNIVector(env,arObject->position);
+		jobject rotationVector = getPointAsJNIVector(env,arObject->rotation);
+		jobject objectUpdate = NULL;
+
 		objectUpdate = env->NewObject(arObjectClass,initMethod,name,positionVector,rotationVector);
-	//}
-	//catch (std::exception & e)
-	//{
-	//	LOGW(LOGTAG_JNI,"Error creating ARObject: %s", e.what());
-	//}
-	//LOGD(LOGTAG_JNI,"ARObject created");
-	return objectUpdate;
+		return objectUpdate;
+	}
 }
 
 jstring ARObjectMessage::GetDescription(JNIEnv * env)

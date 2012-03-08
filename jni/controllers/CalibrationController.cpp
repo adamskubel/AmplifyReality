@@ -14,7 +14,7 @@ CalibrationController::CalibrationController()
 	rgbImage = new Mat();
 	binaryImage = new Mat();
 	grayImage = new Mat();
-
+	missCount = 0;
 	state = CalibrationControllerStates::Running;
 
 	LOGI(LOGTAG_CALIBRATION,"Calibration Controller created");
@@ -47,32 +47,36 @@ void CalibrationController::Initialize(Engine * engine)
 		return;
 	LOGI(LOGTAG_CALIBRATION,"Initializing calibration controller");
 
-	layout = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(5,4));
+	layout = new GridLayout(Size2i(engine->imageWidth,engine->imageHeight),Size_<int>(6,4));
 
 	//Create image capture button
-	captureButton = new Button(std::string("Capture"),cv::Rect(300,300,150,160),Scalar(12,62,141,255));
+	captureButton = new Button(std::string("Capture"),cv::Rect(300,300,150,160),Colors::Turquoise);
 	captureButton->AddClickDelegate(ClickEventDelegate::from_method<CalibrationController,&CalibrationController::HandleButtonClick>(this));	
 	captureButton->Name = std::string("CaptureButton");
-	layout->AddChild(captureButton,Point2i(3,3),Size_<int>(2,1));
+	layout->AddChild(captureButton,Point2i(4,3),Size_<int>(2,1));
 
 	cameraMatDisplay = new DataDisplay("%6.2lf",Colors::Black,Colors::White);
 	distortionMatDisplay = new DataDisplay("%3.2lf",Colors::Black,Colors::White);
 
-	infoLabel = new Label("",Point2i(0,0),Colors::Black,Colors::White);
+	fovLabel = new Label("",Point2i(0,0),Colors::Orange,Colors::DarkRed);
+	fovLabel->FontScale = 0.7f;
+	principalLabel = new Label("",Point2i(0,0),Colors::Orange,Colors::DarkRed);
+	principalLabel->FontScale = 0.7f;
 	
-	layout->AddChild(infoLabel,Point2i(0,0), Size2i(4,1));	
-	layout->AddChild(cameraMatDisplay,Point2i(0,1), Size2i(3,2));	
+	layout->AddChild(fovLabel,Point2i(0,0), Size2i(4,1));
+	layout->AddChild(principalLabel,Point2i(0,1), Size2i(4,1));	
+	layout->AddChild(cameraMatDisplay,Point2i(0,2), Size2i(2,1));	
 	layout->AddChild(distortionMatDisplay,Point2i(0,3),Size2i(3,1));
 
 	//Create exit button
 	calculateButton = new Button(std::string("Calculate"),Colors::Green);
 	calculateButton->AddClickDelegate(ClickEventDelegate::from_method<CalibrationController,&CalibrationController::HandleButtonClick>(this));
 	calculateButton->Name = std::string("CalculateButton");
-	layout->AddChild(calculateButton,Point2i(3,0),Size_<int>(2,1));
+	layout->AddChild(calculateButton,Point2i(4,0),Size_<int>(2,1));
 
 	//Size adjuster
 	sizeSpinner = new NumberSpinner("SquareSize(mm)",10,0.5,"%3.0f");
-	layout->AddChild(sizeSpinner,Point2i(3,1),Size2i(2,2));
+	layout->AddChild(sizeSpinner,Point2i(4,1),Size2i(2,2));
 
 	//Set grid layout as the root UI element
 	inputScaler = new InputScaler(engine->ImageSize(),engine->ScreenSize(),layout);
@@ -82,7 +86,7 @@ void CalibrationController::Initialize(Engine * engine)
 
 	//Create background quad
 	quadBackground = new QuadBackground(Size2i(engine->ImageSize()));
-
+	layout->DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
 	isInitialized = true;
 	LOGI(LOGTAG_CALIBRATION,"Initialization complete");
 }
@@ -94,6 +98,15 @@ void CalibrationController::Teardown(Engine * engine)
 
 	engine->inputHandler->SetRootUIElement(NULL);
 	LOGI(LOGTAG_CALIBRATION,"Teardown complete");
+}
+
+static void setCaptureButton(Button * captureButton, int collectionCount)
+{
+	//Update label
+	char myString[100];
+	sprintf(myString, "Capture (%d)", collectionCount);
+	captureButton->SetText(std::string(myString));
+	captureButton->SetFillColor(Colors::Turquoise);
 }
 
 void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
@@ -112,6 +125,7 @@ void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
 		{
 			LOGI(LOGTAG_CALIBRATION,"Redoing calculation.");
 			collectionCount = 0;
+			missCount = 0;
 			imagePoints->clear();
 			objectPoints->clear();
 			state = CalibrationControllerStates::Running;
@@ -120,17 +134,21 @@ void CalibrationController::HandleButtonClick(void * sender, EventArgs args)
 			distortionMatDisplay->SetVisible(false);
 
 			calculateButton->SetText("Calculate");
-			captureButton->SetText("Capture");
+			setCaptureButton(captureButton,collectionCount);
 		}
 		else if (state == CalibrationControllerStates::Running)
 		{
-			LOGI(LOGTAG_CALIBRATION,"Capturing by button");
+			missCount = 0;
 			state = CalibrationControllerStates::Finding;
+			
+			captureButton->SetFillColor(Colors::OrangeRed);
+			captureButton->SetText("Cancel search");
 		}
 		else if (state == CalibrationControllerStates::Finding)
 		{
 			//Abort capture attempt
-			state = CalibrationControllerStates::Running;
+			state = CalibrationControllerStates::Running;			
+			setCaptureButton(captureButton,collectionCount);
 		}
 		else
 		{
@@ -186,7 +204,7 @@ Controller * CalibrationController::GetSuccessor(Engine * engine)
 		Mat camera,distortion;
 		getCameraMatrices(camera,distortion);
 		Teardown(engine);
-		return new ARController(camera,distortion);	
+		return new ARController(camera,distortion, fovX);	
 	}
 	//Otherwise, create the controller using the predefined matrix
 	else
@@ -194,8 +212,7 @@ Controller * CalibrationController::GetSuccessor(Engine * engine)
 		LOGD(LOGTAG_CALIBRATION,"Calibration was not completed");
 		Teardown(engine);
 		return new ARController();
-	}		
-
+	}
 }
 
 vector<Point3f> CalibrationController::generateChessboardPoints(Size_<int> boardSize, float squareSize)
@@ -218,7 +235,6 @@ void CalibrationController::ProcessFrame(Engine* engine)
 	if (!isInitialized)
 		return;
 
-	LOGV(LOGTAG_CALIBRATION,"Begin ProcessFrame");
 	struct timespec start, end;
 	
 	engine->imageCollector->newFrame();	
@@ -228,11 +244,11 @@ void CalibrationController::ProcessFrame(Engine* engine)
 
 	if (state == CalibrationControllerStates::Finding)
 	{
+		
+
 		vector<Point2f> corners;
-		LOGD(LOGTAG_CALIBRATION,"Finding corners");
 		bool wasFound = findChessboardCorners(*grayImage, chessBoardSize, corners, CALIB_CB_FAST_CHECK);
 
-		LOGD(LOGTAG_CALIBRATION,"Drawing corners");
 		drawChessboardCorners(*rgbImage, chessBoardSize, corners, wasFound);
 
 		if (wasFound)
@@ -242,13 +258,14 @@ void CalibrationController::ProcessFrame(Engine* engine)
 			imagePoints->push_back(corners);
 			collectionCount++;
 			state = CalibrationControllerStates::Running;
-
-			//Update label
-			char myString[100];
-			sprintf(myString, "Capture (%d)", collectionCount);
-			captureButton->SetText(std::string(myString));
+			setCaptureButton(captureButton,collectionCount);
+			
 		}
-
+		else if (missCount++ > 5)
+		{
+			state = CalibrationControllerStates::Running;			
+			setCaptureButton(captureButton,collectionCount);
+		}
 		
 	}
 	else if (state == CalibrationControllerStates::Calculating1)
@@ -260,8 +277,7 @@ void CalibrationController::ProcessFrame(Engine* engine)
 	else if (state == CalibrationControllerStates::Calculating2)
 	{
 		CalculateMatrices();
-	}
-		
+	}		
 
 	for (int i=0;i<drawObjects.size();i++)
 	{
@@ -269,8 +285,6 @@ void CalibrationController::ProcessFrame(Engine* engine)
 	}
 
 	quadBackground->SetImage(rgbImage);
-	
-	LOGV(LOGTAG_CALIBRATION,"End ProcessFrame");
 }
 
 void CalibrationController::CalculateMatrices()
@@ -303,10 +317,13 @@ void CalibrationController::CalculateMatrices()
 	LOGI(LOGTAG_CALIBRATION,"Calibration Complete");
 
 	char labelStr[500];
-	sprintf(labelStr,"fovx=%lf,fovy=%lf,focalLength=%lf,PrincipalPoint=(%lf,%lf),aspectRatio=%lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
-	LOGI(LOGTAG_CALIBRATION,"Data:%s",labelStr);
+	sprintf(labelStr,"FocalLength=%6.3lf - Principal[%4.1lf,%4.1lf]",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
+	fovLabel->SetText(labelStr);
+	
+	sprintf(labelStr,"FOV=[%5.2lf,%5.2lf] - AR=%3.2lf",fovx,fovy,focalLength,principalPoint.x,principalPoint.y,aspectRatio);
+	principalLabel->SetText(labelStr);
 
-	infoLabel->SetText(labelStr);
+	fovX = fovx;
 	
 	state = CalibrationControllerStates::Calculated;
 
@@ -316,8 +333,10 @@ void CalibrationController::CalculateMatrices()
 	distortionMatDisplay->SetData(distortionMatrix);
 
 	calculateButton->SetText("Accept");
-	calculateButton->SetFillColor(Colors::MediumSeaGreen);
+	calculateButton->SetFillColor(Colors::DarkCyan);
+
 	captureButton->SetText("Redo");
+	captureButton->SetFillColor(Colors::Red);
 
 }
 

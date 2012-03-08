@@ -60,8 +60,10 @@ bool QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 	pt.TransformPoint(tmp2);
 	LOGV(LOGTAG_QR,"Transformed: CodeStart = (%f,%f), CodeEnd=(%f,%f)",tmp.x,tmp.y,tmp2.x,tmp2.y);
 
-	debugVector.push_back(new DebugCircle(tmp,10,Colors::Green,true));
-	debugVector.push_back(new DebugCircle(tmp2,10,Colors::Gold,true));
+	
+	debugVector.push_back(new DebugCircle(imageTopLeft,10,Colors::Red,1,true));
+	debugVector.push_back(new DebugCircle(Point2i(tmp.x,tmp.y),10,Colors::Green,2));
+	debugVector.push_back(new DebugCircle(Point2i(tmp2.x,tmp2.y),10,Colors::Gold,2));
 
 	LOGD(LOGTAG_QR,"Num modules per side: %f",numModulesPerSide);
 
@@ -119,7 +121,7 @@ bool QRDecoder::DecodeQRCode(Mat & binaryImage, QRCode * qrCode, vector<Drawable
 	}
 	catch (exception & exp)
 	{
-		LOGD("Error decoding QRCode: %s", exp.what());
+		LOGD(LOGTAG_QR,"Error decoding QRCode: %s", exp.what());
 	}
 
 //	delete matrix;

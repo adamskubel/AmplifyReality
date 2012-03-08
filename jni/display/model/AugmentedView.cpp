@@ -2,7 +2,7 @@
 
 #define LOGTAG_AUGMENTEDVIEW "AugmentedView"
 
-AugmentedView::AugmentedView(UIElementCollection * window, cv::Mat _cameraMatrix)
+AugmentedView::AugmentedView(UIElementCollection * window, Engine * engine, cv::Mat _cameraMatrix)
 {
 	cameraMatrix = new Mat();
 	_cameraMatrix.copyTo(*cameraMatrix);
@@ -20,16 +20,33 @@ AugmentedView::AugmentedView(UIElementCollection * window, cv::Mat _cameraMatrix
 	testObject = new ARObject(OpenGLHelper::CreateSolidColorCube(10,Colors::OrangeRed));
 
 	tabs = new TabDisplay(true);
-	tabs->DoLayout(Rect(0,0,_cameraMatrix.cols,_cameraMatrix.rows));
 	window->AddChild(tabs);
 
+	createNext =false;
+
 	GridLayout * myGrid = new GridLayout(cv::Size2i(5,4));
-	tabs->AddTab("AR",myGrid);
 
 	Button * cancelSelection = new Button("Cancel");
 	cancelSelection->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
 	myGrid->AddChild(cancelSelection,Point2i(4,3));		
+	cancelSelection->Name = "Cancel";
+	
+	Button * releaseSelection = new Button("Release");
+	releaseSelection->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
+	myGrid->AddChild(releaseSelection,Point2i(4,2));		
+	releaseSelection->Name = "Release";
 
+	Button * createCube = new Button("Create Cube");
+	createCube->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
+	myGrid->AddChild(createCube,Point2i(4,1));	
+	createCube->Name = "Create";
+	createCube->FillColor = Colors::LightGreen;
+
+	tabs->AddTab("AR",myGrid);
+	LOGD(LOGTAG_ARINPUT,"Laying out tabs %d,%d",engine->imageWidth,engine->imageHeight);
+	tabs->DoLayout(Rect(0,0,engine->imageWidth,engine->imageHeight));
+	
+	tabs->SetTab(0);
 }
 
 //Delete the camera matrix and the vector of AR objects
@@ -84,10 +101,27 @@ void AugmentedView::HandleTouchInput(void * sender, TouchEventArgs args)
 
 void AugmentedView::ButtonPressed(void * sender, EventArgs args)
 {
-	if (selectedObject != NULL)
+	Button * button = (Button*)sender;
+	if (button->Name.compare("Cancel") == 0)
 	{
-		delete selectedObject;
-		selectedObject = NULL;
+		if (selectedObject != NULL)
+		{
+			delete selectedObject;
+			selectedObject = NULL;
+		}
+	}
+	else if (button->Name.compare("Create") == 0)
+	{
+		if (selectedObject != NULL)
+		{
+			delete selectedObject;
+			selectedObject = NULL;
+		}
+		createNext = true;
+	}
+	else if (button->Name.compare("Release") == 0)
+	{
+		unselectNext = true;
 	}
 }
 
@@ -158,6 +192,19 @@ static Point3f getCameraPosition(Mat projection)
 
 }
 
+static void updateObjectPosition(Mat & projection, SelectedObject * selectedObject, map<std::string,ARObjectMessage*> & updateObjectMap)
+{
+	Point3f cameraPosition = getCameraPosition(projection);
+	Point3f objPosition =  selectedObject->objectPositionDelta + cameraPosition;
+	selectedObject->arObject->position = objPosition; //Offset by camera position
+	LOGD(LOGTAG_ARINPUT,"Updated Object Position(%f,%f,%f)",selectedObject->arObject->position.x,selectedObject->arObject->position.y,selectedObject->arObject->position.z);
+
+	//Send command to server notifying that object has new position
+	updateObjectMap.insert(pair<string,ARObjectMessage*>(selectedObject->arObject->objectID,new ARObjectMessage(selectedObject->arObject)));
+
+	delete selectedObject;
+	selectedObject = NULL;
+}
 
 void AugmentedView::Render(OpenGL * openGL)
 {
@@ -176,6 +223,7 @@ void AugmentedView::Render(OpenGL * openGL)
 	
 	OpenGLSettings();
 	
+
 	SelectedObject * newSelection = NULL;
 	while (!currentPoints.empty())
 	{
@@ -231,22 +279,19 @@ void AugmentedView::Render(OpenGL * openGL)
 	SET_TIME(&now);
 	double timediff = calc_time_double(lastSelectionTime,now);
 
+	if (unselectNext)
+	{
+		if (selectedObject != NULL)
+			updateObjectPosition(projection,selectedObject,updateObjectMap);
+		unselectNext = false;
+	}
 	//Only allowed to change selections every 1.0 seconds
-	if (newSelection != NULL && timediff > 800000.0)
+	else if (newSelection != NULL && timediff > 800000.0)
 	{
 		//Unselect object if selected twice
 		if (selectedObject != NULL && selectedObject->arObject == newSelection->arObject)
 		{		
-			Point3f cameraPosition = getCameraPosition(projection);
-			Point3f objPosition =  selectedObject->objectPositionDelta + cameraPosition;
-			selectedObject->arObject->position = objPosition; //Offset by camera position
-			LOGD(LOGTAG_ARINPUT,"Updated Object Position(%f,%f,%f)",selectedObject->arObject->position.x,selectedObject->arObject->position.y,selectedObject->arObject->position.z);
-
-			//Send command to server notifying that object has new position
-			updateObjectMap.insert(pair<string,ARObjectMessage*>(selectedObject->arObject->objectID,new ARObjectMessage(selectedObject->arObject)));
-
-			delete selectedObject;
-			selectedObject = NULL;
+			updateObjectPosition(projection,selectedObject,updateObjectMap);
 		}
 		else
 		{
@@ -292,10 +337,24 @@ void AugmentedView::Render(OpenGL * openGL)
 			OpenGLHelper::rotate(modelMatrix,object->rotation.z, Point3f(0.0f, 0.0f, 1.0f));
 		//}
 				
-		//Use seperate scale for selection indicator
+			Mat tmpModelMatrix;
+			//Use seperate scale for selection indicator
+			if (selectedObject != NULL && selectedObject->arObject == object)
+			{
+				modelMatrix.copyTo(tmpModelMatrix);
+			}
+
+		
+
+		OpenGLHelper::scale(modelMatrix,object->scale);
+		Mat mt = Mat(modelMatrix.t());
+		glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
+		
+		openGL->DrawGLObject(object->glObject);
+
 		if (selectedObject != NULL && selectedObject->arObject == object)
 		{
-			Mat tmpModelMatrix; modelMatrix.copyTo(tmpModelMatrix);
+
 			float selectorSize = object->BoundingSphereRadius*2.25f;
 			OpenGLHelper::scale(tmpModelMatrix,Point3f(selectorSize,selectorSize,selectorSize));
 
@@ -303,12 +362,6 @@ void AugmentedView::Render(OpenGL * openGL)
 			glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
 			openGL->DrawGLObject(selectionIndicator->glObject);
 		}
-
-		OpenGLHelper::scale(modelMatrix,object->scale);
-		Mat mt = Mat(modelMatrix.t());
-		glUniformMatrix4fv(renderData.modelMatrixLocation, 1, GL_FALSE, mt.ptr<float>(0));
-		
-		openGL->DrawGLObject(object->glObject);
 	}	
 	//Get rid of test object
 	objectVector.pop_back();
@@ -327,7 +380,9 @@ void AugmentedView::SetTransformations(Mat * translationMatrix, Mat * rotationMa
 }
 
 void AugmentedView::Update(Mat * rgbaImage, Engine * engine)
-{
+{	
+	tabs->Draw(rgbaImage);
+
 	if (!updateObjectMap.empty())
 	{
 		if (engine->communicator != NULL && engine->communicator->IsConnected())
@@ -341,7 +396,20 @@ void AugmentedView::Update(Mat * rgbaImage, Engine * engine)
 		updateObjectMap.clear();		
 	}
 
-	tabs->Draw(rgbaImage);
+	
+	if ( engine->communicator->IsConnected() && createNext)
+	{
+		Point3f cameraPosition = getCameraPosition(projection);
+		char objectName[100];
+		sprintf(objectName,"user_obj_%d",objectVector.size()+1);
+		GLObject * glObject = OpenGLHelper::CreateMultiColorCube(35);
+		ARObject * newObject = new ARObject(glObject, Point3f(0,0,0));//cameraPosition - Point3f(0,0,150));
+		newObject->BoundingSphereRadius = 20;
+		newObject->objectID = objectName;
+		engine->communicator->SendMessage(new ARObjectMessage(newObject,true));
+		createNext = false;
+		objectVector.push_back(newObject);
+	}
 
 	canDraw = true;
 }

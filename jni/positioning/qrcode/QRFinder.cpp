@@ -142,7 +142,9 @@ QRCode * QRFinder::LocateQRCodes(cv::Mat& inputImg, vector<Drawable*>& debugVect
 		//Determine alignment pattern position
 		struct timespec aStart,aEnd;
 		SET_TIME(&aStart);		
-		FindAlignmentPattern(inputImg, newCode,debugVector);				
+		FindAlignmentPattern(inputImg, newCode,debugVector);		
+	/*	if (GetSquaredDistance(newCode->alignmentPattern,lastCode->alignmentPattern) > lastCode->getAvgPatternSize() * 3.0f)
+			newCode->alignmentPattern = lastCode->alignmentPattern;*/
 		SET_TIME(&aEnd);
 		LOG_TIME("Alignment Search", aStart, aEnd);
 

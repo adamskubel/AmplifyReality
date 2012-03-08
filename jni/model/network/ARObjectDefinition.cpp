@@ -15,6 +15,7 @@ ARObjectDefinition::ARObjectDefinition(std::string _Name, cv::Point3f _Position,
 	Name = _Name;
 	Position = _Position;
 	Rotation = _Rotation;	
+	Scale = cv::Point3f(1,1,1);
 }
 
 ARObjectDefinition::ARObjectDefinition(std::string _Name, std::string _ModelName, cv::Point3f _Position, cv::Point3f _Rotation, cv::Point3f _Scale, float _BoundingShereRadius)
@@ -72,7 +73,7 @@ ARObjectDefinition * ARObjectDefinition::FromJNIObject(JNIEnv * env, jobject arO
 //Only get updateable fields
 ARObjectDefinition * ARObjectDefinition::FromJNIObject_Update(JNIEnv * env, jobject arObject)
 {
-
+	LOGD(LOGTAG_JNI,"Creating ARObjectDef from Java object");
 	jclass arObjectClass = env->GetObjectClass(arObject);
 
 	jfieldID nameField = env->GetFieldID(arObjectClass,"Name","Ljava/lang/String;");
@@ -94,6 +95,9 @@ ARObjectDefinition * ARObjectDefinition::FromJNIObject_Update(JNIEnv * env, jobj
 
 cv::Point3f ARObjectDefinition::FromJavaVector(JNIEnv * env, jobject vectorObject)
 {
+	if (vectorObject == NULL)
+		return cv::Point3f(0,0,0);
+
 	jclass vectorClass = env->GetObjectClass(vectorObject);
 
 	jfieldID xField = env->GetFieldID(vectorClass,"X","F");

@@ -114,7 +114,7 @@ void WorldLoader::BuildRealm()
 		if (modelName.compare("Cube") == 0)
 		{
 			//Use hardcoded cube model
-			modelObject = OpenGLHelper::CreateMultiColorCube(1);
+			modelObject = OpenGLHelper::CreateMultiColorCube(35);
 		}
 		else
 		{
@@ -134,9 +134,10 @@ void WorldLoader::BuildRealm()
 			}
 		}
 
+		LOGD(LOGTAG_WORLD,"Creating new AROBject from server data");
 		ARObject * newARObject = new ARObject(modelObject,arObjectDef->Position,arObjectDef->Rotation,arObjectDef->Scale);
 		newARObject->objectID = arObjectDef->Name;
-		newARObject->BoundingSphereRadius = arObjectDef->BoundingSphereRadius;
+		newARObject->BoundingSphereRadius = (arObjectDef->BoundingSphereRadius <= 0) ? 20 : arObjectDef->BoundingSphereRadius;
 		LOGD(LOGTAG_WORLD, "Created bounding sphere with radius=%f",arObjectDef->BoundingSphereRadius);
 		arObjects.push_back(newARObject);
 	}
