@@ -127,6 +127,16 @@ void StartupController::ProcessFrame(Engine * engine)
 	{
 		drawObjects.at(i)->Draw(rgbaImage);
 	}
+/*
+	DebugArrow(Point2i(400,400),Point2i(450,400),Colors::Red,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(450,350),Colors::Red,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(400,350),Colors::Red,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(350,350),Colors::Red,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(350,400),Colors::Lime,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(350,450),Colors::Lime,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(400,450),Colors::Lime,2).Draw(rgbaImage);
+	DebugArrow(Point2i(400,400),Point2i(450,450),Colors::Lime,2).Draw(rgbaImage);
+*/
 	quadBackground->SetImage(rgbaImage);
 
 	if (exitNext)

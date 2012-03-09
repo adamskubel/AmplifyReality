@@ -1,9 +1,9 @@
-#include <opencv2/core/core.hpp>
-#include "model/Drawable.hpp"
-
-
 #ifndef DEBUG_SHAPE_HPP_
 #define DEBUG_SHAPE_HPP_
+
+#include <opencv2/core/core.hpp>
+#include "model/Drawable.hpp"
+#include "util/GeometryUtil.hpp"
 
 class DebugRectangle : public Drawable
 {
@@ -69,6 +69,19 @@ private:
 	int thickness;
 	Scalar fillColor;
 	Point2i pt0,pt1;	
+};
+
+class DebugArrow : public Drawable
+{
+public:	
+	DebugArrow(Point2i _pt0, Point2i _pt1, Scalar _color, int _thickness = 1);		
+	~DebugArrow();	
+	void Draw(Mat * rgbaImage);
+
+private:
+	vector<Point2i> points;
+	int thickness;
+	Scalar fillColor;
 };
 
 class DebugLabel : public Drawable

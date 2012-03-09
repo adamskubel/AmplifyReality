@@ -251,30 +251,7 @@ void android_main(struct android_app* state)
 				return;
 			}			
 		}
-
-		/*	
-		if (softKeyboardOpen != lastKeyboardState)
-		{
-		mainEngine.inputHandler->SoftKeyboardChanged(softKeyboardOpen);
-		lastKeyboardState = softKeyboardOpen;
-		}if (myActivity != NULL)
-		{
-		JNIEnv * env = GetJNIEnv(javaVM);
-		jclass activityClass = env->GetObjectClass(myActivity);
-		jmethodID inputAcceptMethod = env->GetMethodID(activityClass,"acceptingText","()Z");
-		if (inputAcceptMethod > 0)
-		{
-		jboolean isAccepting = env->CallBooleanMethod(myActivity,inputAcceptMethod);
-		LOGD(LOGTAG_JNI,"Accepting result = %u",isAccepting);
-		}
-		else
-		{
-		LOGD(LOGTAG_JNI,"AcceptingText methodID = %d",(int)inputAcceptMethod);
-		}
-		delete env;
-		}*/
-
-
+		
 		if (mainEngine.animating == 1)
 		{	
 			mainEngine.communicator->Update(javaVM);

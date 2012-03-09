@@ -35,48 +35,7 @@ public class AmplifyRealityActivity extends NativeActivity
 		client = new ARClient();
 		SetClientObject(this, client);		
 		super.onCreate(savedInstanceState);
-	}
-	
-	
-	public boolean acceptingText()
-	{
-		
-		try
-		{
-			InputMethodManager  m = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-			m.showSoftInput(super.getCurrentFocus(), 0);
-		}
-		catch (Exception e)
-		{
-			Log.i("AmplifyR-JNI","Exception :" + e.getMessage(),e);
-		}
-//		try
-//		{
-//			Method showImeMethod = NativeActivity.class.getMethod("showIme", int.class);		
-//			showImeMethod.setAccessible(true);
-//			showImeMethod.invoke(this, 0);
-//			super.getSystemService(INPUT_METHOD_SERVICE);
-//			
-//		} catch (SecurityException e)
-//		{
-//			Log.v("AmplifyR-JNI", "SecurityException",e);
-//		} catch (NoSuchMethodException e)
-//		{
-//
-//			Log.v("AmplifyR-JNI","NoSuchMethod",e);
-//		} catch (IllegalArgumentException e)
-//		{
-//			Log.v("AmplifyR-JNI","Reflect",e);
-//		} catch (IllegalAccessException e)
-//		{
-//			Log.v("AmplifyR-JNI","Reflect",e);
-//		} catch (InvocationTargetException e)
-//		{
-//			Log.v("AmplifyR-JNI","Reflect",e);
-//		}		
-
-		return true;
-	}
+	}	
 	
 	public String getPreference(String key)
 	{

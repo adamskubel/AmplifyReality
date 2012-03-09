@@ -76,8 +76,12 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("FlannIndexType",1,1,0,2,"%1.0f","FAST",true);
 
 
-	config->AddNewParameter("AP: K Nearest","K-NN_AP",5,1,1,12,"%2.0f","FAST");
-	config->AddNewParameter("FP: K Nearest","K-NN",6,1,1,12,"%2.0f","FAST");
+	config->AddNewParameter("AP: K Nearest","K-NN_AP",5,1,1,12,"%2.0f","FAST_AP");
+
+	config->AddNewParameter("K Center","NumCenterPoints",2,1,1,12,"%2.0f","Fast");
+	config->AddNewParameter("K Inner","NumInnerCorners",6,1,1,12,"%2.0f","Fast");
+	config->AddNewParameter("K Outer","NumOuterCorners",2,1,1,12,"%2.0f","Fast");
+
 	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f","FAST",true);
 	config->AddNewParameter("MaxCosine",-0.6f,0.05f,-2.0f,2.0f,"%4.2f","FAST");
 	config->AddNewParameter("FlannSearchParams",32,32,32,64,"%2.0f","FAST");
@@ -86,15 +90,14 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("FAST AP Debug Level","FASTAPDebug",0,1,-4,4,"%2.0f","Debug");
 	
 	config->AddNewParameter("Post-NonMaxSupress Size","MaxThreshSize",2,1,1,25,"%2.0f","FAST");
-	config->AddNewParameter("AP MaxThresh Size","MaxThreshSize_AP",2,1,1,25,"%2.0f","FAST");
+	config->AddNewParameter("MaxThresh Size","MaxThreshSize_AP",2,1,1,25,"%2.0f","FAST_AP");
 	config->AddNewParameter("Post-NonMaxSupress Count","MaxThreshCount",2,1,1,25,"%2.0f","FAST");
-	config->AddNewParameter("AP MaxThreshScale","MaxThreshScale",0.5f,0.1f,0.1f,2.0f,"%3.2f","FAST");
+	config->AddNewParameter("MaxThreshScale","MaxThreshScale",0.5f,0.1f,0.1f,2.0f,"%3.2f","FAST_AP");
 			
 	config->AddNewParameter("FAST Threshold","FastThresh",10,5,1,400,"%3.0f","FAST");
 	config->AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f","FAST");
 
 	config->AddNewParameter("UseSubPix",1,1,0,1,"%1.0f","FAST");
-
 	config->AddNewParameter("SubPixWindow",5,1,1,20,"%3.0f","FAST");
 	config->AddNewParameter("SubPixDeadZone",1,1,-1,20,"%3.0f","FAST");
 	config->AddNewParameter("SubPixMaxCount",60,10,1,300,"%3.0f","FAST");
@@ -701,10 +704,8 @@ static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, v
 		outsideCornerMat.at<float>(i,1) = (float)features.at(i).y;
 	}
 
-
-	//Build the FLANN index
 	struct timespec start,end;
-	SET_TIME(&start);	
+	//SET_TIME(&start);	
 	if (flannIndexType == 0)
 	{		
 		flannPointIndex = new flann::Index(outsideCornerMat, cv::flann::LinearIndexParams());
@@ -723,11 +724,11 @@ static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, v
 		throw exception();
 	}
 
-	SET_TIME(&end);
-	LOG_TIME_PRECISE("Building FLANN index",start,end);
+	/*SET_TIME(&end);
+	LOG_TIME_PRECISE("Building FLANN index",start,end);*/
 }
 
-static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndices, vector<Point2i> & inputPoints, int itCount)
+static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndices, vector<Point2i> & inputPoints, int itCount, vector<Drawable*> & debugVector, Scalar lineColor)
 {
 	if (itCount-- < 0)
 		return false;
@@ -735,22 +736,24 @@ static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndi
 	if (chosenIndices.size() == 4)
 		return true;
 
+	//Check if we reached the first point (0)
+	float angle = FastTracking::angle(inputPoints[0],inputPoints[lastIndex],inputPoints[currentIndex]);
+	if (abs(angle) < 0.15f)
+	{
+		debugVector.push_back(new DebugArrow(inputPoints[currentIndex],inputPoints[0],lineColor,2));
+		return true;
+	}
+
 	for (int j=0;j<inputPoints.size();j++)
 	{
 		if (j == currentIndex || j == lastIndex || chosenIndices.count(j) != 0)
-			continue;
-
-		//Check if we reached the first point (0)
-		float angle = FastTracking::angle(inputPoints[0],inputPoints[lastIndex],inputPoints[currentIndex]);
-		if (abs(angle) < 0.15f)
-		{
-			return true;
-		}
+			continue;	
 
 		angle = FastTracking::angle(inputPoints[j],inputPoints[lastIndex],inputPoints[currentIndex]);
 		if (abs(angle) < 0.15f)
 		{
-			if (addNextVertex(j,currentIndex,chosenIndices,inputPoints,itCount))
+			debugVector.push_back(new DebugArrow(inputPoints[currentIndex],inputPoints[j],lineColor,2));
+			if (addNextVertex(j,currentIndex,chosenIndices,inputPoints,itCount,debugVector,lineColor))
 			{	
 				chosenIndices.insert(j);
 				return true;
@@ -760,7 +763,7 @@ static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndi
 	return false;
 }
 
-static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squarePoints, Point2i patternCenter, Size2i patternSize)
+static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squarePoints, Point2i patternCenter, Size2i patternSize, vector<Drawable*> & debugVector)
 {
 	LOGD(LOGTAG_QR,"Validating square,points=%d",inputPoints.size());
 	if (inputPoints.size() < 4 || inputPoints.size() > 20)
@@ -804,12 +807,19 @@ static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squa
 
 	int currentIndex = 0;
 	float minDistance = min(((float)patternSize.height * 0.9f),((float)patternSize.width * 0.9f));
+	minDistance = powf(minDistance,2.0f);
 	set<int> chosenIndices;
 	chosenIndices.insert(0);
-
+	
+	Scalar friendlyColors[]  = {Colors::Red,Colors::Orange,Colors::Fuchsia,Colors::Lime, Colors::SkyBlue,Colors::Aqua};
 	for (int i=1;i<inputPoints.size();i++)
 	{
-		if (addNextVertex(i,0,chosenIndices,inputPoints,40))
+		LOGD(LOGTAG_QRFAST,"Testing point(%d,%d)",inputPoints[i].x,inputPoints[i].y);
+		/*if (GetSquaredDistance(inputPoints[0],inputPoints[i]) > minDistance)
+			continue;*/
+		Scalar lineColor = friendlyColors[i%5];
+		debugVector.push_back(new DebugArrow(inputPoints[0],inputPoints[i],lineColor,2));
+		if (addNextVertex(i,0,chosenIndices,inputPoints,40,debugVector,lineColor))
 		{
 			chosenIndices.insert(i);
 			break;
@@ -823,6 +833,7 @@ static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squa
 	squarePoints.clear();
 	for (;it != chosenIndices.end();it++)
 	{
+		LOGD(LOGTAG_QRFAST,"Square point (%d,%d)",inputPoints.at(*it).x,inputPoints.at(*it).y);
 		squarePoints.push_back(inputPoints.at(*it));
 	}
 
@@ -1026,7 +1037,7 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 				pointsOnly.push_back(testPoints.at(i).second);
 			}
 
-			if (validateSquare(pointsOnly,patternPoints, center, patternSize))
+			if (validateSquare(pointsOnly,patternPoints, center, patternSize, debugVector))
 			{
 				break;
 			}
@@ -1094,19 +1105,24 @@ vector<pair<int,Point2i> > FastQRFinder::getClosestInSet(Point2i point, Mat & po
 	vector<pair<int,Point2i> > pointVector;
 	for (int i=0;i<searchSize;i++)
 	{
+		if (indexPtr[i] < 0)
+			break;
+
 		rowPtr = pointMatrix.ptr<float>(indexPtr[i]);
 		float distance = distPtr[i];
 		if (maxDistance > 0 && distance >= maxDistance)
 			continue;
 
 		Point2i point = Point2i((int)(rowPtr[0]),(int)(rowPtr[1]));
+		if (point.x == 0 && point.y == 0)
+			break;
 		pointVector.push_back(pair<int,Point2i>((int)distance,point));
 	}
 	return pointVector;
 }
 
 
-void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Point2i> & corners, vector<Drawable*> & debugVector)
+void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Point2i> & corners_out, vector<Drawable*> & debugVector)
 {
 	struct timespec startTotal,endTotal;
 	SET_TIME(&startTotal);
@@ -1122,7 +1138,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
 	bool subPix = config->GetBooleanParameter("UseSubPix");
 	float maxCosine = config->GetFloatParameter("MaxCosine");
-	int outerMostSearchK = config->GetIntegerParameter("K-NN");
+	//int outerMostSearchK = config->GetIntegerParameter("K-NN");
 
 
 	//FinderPattern search area
@@ -1212,13 +1228,17 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	BuildFLANNIndex(outerPointIndex, numTrees, outsideCornersVector,outsideCornersMatrix);
 	BuildFLANNIndex(innerPointIndex, numTrees, insideCornerVector,insideCornersMatrix);
 	SET_TIME(&indexEnd);
-	//LOG_TIME_PRECISE("Building FLANN indices",indexStart,indexEnd);
-
 	
+	int centerSearchK = config->GetIntegerParameter("NumCenterPoints");
+	int innerSearchK = config->GetIntegerParameter("NumInnerCorners");
+	int outerMostSearchK = config->GetIntegerParameter("NumOuterCorners");
 
-	//Find 4 closest outside corners
-	vector<pair<int,Point2i> >  innerPoints = getClosestInSet(pattern->pt,insideCornersMatrix,innerPointIndex,4,64);
+	//Find K closest outside corners
+	//LOGD(LOGTAG_QRFAST,"Finding points near pattern center(%d,%d)",pattern->pt.x,pattern->pt.y);
+	vector<pair<int,Point2i> >  innerPoints = getClosestInSet(pattern->pt,insideCornersMatrix,innerPointIndex,innerSearchK,64);
 
+	vector<Point2i> corners;
+	corners.clear();
 
 	for (int i=0;i < innerPoints.size(); i++)
 	{
@@ -1228,7 +1248,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 		if (debugLevel == 3)
 			debugVector.push_back(new DebugCircle(innerPoint,4,Colors::DarkOrange,2));
 		
-		LOGV(LOGTAG_QRFAST,"Now finding point closest to (%d,%d)",innerPoint.x,innerPoint.y);
+		//LOGV(LOGTAG_QRFAST,"Now finding point closest to (%d,%d)",innerPoint.x,innerPoint.y);
 		vector<pair<int,Point2i> >  closePointsVector = getClosestInSet(innerPoint,outsideCornersMatrix,outerPointIndex,outerMostSearchK,searchParams);
 
 		if (closePointsVector.size() < 2) //Not enough points. Shouldn't happen
@@ -1244,7 +1264,10 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 		//Select the outer point that forms straightest line, and is farther from pattern center than inner point
 		for (vector<pair<int,Point2i> >::iterator closePointsIt = closePointsVector.begin(); closePointsIt != closePointsVector.end(); closePointsIt++)
 		{			
-			Point2i testPoint = (*closePointsIt).second;	
+
+			Point2i testPoint = (*closePointsIt).second;
+			
+			//LOGV(LOGTAG_QRFAST,"Now finding point closest to (%d,%d)",testPoint.x,testPoint.y);
 			
 			if (GetSquaredDistance(testPoint,pattern->pt) < pointDistance)
 				continue;
@@ -1261,17 +1284,15 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 		}
 
 		//Didn't find an appropriate point
-		if (bestPoint.x == -1 || bestPoint.y == -1)
+		if (bestPoint.x <= 0 || bestPoint.y <= 0)
 		{			
 			if (debugLevel == 2)
 				debugVector.push_back(new DebugCircle(pattern->pt,11,Colors::Tan,1));
 			LOGD(LOGTAG_QRFAST,"Failed to find collinear point",closePointsVector.size());
-			return;
+			continue;
 		}
 		else
-		{
-
-			
+		{			
 			corners.push_back(bestPoint);
 			if (debugLevel == 1)
 				debugVector.push_back(new DebugCircle(corners.back(),8,Colors::GreenYellow,1,true));
@@ -1279,37 +1300,61 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 				
 	}
 
-	if (subPix && corners.size() >= 4)
+	if (corners.size() >= 4)
 	{
-		int subPixWindowSize = config->GetIntegerParameter("SubPixWindow");
-		int subPixDeadZoneSize = config->GetIntegerParameter("SubPixDeadZone");
-		int subPixMaxCount = config->GetIntegerParameter("SubPixMaxCount");
-		double subPixEpsilon = (double)(config->GetFloatParameter("SubPixEpsilon"));
+		bool success = false;
+		vector<Point2i> squarePoints;
 
-		//LOGD(LOGTAG_QRFAST,"Finding corner sub pixels for %d corners", corners.size());
-		vector<Point2f> floatCorners;
 		for (int i=0;i<corners.size();i++)
 		{
-			floatCorners.push_back(Point2f(corners[i].x,corners[i].y));
-		}
-		struct timespec subCornerStart,subCornerEnd;
-		SET_TIME(&subCornerStart);
-
-		cornerSubPix(img,floatCorners,Size2i(subPixWindowSize,subPixWindowSize),Size2i(subPixDeadZoneSize,subPixDeadZoneSize),TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, subPixMaxCount, subPixEpsilon));
-		SET_TIME(&subCornerEnd);
-		LOG_TIME_PRECISE("Corner sub pixels",subCornerStart,subCornerEnd);
-
-		corners.clear();
-		for (int i=0;i<floatCorners.size();i++)
-		{
-			Point2i refinedPoint = Point2i((int)round(floatCorners[i].x),(int)round(floatCorners[i].y));
-			if (debugLevel == 1)
+			if (validateSquare(corners,squarePoints,pattern->pt,pattern->patternSize,debugVector))
 			{
-				debugVector.push_back(new DebugCircle(refinedPoint,8,Colors::Fuchsia,1,true));
+				success = true;
+				break;
 			}
-			corners.push_back(refinedPoint);
 		}
+
+		if (success)
+		{
+			if (subPix)
+			{
+				int subPixWindowSize = config->GetIntegerParameter("SubPixWindow");
+				int subPixDeadZoneSize = config->GetIntegerParameter("SubPixDeadZone");
+				int subPixMaxCount = config->GetIntegerParameter("SubPixMaxCount");
+				double subPixEpsilon = (double)(config->GetFloatParameter("SubPixEpsilon"));
+
+				//LOGD(LOGTAG_QRFAST,"Finding corner sub pixels for %d corners", corners.size());
+				vector<Point2f> floatCorners;
+				for (int i=0;i<squarePoints.size();i++)
+				{
+					floatCorners.push_back(Point2f(squarePoints[i].x,squarePoints[i].y));
+				}
+				struct timespec subCornerStart,subCornerEnd;
+				SET_TIME(&subCornerStart);
+
+				cornerSubPix(img,floatCorners,Size2i(subPixWindowSize,subPixWindowSize),Size2i(subPixDeadZoneSize,subPixDeadZoneSize),TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, subPixMaxCount, subPixEpsilon));
+				SET_TIME(&subCornerEnd);
+				LOG_TIME_PRECISE("Corner sub pixels",subCornerStart,subCornerEnd);
+
+				for (int i=0;i<floatCorners.size();i++)
+				{
+					Point2i refinedPoint = Point2i((int)round(floatCorners[i].x),(int)round(floatCorners[i].y));
+					if (debugLevel == 1)
+					{
+						debugVector.push_back(new DebugCircle(refinedPoint,8,Colors::Fuchsia,1,true));
+					}
+					corners_out.push_back(refinedPoint);
+				}
+			}
+			else
+				corners_out = squarePoints;
+		}	
+		else
+			corners_out = corners;
 	}
+	else
+		corners_out = corners;
+
 
 }
 

@@ -244,52 +244,44 @@ void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & q
 
 }
 
-//void QRCode::getImagePoints
-//{
-//	float finderPatternSpacing = 29.0f * QRCodeDimension;
-//	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
-//
-//	qrVector.push_back(Point3f(0,0,0));
-//	qrVector.push_back(Point3f(finderPatternSpacing,0,0));
-//	qrVector.push_back(Point3f(alignmentPatternSpacing,alignmentPatternSpacing,0)); //alignment pattern
-//	qrVector.push_back(Point3f(0,finderPatternSpacing,0));
-//}
-
 void QRCode::Draw(Mat * rgbaImage)
 {
-	if (isValidCode())
+	if (debugDrawingLevel > 0)
 	{
-		if (isDecoded())
+		if (isValidCode())
 		{
-			DebugLabel(finderPatterns[1]->pt,TextValue,Colors::Black,2.0f,Colors::Beige).Draw(rgbaImage);
-		}
-		if (trackingCorners.size() != 3) //Use centers
-		{
-			Point2i points[4];
+			if (isDecoded())
+			{
+				DebugLabel(finderPatterns[1]->pt,TextValue,Colors::Black,2.0f,Colors::Beige).Draw(rgbaImage);
+			}
+			if (trackingCorners.size() != 3) //Use centers
+			{
+				Point2i points[4];
 
-			points[0] = (finderPatterns.at(0))->pt;
-			points[1] = (finderPatterns.at(1))->pt;
-			//Alignment Pattern is bottom right point
-			points[2] = alignmentPattern;
-			points[3] = (finderPatterns.at(2))->pt;
+				points[0] = (finderPatterns.at(0))->pt;
+				points[1] = (finderPatterns.at(1))->pt;
+				//Alignment Pattern is bottom right point
+				points[2] = alignmentPattern;
+				points[3] = (finderPatterns.at(2))->pt;
 
-			int npts = 4;
-			const Point2i * pArray[] = {points};
-			polylines(*rgbaImage,pArray,&npts,1,true,Colors::Red,2);
+				int npts = 4;
+				const Point2i * pArray[] = {points};
+				polylines(*rgbaImage,pArray,&npts,1,true,Colors::Red,2);
+			}
+			else
+			{
+				vector<Point2i> drawPoints;
+				drawPoints.push_back(trackingCorners[0]);
+				drawPoints.push_back(trackingCorners[1]);
+				drawPoints.push_back(alignmentPattern);
+				drawPoints.push_back(trackingCorners[2]);
+				DebugPoly(drawPoints,Colors::Lime,2).Draw(rgbaImage);
+			}
 		}
-		else
+		else 
 		{
-			vector<Point2i> drawPoints;
-			drawPoints.push_back(trackingCorners[0]);
-			drawPoints.push_back(trackingCorners[1]);
-			drawPoints.push_back(alignmentPattern);
-			drawPoints.push_back(trackingCorners[2]);
-			DebugPoly(drawPoints,Colors::Lime,2).Draw(rgbaImage);
+			LOGD(LOGTAG_QR,"Code is invalid! FPSize=%d,Apx=%d,Apy=%d",finderPatterns.size(),alignmentPattern.x,alignmentPattern.y);
 		}
-	}
-	else if (debugDrawingLevel > 0)
-	{
-		LOGD(LOGTAG_QR,"Code is invalid! FPSize=%d,Apx=%d,Apy=%d",finderPatterns.size(),alignmentPattern.x,alignmentPattern.y);
 	}
 
 	if (debugDrawingLevel > 1)
