@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include "LogDefinitions.h"
 #include <jni.h>
+#include "util/JNIUtils.hpp"
 #include "model/network/NetworkMessages.hpp"
 
 class JavaMessageThread
@@ -38,6 +39,8 @@ private:
 	//Populate objects and call JNI method to send them
 	void run()
 	{
+		LOGE("Don't use this LOL");
+		return;
 		LOGI(LOGTAG_JNI,"Thread running, %d messages to send.",outgoingJNIDataVector.size());
 		pthread_mutex_lock(threadMutex);
 
@@ -50,7 +53,7 @@ private:
 
 		
 		LOGI(LOGTAG_JNI,"Looking for class in JNI env");
-		jclass wrapperClass = javaEnv->FindClass("com/amplifyreality/networking/message/NativeMessage");
+		jclass wrapperClass = JNIUtils::GetClass("com/amplifyreality/networking/message/NativeMessage");
 		LOGI(LOGTAG_JNI,"Got native message class");
 
 		jmethodID initMethod = javaEnv->GetMethodID(wrapperClass,"<init>","(Ljava/lang/String;Ljava/lang/Object;)V");

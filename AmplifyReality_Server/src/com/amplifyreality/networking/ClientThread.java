@@ -43,12 +43,12 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 
 	private enum ClientStates
 	{
-		WaitingForCode, Active;
+		WaitingForCode, Active, Unauthorized;
 	}
 
 	private Realm currentRealm;
 
-	private ClientStates clientState = ClientStates.WaitingForCode;
+	private ClientStates clientState = ClientStates.Unauthorized;
 
 	public ClientThread(Socket _clientSocket, RealmManager realmManager)
 	{
@@ -183,6 +183,10 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 				LOGGER.info("Creating ARObject with name=" + arObject.Name + ", modelname=" + arObject.ModelName);
 			}
 		}
+		else
+		{
+			LOGGER.warning("Unauthorized client attempted to update an AR object!");
+		}
 	}
 
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
@@ -264,10 +268,13 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 				if (!realmManager.authenticateUser(user, pass))
 				{
 					LOGGER.log(Level.INFO, "Failed to authenticate user = " + user);
+					clientState = ClientStates.Unauthorized;
 					SendMessage(new com.amplifyreality.networking.message.ClientStringMessage("AuthFail"));
+					
 				} else
 				{
 					LOGGER.log(Level.INFO, "Authenticated user = " + user);
+					clientState = ClientStates.Active;
 					SendMessage(new com.amplifyreality.networking.message.ClientStringMessage("AuthPass"));
 				}
 

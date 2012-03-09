@@ -16,10 +16,19 @@
                <entry>
                   <string>TestObj1</string>
                   <ARObject Name="TestObj1" ModelName="cube.obj">
-                     <Position X="19.637335" Y="-4.581993" Z="0.16491699"/>
+                     <Position X="12.233349" Y="87.71274" Z="-6.010643"/>
                      <Rotation X="0.0" Y="0.0" Z="0.0"/>
                      <Scale X="15.0" Y="10.0" Z="15.0"/>
                      <BoundingSphereRadius>15.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_3</string>
+                  <ARObject Name="user_obj_3" ModelName="Cube" Action="Create">
+                     <Position X="-6.572314" Y="-15.370796" Z="-2.5204391"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
                   </ARObject>
                </entry>
             </objectMap>

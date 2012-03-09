@@ -7,6 +7,7 @@
 #include "display/objloader/objLoader.h"
 #include "util/GeometryUtil.hpp"
 #include "model/network/NetworkMessages.hpp"
+#include "util/JNIUtils.hpp"
 
 using namespace cv;
 

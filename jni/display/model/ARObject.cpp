@@ -24,7 +24,7 @@ ARObjectMessage::ARObjectMessage(ARObject * _arObject, bool _createNew)
 static jobject getPointAsJNIVector(JNIEnv * env, Point3f point)
 {	
 	//LOGD(LOGTAG_JNI,"Finding vector3 jclass");
-	jclass wrapperClass = env->FindClass("com/amplifyreality/networking/model/Vector3");
+	jclass wrapperClass = JNIUtils::GetClass("com/amplifyreality/networking/model/Vector3");
 	//LOGD(LOGTAG_JNI,"Finding vector3 init method");
 	jmethodID initMethod = env->GetMethodID(wrapperClass,"<init>","(FFF)V");
 	return env->NewObject(wrapperClass,initMethod,(jfloat)point.x,(jfloat)point.y,(jfloat)point.z);
@@ -36,7 +36,7 @@ jobject ARObjectMessage::getJavaObject(JNIEnv * env)
 	{
 		LOGD(LOGTAG_JNI,"Creating new ARObject, name = %s",arObject->objectID.c_str());
 
-		jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
+		jclass arObjectClass = JNIUtils::GetClass("com/amplifyreality/networking/model/ARObject");
 		jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
 
 		jstring name = env->NewStringUTF(arObject->objectID.c_str());
@@ -50,7 +50,7 @@ jobject ARObjectMessage::getJavaObject(JNIEnv * env)
 	}
 	else
 	{
-		jclass arObjectClass = env->FindClass("com/amplifyreality/networking/model/ARObject");
+		jclass arObjectClass = JNIUtils::GetClass("com/amplifyreality/networking/model/ARObject");
 		jmethodID initMethod = env->GetMethodID(arObjectClass,"<init>","(Ljava/lang/String;Lcom/amplifyreality/networking/model/Vector3;Lcom/amplifyreality/networking/model/Vector3;)V");
 
 		jstring name = env->NewStringUTF(arObject->objectID.c_str());

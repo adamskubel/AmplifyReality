@@ -82,6 +82,7 @@
     <ClCompile Include="..\jni\model\network\ARCommunicator.cpp" />
     <ClCompile Include="..\jni\model\network\ARObjectDefinition.cpp" />
     <ClCompile Include="..\jni\model\network\RealmDefinition.cpp" />
+    <ClCompile Include="..\jni\model\PreferenceManager.cpp" />
     <ClCompile Include="..\jni\model\ResourceManager.cpp" />
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp" />
@@ -109,6 +110,7 @@
     <ClCompile Include="..\jni\userinterface\uimodel\SelectBox.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\TabDisplay.cpp" />
     <ClCompile Include="..\jni\userinterface\uimodel\TextBox.cpp" />
+    <ClCompile Include="..\jni\util\JNIUtils.cpp" />
     <ClCompile Include="..\jni\VirtualDeclarations.cpp" />
     <ClCompile Include="..\jni\zxing\BarcodeFormat.cpp" />
     <ClCompile Include="..\jni\zxing\Binarizer.cpp" />
@@ -197,6 +199,7 @@
     <ClInclude Include="..\jni\model\network\NetworkMessages.hpp" />
     <ClInclude Include="..\jni\model\network\RealmDefinition.hpp" />
     <ClInclude Include="..\jni\model\network\WavefrontModel.hpp" />
+    <ClInclude Include="..\jni\model\PreferenceManager.hpp" />
     <ClInclude Include="..\jni\model\ResourceManager.hpp" />
     <ClInclude Include="..\jni\model\SensorData.hpp" />
     <ClInclude Include="..\jni\model\Updateable.hpp" />

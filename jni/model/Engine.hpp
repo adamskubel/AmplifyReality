@@ -4,6 +4,8 @@
 #include "datacollection/SensorCollector.hpp"
 #include <opencv2/core/core.hpp>
 #include "model/network/ARCommunicator.hpp"
+#include "model/PreferenceManager.hpp"
+#include <jni.h>
 
 #ifndef ENGINE_HPP_
 #define ENGINE_HPP_
@@ -24,11 +26,8 @@ public:
 	SensorCollector * sensorCollector;
 	ARCommunicator * communicator;
 	AConfiguration * androidConfiguration;
-
+	PreferenceManager * preferenceManager;
 	
-	////Putting some configuration stuff in here for now
-	//Configuration::DrawMode drawMode;
-
 	//Camera matrices
 	Mat * cameraMatrix;
 	Mat * distortionMatrix;

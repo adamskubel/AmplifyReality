@@ -95,6 +95,11 @@ void StartupController::ProcessFrame(Engine * engine)
 		connectNext = false;
 		std::string hostNameText =hostName->GetText();
 		LOGD(LOGTAG_NETWORKING,"Hostname text = %s",hostNameText.c_str());
+		
+		engine->preferenceManager->SetPreference("connect.hostname",hostNameText);
+		engine->preferenceManager->SetPreference("connect.username",userName->GetText());
+		engine->preferenceManager->SetPreference("connect.password",password->GetText());
+
 		engine->communicator->ConnectTo(hostNameText,userName->GetText(),password->GetText());
 		networkStatusLabel->SetText("Connecting..");
 	}
@@ -193,7 +198,7 @@ void StartupController::Initialize(Engine * engine)
 	GridLayout * networkConfigGrid = new GridLayout(engine->ScreenSize(),Size2i(4,5));
 	tabs->AddTab("Network",networkConfigGrid);
 	Label * hostName_label = new Label("Connection string (host[:port])",Point2i(0,0),Colors::Black,Colors::White);
-	hostName = new TextBox(engine->ScreenSize(),DEFAULT_HOST);
+	hostName = new TextBox(engine->ScreenSize(),engine->preferenceManager->GetPreference("connect.hostname",DEFAULT_HOST));
 	engine->inputHandler->AddTextListener(hostName);
 	networkStatusLabel = new Label("[x]",Point2i(0,0),Colors::Black, Colors::White);
 	networkConfigGrid->AddChild(networkStatusLabel,Point2i(0,0),Size(4,1));
@@ -207,14 +212,14 @@ void StartupController::Initialize(Engine * engine)
 	networkConfigGrid->AddChild(hostName,Point2i(2,1),Size(2,1));
 	
 	Label * userName_label = new Label("Username",Point2i(0,0),Colors::Black,Colors::White);
-	userName = new TextBox(engine->ScreenSize(), DEFAULT_USER);
+	userName = new TextBox(engine->ScreenSize(), engine->preferenceManager->GetPreference("connect.username",DEFAULT_USER));
 	engine->inputHandler->AddTextListener(userName);
 
 	networkConfigGrid->AddChild(userName_label,Point2i(0,2),Size(2,1));
 	networkConfigGrid->AddChild(userName,Point2i(2,2),Size(2,1));
 	
 	Label * password_Label = new Label("Password",Point2i(0,0),Colors::Black,Colors::White);
-	password = new TextBox(engine->ScreenSize(),DEFAULT_PASS);
+	password = new TextBox(engine->ScreenSize(),engine->preferenceManager->GetPreference("connect.password",DEFAULT_PASS));
 	password->obfuscateMode = true;
 	password->SetText(DEFAULT_PASS);
 	engine->inputHandler->AddTextListener(password);

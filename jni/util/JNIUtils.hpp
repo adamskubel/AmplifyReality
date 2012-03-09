@@ -2,24 +2,22 @@
 #define JNI_UTILS_HPP_
 
 #include <jni.h>
+#include <map>
 #include <LogDefinitions.h>
 
-static JNIEnv * GetJNIEnv(JavaVM * lJavaVM)
+using namespace std;
+
+class JNIUtils
 {
-	jint lResult; 
-	jint lFlags = 0; 
-	JNIEnv * lJNIEnv = new JNIEnv();
-	JavaVMAttachArgs lJavaVMAttachArgs; 
-	lJavaVMAttachArgs.version = JNI_VERSION_1_6; 
-	lJavaVMAttachArgs.name = "NativeThread"; 
-	lJavaVMAttachArgs.group = NULL; 
-	lResult=lJavaVM->AttachCurrentThread(&lJNIEnv,&lJavaVMAttachArgs); 
-	if (lResult == JNI_ERR)
-	{ 
-		LOGE(LOGTAG_JNI,"Error getting JVM");
-		return NULL; 
-	} 	
-	return lJNIEnv;
-}
+public:
+	static JNIEnv * GetJNIEnv(JavaVM * lJavaVM);
+	static bool LogJNIError(JNIEnv * env);
+	static void AddClass(JNIEnv * env, std::string qualifiedName);
+	static jclass GetClass(std::string qualifiedName);
+	//static jmethodID GetMethodID(std::string methodName, 
+private:
+	static std::map<std::string,jclass> javaClassMap;
+};
+
 
 #endif

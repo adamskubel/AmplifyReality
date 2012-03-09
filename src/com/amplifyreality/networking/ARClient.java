@@ -1,30 +1,29 @@
 package com.amplifyreality.networking;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
+import android.util.Log;
+
 import com.amplifyreality.AmplifyRealityActivity;
 import com.amplifyreality.networking.exceptions.InvalidHeaderMessageException;
 import com.amplifyreality.networking.exceptions.UnknownClientActionException;
-import com.amplifyreality.networking.message.ClientMessage;
-import com.amplifyreality.networking.message.ClientStringMessage;
 import com.amplifyreality.networking.message.ClientXMLMessage;
 import com.amplifyreality.networking.message.NativeMessage;
 import com.amplifyreality.networking.model.ARObject;
 import com.amplifyreality.networking.model.ClientRequest;
-import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.DataHeader;
+import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.WavefrontObj;
-
-import android.util.Log;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class ARClient
@@ -100,38 +99,7 @@ public class ARClient
 	private void RequestData()
 	{
 		Thread t = new Thread(new Runnable()
-		{
-			@Override
-//			public void run()
-//			{
-//				while (listening)
-//				{
-//					Object[] msgs = null;
-//					try
-//					{
-//						msgs = AmplifyRealityActivity.GetOutgoingMessages();
-//					}
-//					catch (Exception e)
-//					{
-//						Log.e(LOGTAG_NETWORKING, "Exception checking native layer", e);
-//						continue;
-//					}
-//					
-//					//Process messages
-//					SendNativeMessages(msgs);
-//					
-//					
-//					try
-//					{
-//						Thread.sleep(5000);
-//					} catch (InterruptedException e)
-//					{
-//						Log.e(LOGTAG_NETWORKING, "Interrupted while sleeping.", e);
-//					}
-//				}
-//				Cleanup();
-//			}
-			
+		{			
 			public void run()
 			{
 				
@@ -149,8 +117,7 @@ public class ARClient
 					SendNativeMessages(msgs);
 				}
 				
-			}
-			
+			}			
 
 		});
 		t.start();
@@ -163,16 +130,7 @@ public class ARClient
 		{
 			@Override
 			public void run()
-			{
-				// Sleep a bit to ensure native layer has started
-				try
-				{
-					Thread.sleep(6000);
-				} catch (InterruptedException e1)
-				{
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+			{				
 				DataHeader dataHeader = null;
 				try
 				{
@@ -219,10 +177,8 @@ public class ARClient
 				}
 				Cleanup();
 			}
-
 		});
 		t.start();
-
 	}
 
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException

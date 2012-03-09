@@ -13,6 +13,7 @@
 #include "ARController.hpp"
 #include "userinterface/uimodel/TextBox.hpp"
 #include "userinterface/uimodel/TabDisplay.hpp"
+#include "util/JNIUtils.hpp"
 
 
 #ifndef STARTUP_CONTROLLER_HPP_

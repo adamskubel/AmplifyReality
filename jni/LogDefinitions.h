@@ -1,4 +1,5 @@
 #include <android/log.h>
+#include <android_native_app_glue.h>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "AmplifyRealityGlobals.hpp"
