@@ -1,7 +1,7 @@
 #include "QRLocator.hpp"
 
 
-QRLocator::QRLocator(Mat  _cameraMatrix, Mat  _distortionMatrix)
+QRLocator::QRLocator(Mat  _cameraMatrix, Mat  _distortionMatrix, ARControllerDebugUI * _config)
 {
 	cameraMatrix = new Mat();
 	_cameraMatrix.copyTo(*cameraMatrix);
@@ -11,15 +11,8 @@ QRLocator::QRLocator(Mat  _cameraMatrix, Mat  _distortionMatrix)
 
 	LOGD_Mat(LOGTAG_QR,"Instantiated with camera matrix:",cameraMatrix);
 	LOGD_Mat(LOGTAG_QR,"and with distortion matrix:",distortionMatrix);
-}
 
-QRLocator::QRLocator(Mat _cameraMatrix)
-{
-	cameraMatrix = new Mat();
-	_cameraMatrix.copyTo(*cameraMatrix);
-
-	distortionMatrix = new Mat(Mat::zeros(1,5,CV_64F));
-	LOGD_Mat(LOGTAG_QR,"Instantiated with only camera matrix:",cameraMatrix);
+	config = _config;
 }
 
 QRLocator::~QRLocator()
@@ -34,15 +27,23 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 {
 	struct timespec start,end;
 	SET_TIME(&start);
+	
+	bool extraPoints = false;
+	if (config != NULL)
+		 extraPoints = config->GetBooleanParameter("UseExtraPoints");
 
-	vector<Point3f> qrVector = vector<Point3f>();
+	vector<Point3f> qrVector;
 	vector<Point2f> imagePointVector;
 
-	LOGV(LOGTAG_QR,"Retreiving tracking points");
-	qrCode->getTrackingPoints(imagePointVector,qrVector);
+	LOGV(LOGTAG_QR,"Retreiving tracking points. Extra=%d",extraPoints);
+	qrCode->getTrackingPoints(imagePointVector,qrVector,extraPoints);
 
-	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"ImagePoints",&imagePointVector);
-	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"QR-Points",&qrVector);
+	/*LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"ImagePoints",&imagePointVector);
+	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"QR-Points",&qrVector);*/
+	Mat imagePointMatrix(imagePointVector.size(),2,CV_32F,imagePointVector.data());
+	LOGD_Mat(LOGTAG_POSITION,"ImagePoints",&imagePointMatrix);
+	Mat qrPointMatrix(qrVector.size(),3,CV_32F,qrVector.data());
+	LOGD_Mat(LOGTAG_POSITION,"QRPoints",&qrPointMatrix);
 
 	try
 	{

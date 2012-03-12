@@ -11,24 +11,6 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 	int32_t eventType = AInputEvent_getType(inputEvent);
 	LOGV(LOGTAG_INPUT,"Handling event");
 
-
-	//if (keyboardIsOpen && keyboardConfig == ACONFIGURATION_KEYSHIDDEN_YES)
-	//{
-	//	keyboardIsOpen = false;
-	//	for (int i=0;i<textListeners.size();i++)
-	//	{
-	//		textListeners.at(i)->VirtualKeyboardEvent(keyboardIsOpen); 
-	//	}
-	//}
-	//else if (!keyboardIsOpen && keyboardConfig != ACONFIGURATION_KEYSHIDDEN_NO)
-	//{
-	//	keyboardIsOpen = true;
-	//	for (int i=0;i<textListeners.size();i++)
-	//	{
-	//		textListeners.at(i)->VirtualKeyboardEvent(keyboardIsOpen); 
-	//	}
-	//}
-
 	//Assume motion type events are from a touch screen
 	if (eventType == AINPUT_EVENT_TYPE_MOTION)
 	{
@@ -60,7 +42,7 @@ int32_t AndroidInputHandler::HandleInputEvent(struct android_app* app, AInputEve
 	}
 	else if ( eventType == AINPUT_EVENT_TYPE_KEY)
 	{
-		HandleButtonEvent(inputEvent);
+		return HandleButtonEvent(inputEvent);
 	}
 	return 0;
 }
@@ -141,7 +123,7 @@ void AndroidInputHandler::SoftKeyboardChanged(bool _keyboardIsOpen)
 	}
 }
 
-void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
+int32_t AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 {
 	int32_t eventAction = AKeyEvent_getAction(inputEvent);
 	int32_t eventKey = AKeyEvent_getKeyCode(inputEvent);
@@ -150,10 +132,9 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 	//LOGD(LOGTAG_INPUT,"Key=%d",eventKey);
 
 	//Physical buttons of interest
-	if (eventKey == AKEYCODE_MENU || eventKey == AKEYCODE_SEARCH || eventKey == AKEYCODE_BACK)
+	if (eventKey == AKEYCODE_MENU || eventKey == AKEYCODE_SEARCH || eventKey == AKEYCODE_VOLUME_DOWN || eventKey == AKEYCODE_VOLUME_UP)
 	{
 		
-
 		//Check for keyboard opening/closing events
 		bool lastKBState = keyboardIsOpen;
 		if (eventKey == AKEYCODE_MENU && flags & AKEY_EVENT_FLAG_LONG_PRESS) //Long menu press toggles soft KB
@@ -176,7 +157,8 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 		}
 
 		//Only care about complete press, doesn't check for down occuring
-		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime))
+		//Except volume keys. They are special.
+		if (eventAction == AKEY_EVENT_ACTION_UP && CheckEventTime(inputEvent,ARInput::MinimumKeyPressTime) ||  (eventKey == AKEYCODE_VOLUME_DOWN || eventKey == AKEYCODE_VOLUME_UP))
 		{		
 			for (int i=0;i<globalButtonEventDelegates.size();i++)
 			{
@@ -184,6 +166,7 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 				buttonEvent.ButtonCode = eventKey;
 				globalButtonEventDelegates.at(i)(NULL,buttonEvent);
 			}
+			return 1;
 		}
 	}
 	else
@@ -213,8 +196,10 @@ void AndroidInputHandler::HandleButtonEvent(AInputEvent * inputEvent)
 					handled = textListeners.at(i)->HandleKeyEvent(keyEvent);
 				}
 			}
+			return 0; //Don't want to swallow input for any key except those above
 		}
 	}
+	return 0;
 }
 
 void AndroidInputHandler::AddTextListener(ITextListener * newListener)

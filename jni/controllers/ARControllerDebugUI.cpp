@@ -241,6 +241,8 @@ void ARControllerDebugUI::DrawmodeSelectionChanged(void * sender, SelectionChang
 			currentDrawMode = DrawModes::ColorImage;
 		else if(selectionName.compare("Gray") == 0)
 			currentDrawMode = DrawModes::GrayImage;
+		else if(selectionName.compare("Binary") == 0)
+			currentDrawMode = DrawModes::BinaryImage;
 	}
 }
 

@@ -49,6 +49,7 @@ public:
 	void AddObject(ARObject * arObject);
 
 	void HandleTouchInput(void * sender, TouchEventArgs args);
+	void HandleButtonPress(void*,PhysicalButtonEventArgs);
 	void SetFOV(float fov);
 
 	void ButtonPressed(void * sender, EventArgs args);
@@ -67,7 +68,7 @@ private:
 	TabDisplay * tabs;
 
 	struct timespec lastSelectionTime;
-	bool unselectNext;
+	bool unselectNext, closeNext,farNext;
 	map<std::string,ARObjectMessage*> updateObjectMap;
 	
 

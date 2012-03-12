@@ -125,6 +125,18 @@ void AugmentedView::ButtonPressed(void * sender, EventArgs args)
 	}
 }
 
+void AugmentedView::HandleButtonPress(void * sender, PhysicalButtonEventArgs args)
+{
+	if (args.ButtonCode == AKEYCODE_VOLUME_DOWN)
+	{
+		closeNext = true;
+	}
+	else if (args.ButtonCode == AKEYCODE_VOLUME_UP)
+	{
+		farNext = true;
+	}
+}
+
 
 static void getPickingRay(Point2i point, OpenGL * openGL, Mat projection, Point3f & near, Point3f & far, ARObject * testObject, float fieldOfView)
 {
@@ -311,8 +323,22 @@ void AugmentedView::Render(OpenGL * openGL)
 		LOGD(LOGTAG_ARINPUT,"Time spacing too short for unselect. Diff=%lf",timediff);
 	}
 
-	objectVector.push_back(testObject);	
 
+	if (selectedObject != NULL)
+	{
+		if (farNext)
+		{
+			selectedObject->objectPositionDelta *= 1.07f;
+			farNext = false;
+		}
+		else if (closeNext)
+		{
+			selectedObject->objectPositionDelta *= 0.90f;
+			closeNext = false;
+		}
+	}
+
+	objectVector.push_back(testObject);	
 	LOGV(LOGTAG_OPENGL,"Drawing %d ARObjects",objectVector.size());
 	for (int i=0;i<objectVector.size();i++)
 	{		

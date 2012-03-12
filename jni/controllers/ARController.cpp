@@ -25,7 +25,7 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix, double fov)
 	LOG_Mat(ANDROID_LOG_INFO,LOGTAG_ARCONTROLLER,"Using Distortion Matrix",&distortionMatrix);
 	
 	//Create locator object
-	qrLocator = new QRLocator(cameraMatrix,distortionMatrix);
+	qrLocator = new QRLocator(cameraMatrix,distortionMatrix,debugUI);
 
 
 	//Initialize image matrices
@@ -90,18 +90,18 @@ void ARController::initializeUI(Engine * engine)
 	drawObjects.push_back(debugUI);
 	deletableObjects.push_back(debugUI);
 	
-
+	qrLocator->config = debugUI;
 
 	debugUI->AddNewParameter("T-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("R-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("FOV",startingFOV,1,10,180,"%3.0f","Tracking");
-	//debugUI->AddNewParameter("Autograb",0,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("UseExtraPoints",0,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
 	debugUI->AddNewLabel("State","","Data");
 
 	currentQRSize = 1.5f;
-	debugUI->AddNewParameter("ARController","ARControllerDebug",0,1,-2,5,"%2.0f","Debug");
+	debugUI->AddNewParameter("ARController","ARControllerDebug",0,1,-5,5,"%2.0f","Debug");
 	debugUI->AddNewParameter("QR Unit size (mm)","QRSize",currentQRSize,0.5f,1,100,"%3.0f","Tracking");
 	
 			
@@ -178,7 +178,7 @@ void ARController::initializeARView(Engine * engine)
 	augmentedView = new AugmentedView(window,engine,Mat(3,3,CV_64F,&data));
 
 	engine->inputHandler->AddGlobalTouchDelegate(TouchEventDelegate::from_method<AugmentedView,&AugmentedView::HandleTouchInput>(augmentedView));
-	
+	engine->inputHandler->AddGlobalButtonDelegate(ButtonEventDelegate::from_method<AugmentedView,&AugmentedView::HandleButtonPress>(augmentedView));
 	//Add some cubes
 	//objLoader loader;
 
@@ -270,21 +270,10 @@ void ARController::ProcessFrame(Engine * engine)
 			if (item->qrCode != NULL && item->qrCode->isValidCode())
 			{	
 				struct timespec decodeStart,decodeEnd;
-				//Need binary image for this step
-				LOGD(LOGTAG_ARCONTROLLER,"Thresholding for decoding");
-				Point2i codeCenter = item->qrCode->codeCenter;
-				int codeSizeGuess = item->qrCode->getAvgPatternSize() * 3;
-
-				Rect window=Rect(codeCenter.x - codeSizeGuess, codeCenter.y - codeSizeGuess, codeSizeGuess*2,codeSizeGuess*2);
-				ImageProcessor::WindowedThreshold(*grayImage, *binaryImage,window);
-
-				debugVector.push_back(new DebugRectangle(window,Colors::SkyBlue,1));
-
 				SET_TIME(&decodeStart);
-				qrDecoder->DecodeQRCode(*binaryImage,item->qrCode,debugVector);
+				qrDecoder->DecodeQRCode(grayImage,binaryImage,item->qrCode,debugVector);
 				SET_TIME(&decodeEnd);
-				LOG_TIME("QR decode", decodeStart,decodeEnd);
-
+				LOG_TIME("Decode",decodeStart,decodeEnd);
 				if (item->qrCode->isDecoded())
 				{
 					string codeText = "Code=";
@@ -293,7 +282,6 @@ void ARController::ProcessFrame(Engine * engine)
 
 					if (engine->communicator->IsConnected())
 					{
-						LOGI(LOGTAG_ARCONTROLLER,"Code found, fetching realm with ID=%s",item->qrCode->TextValue.c_str());
 						worldLoader->LoadRealm(item->qrCode->TextValue);
 					}
 					else //If not connected, just add a test object
@@ -306,21 +294,22 @@ void ARController::ProcessFrame(Engine * engine)
 						ARObject * myCube1 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(0,0,0));
 						
 						//ARObject * myCube2 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(50,10,0));
-						
+						//augmentedView->AddObject(myCube2);	
+						//myCube2->BoundingSphereRadius = 30;						
 						//ARObject * myCube3 = new ARObject(OpenGLHelper::CreateMultiColorCube(20),Point3f(-50,-10,0));
+						//augmentedView->AddObject(myCube3);	
+						//myCube3->BoundingSphereRadius = 30;
 
 						augmentedView->AddObject(myCube1);	
-						//augmentedView->AddObject(myCube2);	
-						//augmentedView->AddObject(myCube3);	
 						myCube1->BoundingSphereRadius = 23;
-						//myCube2->BoundingSphereRadius = 30;
-						//myCube3->BoundingSphereRadius = 30;
 
 						SetState(ControllerStates::Running);
 						delete worldLoader;
 						worldLoader = NULL;
 					}
 				}
+				else
+					LOGD(LOGTAG_ARCONTROLLER,"QRCode not decoded");
 			}
 		}
 		else if (worldState == WorldStates::WaitingForRealm || worldState == WorldStates::WaitingForResources)
@@ -360,7 +349,6 @@ void ARController::ProcessFrame(Engine * engine)
 			LOGV(LOGTAG_QR,"Getting position");
 			currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
 			item->qrCode->QRCodeDimension = currentQRSize;
-			//if (
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);
@@ -378,15 +366,20 @@ void ARController::ProcessFrame(Engine * engine)
 
 		augmentedView->Update(rgbImage,engine);
 	}
-
 	else
 	{
 		char stateString[100];
 		sprintf(stateString,"ContState=%d",(int)controllerState);
 		debugUI->SetLabelValue("State",stateString);
-		LOGW(LOGTAG_ARCONTROLLER,"Unexpected state");
+		LOGW(LOGTAG_ARCONTROLLER,"Unexpected state: %s",stateString);
 	}
 
+	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
+	{		
+		LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw");
+		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
+		LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw complete");
+	}
 	
 	if (drawingLevel == 1 || drawingLevel == 3)
 	{
@@ -479,10 +472,7 @@ void ARController::getImages(Engine * engine)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("Color Image Capture", start, end);
 
-		SET_TIME(&start)
 		cvtColor(*rgbImage, *grayImage, CV_RGBA2GRAY, 1);
-		SET_TIME(&end);
-		LOG_TIME_PRECISE("RGBA->Gray", start, end);
 	} 
 	else 
 	{
@@ -492,10 +482,7 @@ void ARController::getImages(Engine * engine)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("Gray Image Capture", start, end);
 
-		SET_TIME(&start)
 		cvtColor(*grayImage, *rgbImage, CV_GRAY2RGBA, 4);
-		SET_TIME(&end);
-		LOG_TIME_PRECISE("Gray->RGBA", start, end);
 	} 
 		
 	

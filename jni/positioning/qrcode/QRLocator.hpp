@@ -4,6 +4,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2\calib3d\calib3d.hpp>
 #include "QRCode.hpp"
+#include "controllers/ARControllerDebugUI.hpp"
 
 #ifndef QR_LOCATPR_HPP_
 #define QR_LOCATPR_HPP_
@@ -18,12 +19,10 @@ class QRLocator
 {
 private:
 	Mat * cameraMatrix, * distortionMatrix;
-	//float qrCodeUnitDimension;
-
 public:
-	QRLocator(Mat  cameraMatrix, Mat distortionMatrix);
-	QRLocator(Mat  cameraMatrix);
+	QRLocator(Mat  cameraMatrix, Mat distortionMatrix, ARControllerDebugUI * config);
 	~QRLocator();
+	ARControllerDebugUI * config;
 	void transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix);
 };
 

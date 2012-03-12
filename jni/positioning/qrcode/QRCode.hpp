@@ -3,6 +3,7 @@
 #include <opencv2/core/core.hpp>
 #include "model/Drawable.hpp"
 #include "model/DebugShape.hpp"
+#include "zxing/common/PerspectiveTransform.h"
 
 #ifndef QRCODE_HPP_
 #define QRCODE_HPP_
@@ -22,21 +23,23 @@ public:
 	QRCode(vector<FinderPattern*> _finderPatterns);
 	~QRCode();
 
-	void getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector);
-	//void getImagePoints(vector<Point3f> & points);
-
+	void getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector, bool extraPoints = false);
+	zxing::Ref<zxing::PerspectiveTransform> getPerspectiveTransform();//vector<Point2i> & imagePoints, vector<Point2i> & codePoints);
+	Rect getBoundaryRectangle();
 
 	void Draw(Mat * rgbaImage);
 	void sortCorners();
 	bool isValidCode();
 	bool isDecoded();
 
+	int getCodeDimension();
+	float getModuleSize();
+	void setModuleSize(float moduleSize);
+
 	float getAvgPatternSize();
 
 	bool isCodeValidSuccessor(QRCode * nextCode);
-
-	void SetAlignmentCorners(vector<Point2i> & alignmentCorners);
-	
+	void SetAlignmentCorners(vector<Point2i> & alignmentCorners);	
 	bool GuessAlignmentPosition(Point2i & result,Rect & searchRegion);
 
 	static int FPDistance(FinderPattern * a,  FinderPattern * b);

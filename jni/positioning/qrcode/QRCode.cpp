@@ -59,6 +59,22 @@ float QRCode::getAvgPatternSize()
 }
 
 
+int QRCode::getCodeDimension()
+{
+	return 29;
+}
+
+float QRCode::getModuleSize()
+{
+	return QRCodeDimension;
+}
+
+void QRCode::setModuleSize(float moduleSize)
+{
+	QRCodeDimension = moduleSize;
+}
+
+
 static Point2f getIntersectionPoint(Point2f p1, Point2f p2, Point2f p3, Point2f p4)
 {
 	float data[] = { p2.x - p1.x, -(p4.x-p3.x), p2.y - p1.y, -(p4.y-p3.y)};
@@ -77,6 +93,7 @@ static Point2f getIntersectionPoint(Point2f p1, Point2f p2, Point2f p3, Point2f 
 
 	return Point2f(p1.x + (p2.x-p1.x)*s, p1.y + (p2.y-p1.y)*s);
 }
+
 
 bool QRCode::GuessAlignmentPosition(Point2i & result, Rect & searchArea)
 {
@@ -182,19 +199,22 @@ void QRCode::SetDrawingLevel(int level)
 
 void QRCode::sortCorners()
 {
-	LOGD(LOGTAG_QR,"Sorting corners for %d patterns",finderPatterns.size());
-	//Top left, top right, bottom left
-	codeCenter = Point2i(0,0);
-	trackingCorners.clear();
-	for (int i=0;i<finderPatterns.size();i++)
+	if (trackingCorners.size() < 3)
 	{
-		codeCenter += finderPatterns[i]->pt;
-	}
-	codeCenter = Point2i(codeCenter.x/(float)finderPatterns.size(),codeCenter.y/(float)finderPatterns.size());
+		LOGD(LOGTAG_QR,"Sorting corners for %d patterns",finderPatterns.size());
 
-	for (int i=0;i<finderPatterns.size();i++)
-	{
-		trackingCorners.push_back(finderPatterns[i]->getFarthestCorner(codeCenter));
+		//Top left, top right, bottom left
+		codeCenter = Point2i(0,0);
+		for (int i=0;i<finderPatterns.size();i++)
+		{
+			codeCenter += finderPatterns[i]->pt;
+		}
+		codeCenter = Point2i(codeCenter.x/(float)finderPatterns.size(),codeCenter.y/(float)finderPatterns.size());
+
+		for (int i=0;i<finderPatterns.size();i++)
+		{
+			trackingCorners.push_back(finderPatterns[i]->getFarthestCorner(codeCenter));
+		}
 	}
 }
 
@@ -208,14 +228,64 @@ bool QRCode::isDecoded()
 	return isValidCode() && TextValue.length() > 0;
 }
 
-void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector)
+zxing::Ref<zxing::PerspectiveTransform> QRCode::getPerspectiveTransform()
+{
+	vector<Point3f> codePoints;
+	vector<Point2f> imagePoints;
+	
+	getTrackingPoints(imagePoints,codePoints);
+
+	if (codePoints.size() < 4 || imagePoints.size() < 4)
+	{
+		LOGE("Insufficient points for transform");
+		throw exception();
+	}
+	
+	return zxing::PerspectiveTransform::quadrilateralToQuadrilateral
+		(codePoints[0].x,codePoints[0].y,codePoints[1].x,codePoints[1].y,codePoints[2].x,codePoints[2].y,codePoints[3].x,codePoints[3].y,
+		imagePoints[0].x,imagePoints[0].y,imagePoints[1].x,imagePoints[1].y,imagePoints[2].x,imagePoints[2].y,imagePoints[3].x,imagePoints[3].y);
+}
+
+Rect QRCode::getBoundaryRectangle()
+{
+	float error = 0.1f;
+	zxing::Ref<zxing::PerspectiveTransform> pt = getPerspectiveTransform();
+
+	int codeSize = getCodeDimension() * getModuleSize();
+	vector<Point2f> corners;
+	corners.push_back(Point2f(0,0));
+	corners.push_back(Point2f(codeSize,0));
+	corners.push_back(Point2f(codeSize,codeSize));
+	corners.push_back(Point2f(0,codeSize));
+
+	Point2f minPoint(INT_MAX,INT_MAX);
+	Point2f maxPoint(0,0);
+	
+	for (int i=0;i<corners.size();i++)
+	{
+		vector<float> ptVector;
+		ptVector.push_back(corners[i].x);
+		ptVector.push_back(corners[i].y);
+		pt->transformPoints(ptVector);
+		minPoint.x = MIN(minPoint.x,ptVector[0]);
+		maxPoint.x = MAX(maxPoint.x,ptVector[0]);
+		minPoint.y = MIN(minPoint.y,ptVector[1]);
+		maxPoint.y = MAX(maxPoint.y,ptVector[1]);
+	}
+	Point2f sizePoint = (maxPoint-minPoint);
+	minPoint -= sizePoint * error;
+	maxPoint += sizePoint *error;
+	Rect rectangle = Rect(minPoint,maxPoint);
+	return rectangle;
+}
+
+void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & qrVector, bool extraPoints)
 {
 	float finderPatternSpacing = 29.0f * QRCodeDimension;
 	float alignmentPatternSpacing = 21.0f * QRCodeDimension;
 	float finderPatternSize = 7.0f * QRCodeDimension;
 
-	if (trackingCorners.size() < 3)
-		sortCorners();
+	sortCorners();
 
 	points.push_back(Point2f(trackingCorners.at(0).x,trackingCorners.at(0).y));
 	points.push_back(Point2f(trackingCorners.at(1).x,trackingCorners.at(1).y));
@@ -227,21 +297,44 @@ void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & q
 	qrVector.push_back(Point3f(alignmentPatternSpacing,alignmentPatternSpacing,0)); //alignment pattern
 	qrVector.push_back(Point3f(0,finderPatternSpacing,0));
 	
-	if (finderPatterns.size() == 3)
-	{
+	if (extraPoints && finderPatterns.size() == 3)
+	{		
 		if (finderPatterns[0]->patternCorners.size() == 4)
 		{
 			points.push_back(finderPatterns[0]->patternCorners[1]);
-			qrVector.push_back(Point3f(0,finderPatternSpacing - finderPatternSize,0));
+			qrVector.push_back(Point3f(finderPatternSize,0,0));
 						
 			points.push_back(finderPatterns[0]->patternCorners[2]);
-			qrVector.push_back(Point3f(finderPatternSize,finderPatternSpacing - finderPatternSize,0));
+			qrVector.push_back(Point3f(finderPatternSize,finderPatternSize,0));
 
 			points.push_back(finderPatterns[0]->patternCorners[3]);
+			qrVector.push_back(Point3f(0,finderPatternSize,0));
+		}
+
+		if (finderPatterns[1]->patternCorners.size() == 4)
+		{
+			points.push_back(finderPatterns[1]->patternCorners[1]);
+			qrVector.push_back(Point3f(finderPatternSpacing,finderPatternSize,0));
+						
+			points.push_back(finderPatterns[1]->patternCorners[2]);
+			qrVector.push_back(Point3f(finderPatternSpacing-finderPatternSize,finderPatternSize,0));
+
+			points.push_back(finderPatterns[1]->patternCorners[3]);
+			qrVector.push_back(Point3f(finderPatternSpacing-finderPatternSize,0,0));
+		}
+
+		if (finderPatterns[2]->patternCorners.size() == 4)
+		{
+			points.push_back(finderPatterns[2]->patternCorners[1]);
+			qrVector.push_back(Point3f(0,finderPatternSpacing-finderPatternSize,0));
+						
+			points.push_back(finderPatterns[2]->patternCorners[2]);
+			qrVector.push_back(Point3f(finderPatternSize,finderPatternSpacing-finderPatternSize,0));
+
+			points.push_back(finderPatterns[2]->patternCorners[3]);
 			qrVector.push_back(Point3f(finderPatternSize,finderPatternSpacing,0));
 		}
 	}
-
 }
 
 void QRCode::Draw(Mat * rgbaImage)

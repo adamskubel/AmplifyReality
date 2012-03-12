@@ -29,7 +29,7 @@ public:
 
 private:
 	bool CheckEventTime(AInputEvent * inputEvent, int minEventTimeMillis);
-	void HandleButtonEvent(AInputEvent * inputEvent);
+	int32_t HandleButtonEvent(AInputEvent * inputEvent);
 	bool CreateTouchEvent(AInputEvent * inputEvent, TouchEventArgs * touchEvent);
 
 	std::vector<ButtonEventDelegate> globalButtonEventDelegates;
