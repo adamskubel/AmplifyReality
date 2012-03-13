@@ -143,8 +143,8 @@ bool ARCommunicator::FilterMessages(std::string filter, std::vector<IncomingMess
 {
 	if (incomingMessageQueue.empty())
 		return false;
-
-	LOGD(LOGTAG_NETWORKING,"%d messages in queue. Returning messages with tag %s", incomingMessageQueue.size(), filter.c_str());
+/*
+	LOGD(LOGTAG_NETWORKING,"%d messages in queue. Returning messages with tag %s", incomingMessageQueue.size(), filter.c_str());*/
 	bool found = false;
 	for (int i=0;i<incomingMessageQueue.size();i++)
 	{

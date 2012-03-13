@@ -23,7 +23,7 @@ public:
 	QRLocator(Mat  cameraMatrix, Mat distortionMatrix, ARControllerDebugUI * config);
 	~QRLocator();
 	ARControllerDebugUI * config;
-	void transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix);
+	void transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix, bool useGuess = false);
 };
 
 #endif

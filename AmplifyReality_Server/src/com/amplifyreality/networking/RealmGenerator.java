@@ -32,8 +32,8 @@ public class RealmGenerator
 			manager = serializer.read(RealmManager.class, new File(filename));
 		} catch (Exception e)
 		{
-			e.printStackTrace();
-			System.out.println("Error reading realm file. Creating new manager.");
+//			e.printStackTrace();
+			System.out.println("Error reading realm file (" + e.getMessage() + "). Creating new manager.");
 			manager = new RealmManager();
 		}
 				
@@ -51,7 +51,7 @@ public class RealmGenerator
 	
 	private static Realm CreateTestRealm() throws Exception
 	{
-		Realm newRealm = new Realm("TestRealm_Name",3.0f);
+		Realm newRealm = new Realm(new RealmKey("TestRealm_Name"),3.0f);
 		
 		ARObject object1 = new ARObject();
 		object1.Name = "TestObj1";
@@ -80,7 +80,7 @@ public class RealmGenerator
 	private static Realm CreateRealm1() throws Exception
 	{
 
-		Realm newRealm = new Realm("ThisIsAQRCode",3.0f);
+		Realm newRealm = new Realm(new RealmKey("ThisIsAQRCode"),3.0f);
 		
 		ARObject object1 = new ARObject();
 		object1.Name = "TestObj1";
@@ -107,7 +107,7 @@ public class RealmGenerator
 	
 	private static Realm CreateRealm2() throws Exception
 	{
-		Realm newRealm =  new Realm("TestRealm_2",2.0f);
+		Realm newRealm =  new Realm(new RealmKey("TestRealm_2"),2.0f);
 		ARObject object1 = new ARObject();
 		object1.Name = "TestObj1";
 		object1.ModelName = "cube.obj";

@@ -35,6 +35,7 @@ public:
 	PositionSelector(ARControllerDebugUI * config);
 	~PositionSelector();
 	float UpdatePosition(FrameItem * item);
+	void GetPreviousResult(FrameItem * item);
 
 private:
 	void FirstOrderPrediction(FrameItem * item);

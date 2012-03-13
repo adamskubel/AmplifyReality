@@ -19,6 +19,7 @@ import com.amplifyreality.networking.model.ARObject;
 import com.amplifyreality.networking.model.ClientRequest;
 import com.amplifyreality.networking.model.DataHeader;
 import com.amplifyreality.networking.model.Realm;
+import com.amplifyreality.networking.model.RealmKey;
 import com.amplifyreality.networking.model.RealmPositionWatcher;
 import com.amplifyreality.networking.model.WavefrontObj;
 import com.amplifyreality.util.Logging;
@@ -236,9 +237,15 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 
 			if (request.RequestType.equals("Realm"))
 			{
-				Realm requestedRealm = realmManager.RequestRealm(request.RequestData);
+				RealmKey lookupKey = new RealmKey(request.RequestData);
+				if (request.CurrentLocation != null)
+				{
+					lookupKey.Latitude = request.CurrentLocation.Latitude;
+					lookupKey.Longitude = request.CurrentLocation.Longitude;
+				}
+				Realm requestedRealm = realmManager.RequestRealm(lookupKey);
 				// requestedRealm.AddClient(this);
-				LOGGER.info("Sending realm to client, RealmData:" + requestedRealm.Name + ". Client is now active.");
+				LOGGER.info("Sending realm to client, RealmData:" + requestedRealm.Key + ". Client is now active.");
 				clientState = ClientStates.Active;
 				SendMessage(new ClientXMLMessage(new Persister(), requestedRealm));
 				currentRealm = requestedRealm;

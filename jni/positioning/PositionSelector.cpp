@@ -14,6 +14,19 @@ PositionSelector::~PositionSelector()
 	LOGD(LOGTAG_POSITION,"Position Selector Deleted");
 }
 
+void PositionSelector::GetPreviousResult(FrameItem * item)
+{
+	if (!pastResults->empty())
+	{
+		if (pastResults->front()->PositionCertainty > 0.9f)
+		{
+			//Copy past result to current item to use as guess
+			pastResults->front()->Position.copyTo(*item->translationMatrix);
+			pastResults->front()->Rotation.copyTo(*item->rotationMatrix);
+		}
+	}
+}
+
 /* Set the rotation and translation matrices in the FrameItem to the
  * estimated position and orientation. 
  */

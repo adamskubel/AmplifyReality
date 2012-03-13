@@ -96,6 +96,7 @@ void ARController::initializeUI(Engine * engine)
 	debugUI->AddNewParameter("R-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("FOV",startingFOV,1,10,180,"%3.0f","Tracking");
 	debugUI->AddNewParameter("UseExtraPoints",0,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("UseGuess",0,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
 	debugUI->AddNewLabel("State","","Data");
@@ -229,6 +230,7 @@ void ARController::ProcessFrame(Engine * engine)
 	fpsLabel->SetText(fpsString);
 
 	int debugLevel = debugUI->GetIntegerParameter("ARControllerDebug");
+	bool useGuess = debugUI->GetBooleanParameter("UseGuess");
 	
 
 	//This section is the default per-frame operations
@@ -346,10 +348,13 @@ void ARController::ProcessFrame(Engine * engine)
 
 		if (item->qrCode != NULL && item->qrCode->isValidCode())
 		{
+			if (useGuess)
+				positionSelector->GetPreviousResult(item);
+
 			LOGV(LOGTAG_QR,"Getting position");
 			currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
 			item->qrCode->QRCodeDimension = currentQRSize;
-			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix));
+			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix),useGuess);
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);
 		}	

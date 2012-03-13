@@ -23,7 +23,7 @@ QRLocator::~QRLocator()
 }
 
 //Transform a set of points from camera space to reality space 
-void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix)
+void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix, bool useGuess)
 {
 	struct timespec start,end;
 	SET_TIME(&start);
@@ -40,15 +40,15 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 
 	/*LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"ImagePoints",&imagePointVector);
 	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"QR-Points",&qrVector);*/
-	Mat imagePointMatrix(imagePointVector.size(),2,CV_32F,imagePointVector.data());
+	/*Mat imagePointMatrix(imagePointVector.size(),2,CV_32F,imagePointVector.data());
 	LOGD_Mat(LOGTAG_POSITION,"ImagePoints",&imagePointMatrix);
 	Mat qrPointMatrix(qrVector.size(),3,CV_32F,qrVector.data());
-	LOGD_Mat(LOGTAG_POSITION,"QRPoints",&qrPointMatrix);
+	LOGD_Mat(LOGTAG_POSITION,"QRPoints",&qrPointMatrix);*/
 
 	try
 	{
 		LOGV(LOGTAG_QR,"Calling solvePnP");
-		solvePnP(qrVector,imagePointVector,*cameraMatrix,*distortionMatrix,rotationMatrix,translationMatrix,false);
+		solvePnP(qrVector,imagePointVector,*cameraMatrix,*distortionMatrix,rotationMatrix,translationMatrix,useGuess);
 	} catch (exception& e)
 	{
 		LOGE("Exception from solvePnP: %s", e.what());

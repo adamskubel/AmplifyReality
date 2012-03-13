@@ -30,7 +30,10 @@ extern "C"
 		{
 			LOGD(LOGTAG_JNI,"Creating new realm object");
 			RealmDefinition * realm = RealmDefinition::FromJNIEnv(env,dataObject);
-			jniDataVector.push_back(realm);
+			if (realm != NULL)
+				jniDataVector.push_back(realm);
+			else
+				LOGW(LOGTAG_JNI,"Error! Realm is null!");
 		}
 		else if(cString->compare("WavefrontObject") == 0)
 		{			
@@ -68,6 +71,12 @@ extern "C"
 		envInitialized = true;
 		LOGI(LOGTAG_JNI,"Java environment initialized.");
 	}
+
+	/*JNIEXPORT void JNICALL 
+		Java_com_amplifyreality_AmplifyRealityActivity_LocationUpdated(JNIEnv * env, jobject  obj, jobject _myLocation)
+	{		
+		
+	}*/
 }
 
 
@@ -110,8 +119,7 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 		engine->animating = 1;
 		break;
 	case APP_CMD_LOST_FOCUS:
-		engine->animating = 0;
-		//shutdownEngine(engine);
+		shutdownEngine(engine);
 		break;
     }
 }
@@ -154,6 +162,7 @@ void initializeEngine(struct android_app* state, Engine & engine)
 
 	LOGI(LOGTAG_MAIN,"Initialize stateful classes");
 	engine.inputHandler = new AndroidInputHandler();
+	
 	engine.sensorCollector = new SensorCollector(ASensorManager_getInstance(), state->looper);	
 	engine.communicator = new ARCommunicator(arClientObject);	
 	engine.preferenceManager = new PreferenceManager(myActivity);
@@ -269,10 +278,6 @@ void android_main(struct android_app* state)
 				if (count > 0)
 					LOGD(LOGTAG_NETWORKING,"Got %d messages from JNI queue",count);
 				pthread_mutex_unlock(&incomingMutex);
-			}
-			else
-			{
-				LOGD(LOGTAG_NETWORKING,"Unable to lock incoming mutex");
 			}
 
 			try

@@ -5,7 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.ElementMap;
@@ -18,19 +24,22 @@ import sun.misc.BASE64Encoder;
 
 import com.amplifyreality.networking.exceptions.AuthenticationFailedException;
 import com.amplifyreality.networking.exceptions.RealmNotFoundException;
+import com.amplifyreality.networking.model.EqualityMap;
 import com.amplifyreality.networking.model.Realm;
+import com.amplifyreality.networking.model.RealmKey;
 import com.amplifyreality.util.Logging;
 
 @Root
 public class RealmManager
 {
+	
+
 	private final static Logger LOGGER = Logging.CreateLogger(RealmManager.class);
 
 	public boolean needsPersist = false;
-	
-	
+
 	@ElementMap
-	private HashMap<String, Realm> realmMap;
+	private Map<RealmKey, Realm> realmMap;
 
 	@ElementMap
 	private HashMap<String, String> credentialMap;
@@ -47,16 +56,15 @@ public class RealmManager
 			return;
 		}
 		byte[] bytes = digest.digest(password.getBytes());
-		credentialMap.put(user,new BASE64Encoder().encode(bytes));
+		credentialMap.put(user, new BASE64Encoder().encode(bytes));
 	}
-	
+
 	public boolean authenticateUser(String user, String plainTextPassword)
 	{
 		if (!credentialMap.containsKey(user))
 			return false;
 		if (plainTextPassword == null || plainTextPassword.length() == 0)
 			return false;
-		
 
 		java.security.MessageDigest digest;
 		try
@@ -67,10 +75,10 @@ public class RealmManager
 			e.printStackTrace();
 			return false;
 		}
-		
+
 		byte[] bytes = digest.digest(plainTextPassword.getBytes());
 		String base64encrypted = new BASE64Encoder().encode(bytes);
-		
+
 		if (base64encrypted.equals(credentialMap.get(user)))
 			return true;
 		else
@@ -79,26 +87,25 @@ public class RealmManager
 
 	public RealmManager()
 	{
-		realmMap = new HashMap<String, Realm>();
-		credentialMap = new HashMap<String,String>();
+		realmMap = new EqualityMap<RealmKey, Realm>();
+		credentialMap = new HashMap<String, String>();
 	}
 
-	public Realm RequestRealm(String code) throws Exception
-	{		
+	public Realm RequestRealm(RealmKey code) throws Exception
+	{
 		if (realmMap.containsKey(code))
 		{
 			return realmMap.get(code);
-		}
-		else
+		} else
 		{
 			Realm newRealm = CreateRealm(code);
-			realmMap.put(code,newRealm);
+			realmMap.put(code, newRealm);
 			return newRealm;
 		}
 	}
 
 	public boolean NeedsPersist()
-	{			
+	{
 		if (realmMap.size() > 0)
 		{
 			boolean needsUpdate = needsPersist;
@@ -121,10 +128,15 @@ public class RealmManager
 
 	public void AddRealm(Realm realm)
 	{
-		realmMap.put(realm.Name, realm);
+		realmMap.put(realm.Key, realm);
 	}
 
 	public Realm GetRealm(String code) throws RealmNotFoundException
+	{
+		return GetRealm(new RealmKey(code));
+	}
+
+	public Realm GetRealm(RealmKey code) throws RealmNotFoundException
 	{
 		if (realmMap.containsKey(code))
 			return realmMap.get(code);
@@ -132,12 +144,12 @@ public class RealmManager
 			throw new RealmNotFoundException();
 	}
 
-	public Realm CreateRealm(String code)
+	public Realm CreateRealm(RealmKey key)
 	{
-		Realm newRealm = new Realm(code, 10.0f);
+		Realm newRealm = new Realm(key, 10.0f);
 		newRealm.isUpdated = true;
 		needsPersist = true;
-		LOGGER.info("Creating new realm, code = " + code);
+		LOGGER.info("Creating new realm, code = " + key);
 		return newRealm;
 	}
 

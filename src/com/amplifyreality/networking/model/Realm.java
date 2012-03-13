@@ -16,27 +16,27 @@ public class Realm implements RealmPositionWatcher
 	private final static Logger LOGGER = Logging.CreateLogger(Realm.class);
 
 	public volatile boolean isUpdated = false;
-	
-	@Attribute
-	public String Name;
 
 	@Attribute
 	public float QRUnitSize;
-	
+
 	@ElementMap
-	public Map<String, ARObject> objectMap;
+	public HashMap<String, ARObject> objectMap;
+
+	@Element
+	public RealmKey Key;
 
 	List<RealmPositionWatcher> clients;
-	
+
 	public Realm()
 	{
-		
+
 	}
 
-	public Realm(String Name, float QRUnitSize)
+	public Realm(RealmKey Key, float QRUnitSize)
 	{
 		this.QRUnitSize = QRUnitSize;
-		this.Name = Name;
+		this.Key = Key;
 		objectMap = new HashMap<String, ARObject>();
 	}
 
@@ -46,56 +46,64 @@ public class Realm implements RealmPositionWatcher
 			clients = new ArrayList<RealmPositionWatcher>();
 		clients.add(watcher);
 	}
-	
+
 	public void AddNewObject(String objectId, ARObject newObject)
 	{
 		if (objectMap.containsKey(objectId))
 		{
-			LOGGER.info("Attempted to create existing object. Name="+ objectId + ". Processing as update.");
-			UpdateObject(objectId,newObject);
+			LOGGER.info("Attempted to create existing object. Name=" + objectId + ". Processing as update.");
+			UpdateObject(objectId, newObject);
 		}
-		
-		objectMap.put(objectId,newObject);
+
+		objectMap.put(objectId, newObject);
 	}
 	
+	public String getCodeName()
+	{
+		return Key.CodeValue;
+	}
 
 	@Override
 	public void UpdateObject(String objectId, ARObject newObjectProperties)
 	{
 		if (!objectMap.containsKey(objectId))
 		{
-			LOGGER.info("Attempted to update non-existent object. Name="+ objectId);
+			LOGGER.info("Attempted to update non-existent object. Name=" + objectId);
 			return;
 		}
-		
+
 		ARObject arObject = objectMap.get(objectId);
-			
-		arObject.Update(newObjectProperties);	
-		
+
+		arObject.Update(newObjectProperties);
+
 		isUpdated = true;
-		
+
 		if (clients != null && clients.size() > 0)
 			for (RealmPositionWatcher watcher : clients)
 			{
 				watcher.UpdateObject(objectId, newObjectProperties);
 			}
 	}
-	
+
 	@Override
 	public String toString()
 	{
-		return Name + "=" + String.valueOf(objectMap);
+		return Key.CodeValue + "=" + String.valueOf(objectMap);
 	}
-	
+
 	public ArrayList getObjectList()
 	{
-		Log.i("AmplifyR-JNI","Returning ARObjects as array");
-		ArrayList list = new ArrayList();
-		for (ARObject value : objectMap.values())
+		Log.i("AmplifyR-JNI", "Returning ARObjects as array. Size = " + objectMap.size());
+		if (!objectMap.isEmpty())
 		{
-			list.add(value);
+			ArrayList list = new ArrayList();
+			for (ARObject value : objectMap.values())
+			{
+				list.add(value);
+			}
+			return list;
 		}
-		return list;
+		return null;
 	}
 
 }

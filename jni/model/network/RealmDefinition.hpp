@@ -6,6 +6,7 @@
 #include "NetworkMessages.hpp"
 #include <vector>
 #include <jni.h>
+#include "util/JNIUtils.hpp"
 
 class RealmDefinition : public IncomingMessage
 {

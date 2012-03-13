@@ -1,9 +1,9 @@
 <realmManager>
-   <realmMap>
+   <realmMap class="com.amplifyreality.networking.model.EqualityMap">
       <entry>
-         <string>ThisIsAQRCode</string>
-         <realm Name="ThisIsAQRCode" QRUnitSize="3.0">
-            <objectMap class="java.util.HashMap">
+         <realmKey CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="3.0">
+            <objectMap>
                <entry>
                   <string>TestObj2</string>
                   <ARObject Name="TestObj2" ModelName="cube.obj">
@@ -16,28 +16,20 @@
                <entry>
                   <string>TestObj1</string>
                   <ARObject Name="TestObj1" ModelName="cube.obj">
-                     <Position X="12.233349" Y="87.71274" Z="-6.010643"/>
+                     <Position X="47.016354" Y="3.2264602" Z="-0.8451233"/>
                      <Rotation X="0.0" Y="0.0" Z="0.0"/>
                      <Scale X="15.0" Y="10.0" Z="15.0"/>
                      <BoundingSphereRadius>15.0</BoundingSphereRadius>
                   </ARObject>
                </entry>
-               <entry>
-                  <string>user_obj_3</string>
-                  <ARObject Name="user_obj_3" ModelName="Cube" Action="Create">
-                     <Position X="-6.572314" Y="-15.370796" Z="-2.5204391"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="1.0" Y="1.0" Z="1.0"/>
-                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
             </objectMap>
+            <Key CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          </realm>
       </entry>
       <entry>
-         <string>TestRealm_2</string>
-         <realm Name="TestRealm_2" QRUnitSize="2.0">
-            <objectMap class="java.util.HashMap">
+         <realmKey CodeValue="TestRealm_2" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="2.0">
+            <objectMap>
                <entry>
                   <string>TestObj3</string>
                   <ARObject Name="TestObj3" ModelName="cube.obj">
@@ -66,47 +58,7 @@
                   </ARObject>
                </entry>
             </objectMap>
-         </realm>
-      </entry>
-      <entry>
-         <string>ThoughtWorks Interactive Technologies</string>
-         <realm Name="ThoughtWorks Interactive Technologies" QRUnitSize="10.0">
-            <objectMap class="java.util.HashMap">
-               <entry>
-                  <string>user_obj_2</string>
-                  <ARObject Name="user_obj_2" ModelName="Cube" Action="Create">
-                     <Position X="0.0" Y="0.0" Z="0.0"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="0.0" Y="0.0" Z="0.0"/>
-                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-               <entry>
-                  <string>user_obj_1</string>
-                  <ARObject Name="user_obj_1" ModelName="Cube" Action="Create">
-                     <Position X="-21.479557" Y="34.420956" Z="4.924469"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="0.0" Y="0.0" Z="0.0"/>
-                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-            </objectMap>
-         </realm>
-      </entry>
-      <entry>
-         <string>UnknownRealm</string>
-         <realm Name="UnknownRealm" QRUnitSize="10.0">
-            <objectMap class="java.util.HashMap">
-               <entry>
-                  <string>user_obj_1</string>
-                  <ARObject Name="user_obj_1" ModelName="Cube" Action="Create">
-                     <Position X="15.464287" Y="-28.263788" Z="-18.6305"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="1.0" Y="1.0" Z="1.0"/>
-                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-            </objectMap>
+            <Key CodeValue="TestRealm_2" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          </realm>
       </entry>
    </realmMap>

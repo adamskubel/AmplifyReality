@@ -12,9 +12,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
+import android.location.Location;
 import android.util.Log;
 
 import com.amplifyreality.AmplifyRealityActivity;
+import com.amplifyreality.LocationCollector;
 import com.amplifyreality.networking.exceptions.InvalidHeaderMessageException;
 import com.amplifyreality.networking.exceptions.UnknownClientActionException;
 import com.amplifyreality.networking.message.ClientXMLMessage;
@@ -22,6 +24,7 @@ import com.amplifyreality.networking.message.NativeMessage;
 import com.amplifyreality.networking.model.ARObject;
 import com.amplifyreality.networking.model.ClientRequest;
 import com.amplifyreality.networking.model.DataHeader;
+import com.amplifyreality.networking.model.MyLocation;
 import com.amplifyreality.networking.model.Realm;
 import com.amplifyreality.networking.model.WavefrontObj;
 
@@ -38,24 +41,19 @@ public class ARClient
 	volatile boolean listening = false;
 
 	private LinkedBlockingQueue<Object[]> outgoingQueue;
-
 	private LinkedBlockingQueue<Integer> authenticationResultQueue;
+	
+	private LocationCollector locationCollector;
 
 	Socket mySocket;
 	BufferedReader reader;
 
-	public ARClient()
+	public ARClient(LocationCollector locationCollector)
 	{
+		this.locationCollector = locationCollector;
 		reader = null;
 		outgoingQueue = new LinkedBlockingQueue<Object[]>();
 		authenticationResultQueue = new LinkedBlockingQueue<Integer>();
-	}
-
-	public ARClient(String host, int port)
-	{
-		this.host = host;
-		this.port = port;
-		reader = null;
 	}
 
 	private void SendNativeMessages(Object[] msgs)
@@ -71,6 +69,13 @@ public class ARClient
 			NativeMessage message = (NativeMessage) msgs[i];
 			Serializer xmlSerializer = new Persister();
 
+			if (message.isLocationSensitive() && locationCollector != null)
+			{
+				Location location = locationCollector.getLocation();
+				message.setLocation(location);
+				Log.d("AmplifyR-GPS","Setting message location:" + location);
+			}
+			
 			try
 			{
 				ClientXMLMessage msg = new ClientXMLMessage(xmlSerializer, message.GetXMLObject());
