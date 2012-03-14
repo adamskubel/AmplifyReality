@@ -11,7 +11,6 @@ void FastQR::ThreePointLine::DrawDebug(vector<Drawable*> & debugVector)
 	debugVector.push_back(new DebugLine(pt1,pt0,Colors::Sienna,2));
 }
 
-
 class ThreePointLineCompare
 {
 public:      
@@ -78,9 +77,11 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 
 	config->AddNewParameter("AP: K Nearest","K-NN_AP",5,1,1,12,"%2.0f","FAST_AP");
 
-	config->AddNewParameter("K Center","NumCenterPoints",2,1,1,12,"%2.0f","FAST");
-	config->AddNewParameter("K Inner","NumInnerCorners",6,1,1,12,"%2.0f","FAST");
-	config->AddNewParameter("K Outer","NumOuterCorners",2,1,1,12,"%2.0f","FAST");
+	config->AddNewParameter("K Center","NumCenterPoints",2,1,1,12,"%2.0f","FAST",true);
+	config->AddNewParameter("K Inner","NumInnerCorners",6,1,1,12,"%2.0f","FAST",true);
+	config->AddNewParameter("K Outer","NumOuterCorners",2,1,1,12,"%2.0f","FAST",true);
+	config->AddNewParameter("FP_Square_Cos",0.25f,0.01f,-2.0f,2.0f,"%4.2f","FAST");
+	config->AddNewParameter("AP_Square_Cos",0.25f,0.01f,-2.0f,2.0f,"%4.2f","FAST_AP");
 
 	config->AddNewParameter("NumKDTrees",1,1,1,16,"%2.0f","FAST",true);
 	config->AddNewParameter("MaxCosine",-0.6f,0.05f,-2.0f,2.0f,"%4.2f","FAST");
@@ -98,10 +99,10 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	config->AddNewParameter("NonMaxSuppress",0,1,0,1,"%1.0f","FAST");
 
 	config->AddNewParameter("UseSubPix",0,1,0,1,"%1.0f","FAST");
-	config->AddNewParameter("SubPixWindow",2,1,1,20,"%3.0f","FAST",true);
-	config->AddNewParameter("SubPixDeadZone",1,1,-1,20,"%3.0f","FAST",true);
-	config->AddNewParameter("SubPixMaxCount",60,10,1,300,"%3.0f","FAST",true);
-	config->AddNewParameter("SubPixEpsilon",0.02,0.01,0,3,"%3.2f","FAST",true);
+	config->AddNewParameter("SubPixWindow",2,1,1,20,"%3.0f","FAST",!true);
+	config->AddNewParameter("SubPixDeadZone",1,1,-1,20,"%3.0f","FAST",!true);
+	config->AddNewParameter("SubPixMaxCount",60,10,1,300,"%3.0f","FAST",!true);
+	config->AddNewParameter("SubPixEpsilon",0.02,0.01,0,3,"%3.2f","FAST",!true);
 
 	
 
@@ -110,6 +111,8 @@ FastQRFinder::FastQRFinder(ARControllerDebugUI * debugUI)
 	maxThreshTime = 20;
 	fastTime = 0;
 	clusterTime = 0;
+
+	squareValidator = new SquareValidator();
 	
 	
 	//config->AddNewLabel("FAST time"," ms ");
@@ -572,219 +575,12 @@ static void BuildFLANNIndex(cv::flann::Index *& flannPointIndex, int numTrees, v
 	LOG_TIME_PRECISE("Building FLANN index",start,end);*/
 }
 
-static int numIterations;
-
-static bool addNextVertex(int currentIndex, int lastIndex, set<int> & chosenIndices, vector<Point2i> & inputPoints, int depth, vector<Drawable*> & debugVector,int debugLevel, Scalar lineColor)
-{
-	numIterations++;
-	
-	if (chosenIndices.size() == 4)
-		return true;
-
-	float angle = 0;
-	if (depth++ == 2)
-	{
-		//Check if we reached the first point (0) if 3 vertices found
-		angle = FastTracking::angle(inputPoints[0],inputPoints[lastIndex],inputPoints[currentIndex]);
-		if (abs(angle) < 0.15f)
-		{
-			if (debugLevel > 0)
-				debugVector.push_back(new DebugArrow(inputPoints[currentIndex],inputPoints[0],Colors::Lime,2));
-			return true;
-		}
-		else //If not, then this isn't a square
-		{
-			return false;
-		}
-	}
-	else
-	{
-		for (int j=0;j<inputPoints.size();j++)
-		{
-			if (j == currentIndex || j == lastIndex || chosenIndices.count(j) != 0)
-				continue;	
-
-			angle = FastTracking::angle(inputPoints[j],inputPoints[lastIndex],inputPoints[currentIndex]);
-			if (abs(angle) < 0.15f)
-			{
-				if (debugLevel > 0)
-					debugVector.push_back(new DebugArrow(inputPoints[currentIndex],inputPoints[j],lineColor,2));
-				if (addNextVertex(j,currentIndex,chosenIndices,inputPoints,depth,debugVector,debugLevel,lineColor))
-				{	
-					chosenIndices.insert(j);
-					return true; //True if this point ends in a square
-				}
-			}
-		}
-		return false; //Return false if all points are searched and no success found
-	}
-}
-
-static bool validateSquare(vector<Point2i> & inputPoints, vector<Point2i> & squarePoints, Point2i patternCenter, Size2i patternSize, vector<Drawable*> & debugVector, int debugLevel = 0)
-{
-	LOGD(LOGTAG_QR,"Validating square,points=%d",inputPoints.size());
-	if (inputPoints.size() < 4 || inputPoints.size() > 20)
-	{
-		return false;
-	}
-	vector<Point2i> testPoints = inputPoints;
-
-	/*float avgLength = 0;
-	for (int i=0;i<inputPoints.size();i++)
-	{
-		for (int j=0;j<inputPoints.size();j++)
-		{
-			if (i==j) continue;
-			avgLength += sqrtf(GetSquaredDistance(inputPoints[i],inputPoints[j]));
-
-		}
-	}
-	int sampleSize = inputPoints.size() * (inputPoints.size()-1);
-	avgLength = idiv(avgLength,sampleSize);
-	
-	float deviation = 0;
-	for (int i=0;i<inputPoints.size();i++)
-	{
-		for (int j=0;j<inputPoints.size();j++)
-		{
-			if (i==j) continue;
-			deviation += powf(avgLength - sqrtf(GetSquaredDistance(inputPoints[i],inputPoints[j])),2);
-
-		}
-	}
-	deviation = idiv(deviation,sampleSize);
-	deviation = sqrt(deviation);
-
-	if (deviation/avgLength > 0.5f)
-	{
-		LOGD(LOGTAG_QRFAST,"Deviation %f is too high");
-		return false;
-	}
-*/
-
-	int currentIndex = 0;
-	float minDistance = min(((float)patternSize.height * 0.9f),((float)patternSize.width * 0.9f));
-	minDistance = powf(minDistance,2.0f);
-	set<int> chosenIndices;
-	chosenIndices.insert(0);
-	
-
-	struct timespec start,end;
-
-	SET_TIME(&start);
-	numIterations = 0;
-	Scalar friendlyColors[]  = {Colors::Red,Colors::Orange,Colors::Fuchsia,Colors::Lime, Colors::SkyBlue,Colors::Aqua};
-	for (int i=1;i<inputPoints.size();i++)
-	{
-		LOGD(LOGTAG_QRFAST,"Testing point(%d,%d)",inputPoints[i].x,inputPoints[i].y);
-		/*if (GetSquaredDistance(inputPoints[0],inputPoints[i]) > minDistance)
-			continue;*/
-		Scalar lineColor = friendlyColors[i%5];
-		if (debugLevel > 0)
-			debugVector.push_back(new DebugArrow(inputPoints[0],inputPoints[i],lineColor,2));
-		if (addNextVertex(i,0,chosenIndices,inputPoints,0,debugVector,debugLevel,lineColor))
-		{
-			chosenIndices.insert(i);
-			break;
-		}
-	}
-	SET_TIME(&end);
-
-
-	LOGD(LOGTAG_QR,"Square recursion took %lf us for %d points and %d iterations, found %d square vertices",calc_time_double(start,end),inputPoints.size(),numIterations,chosenIndices.size());
-
-	//LOGD(LOGTAG_QR,"Index set size = %d", chosenIndices.size());
-
-	set<int>::iterator it = chosenIndices.begin();
-
-	squarePoints.clear();
-	for (;it != chosenIndices.end();it++)
-	{
-		LOGD(LOGTAG_QRFAST,"Square point (%d,%d)",inputPoints.at(*it).x,inputPoints.at(*it).y);
-		squarePoints.push_back(inputPoints.at(*it));
-	}
-
-	/*while (chosenIndices.size() < 4)
-	{
-		for (int i=0;i<inputPoints.size();i++)
-		{
-			if (chosenIndices.count(i) != 0)
-				continue;
-			float distanceToLast = GetSquaredDistance(inputPoints[currentIndex],inputPoints[i-1]);
-			if (sqrtf(distanceToLast) < minDistance)
-			{
-				LOGV(LOGTAG_QRFAST,"Point is too close to last point");
-				continue;
-			}
-
-			
-
-		}
-	}*/
-
-	//float minAngleDiff = 10.0f * (PI/180.0f);
-	//
-	//multimap<int,Point2i> parallelCountMap;
-	//float minDistance = min(((float)patternSize.height * 0.9f),((float)patternSize.width * 0.9f));
-
-	//for (int i=0;i<inputPoints.size();i++)
-	//{
-	//	
-	//	/*	float distanceToLast = GetSquaredDistance(inputPoints[i],inputPoints[i-1]);
-	//		if (sqrtf(distanceToLast) < minDistance)
-	//		{
-	//			LOGV(LOGTAG_QRFAST,"Point is too close to last point");
-	//			continue;
-	//		}
-	//	}*/
-	//	int parallelCount = 0;
-	//	Point2i point = inputPoints[i];
-	//	Point2f endPoint = Point2f(point.x - patternCenter.x, point.y - patternCenter.y);
-	//	float angleToHorizontal = atanf(endPoint.y/endPoint.x);
-	//	for (int j=0;j<inputPoints.size();j++)
-	//	{
-	//		if (i==j) continue;
-
-	//		Point2i point_inner = inputPoints[j];
-	//		endPoint = Point2f(point_inner.x - patternCenter.x, point_inner.y - patternCenter.y);
-	//		float angleToHorizontal_inner = atanf(endPoint.y/endPoint.x);
-
-	//		if (abs(angleToHorizontal_inner-angleToHorizontal) < minAngleDiff ||
-	//			abs(abs(angleToHorizontal_inner-angleToHorizontal) - PI) < minAngleDiff)
-	//		{
-	//			parallelCount++;
-	//		}	
-	//	}
-	//	parallelCountMap.insert(pair<int,Point2i>(parallelCount,point));
-	//}
-
-	//
-	//pair<multimap<int,Point2i>::iterator,multimap<int,Point2i>::iterator> itPair = parallelCountMap.equal_range(1);
-	//	
-	//for (; itPair.first != itPair.second;itPair.first++)
-	//{
-	//	squarePoints.push_back((*itPair.first).second);
-	//	if (squarePoints.size() == 4)
-	//		return true;
-	//}
-
-	//for (map<float,Point2i>::iterator it = anglePointMap.begin(); it != anglePointMap.end(); it++)
-	//{
-	//	squarePoints.push_back((*it).second);
-	//	if (squarePoints.size() == 4)
-	//		return true;
-	//}
-
-	if (squarePoints.size() == 4)
-			return true;
-	return false;
-}
-
 void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patternSize, vector<Point2i> & patternPoints, vector<Drawable*> & debugVector)
 {	
 	struct timespec startTotal,endTotal;
 	SET_TIME(&startTotal);
 	
+
 	int apSearchSize = config->GetIntegerParameter("K-NN_AP");
 	int threshold = config->GetParameter("FastThresh");
 	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
@@ -793,6 +589,9 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 	int scoreSearchSize = config->GetParameter("MaxThreshSize_AP");
 	float maxThreshScale = config->GetFloatParameter("MaxThreshScale");	
 	bool subPix = config->GetBooleanParameter("UseSubPix");
+	float maxSquareCos = config->GetFloatParameter("AP_Square_Cos");
+	
+	squareValidator->SetParameters(debugLevel,maxSquareCos);
 
 	Rect fastRect = Rect(center.x-(patternSize.width/2.0f),center.y-(patternSize.height/2.0f),patternSize.width, patternSize.height);
 
@@ -842,15 +641,16 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 	if (insideCornerVector.size() < 4)
 	{
 		if (debugLevel == 1)
-			debugVector.push_back(new DebugCircle(center,13,Colors::Purple,1));	
+			debugVector.push_back(new DebugCircle(center,30,Colors::Purple,1));	
 		return;
 	}
 
-	if (debugLevel == 1) 
+	/*if (debugLevel == 1) 
 	{	
 		debugVector.push_back(new DebugCircle(center,3,Colors::Lime,2));	
-	}
+	}*/
 
+	float maxRadius = max(patternSize.width,patternSize.height) * 1.2f;
 	float maxCenterSize = max((float)patternSize.width * 0.5f, (float)patternSize.height*0.5f);
 	vector<pair<int,Point2i> > outerPoints;
 
@@ -863,7 +663,7 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		outerPoints =  getClosestInSet(center,outsideCornerMatrix,outerIndex,3,64, maxCenterSize);
 		
 	}
-	if (outerPoints.empty())
+	if (outerPoints.empty()) //Just use original center
 	{
 		outerPoints.push_back(pair<int,Point2i>(0,center));
 	}
@@ -873,10 +673,9 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 	{
 		center = (*centerIt).second;
 
-		if (debugLevel == 1) 
+		if (debugLevel == 2) 
 		{	
-			debugVector.push_back(new DebugCircle(center,1,Colors::Aqua,-1));	
-			debugVector.push_back(new DebugCircle(center,4,Colors::Aqua,1));	
+			debugVector.push_back(new DebugCircle(center,maxRadius,Colors::Aqua,1,true));	
 		}
 
 
@@ -888,8 +687,8 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		if (!testPoints.empty())
 		{
 			
-			if (debugLevel == 1)
-				debugVector.push_back(new DebugCircle(testPoints[0].second,8,Colors::Red,2,true));
+			/*if (debugLevel == 1)
+				debugVector.push_back(new DebugCircle(testPoints[0].second,8,Colors::Red,2,true));*/
 
 			for (vector<pair<int,Point2i> >::iterator it = testPoints.begin(); it != testPoints.end(); it++)
 			{
@@ -902,9 +701,9 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 			for (int i=0;i<testPoints.size();i++)
 			{
 				pointsOnly.push_back(testPoints.at(i).second);
-			}
+			} 
 
-			if (validateSquare(pointsOnly,patternPoints, center, patternSize, debugVector))
+			if (squareValidator->ValidateSquare(pointsOnly,patternPoints,1,center, Size2i(-1,-1), &debugVector))
 			{
 				break;
 			}
@@ -923,7 +722,7 @@ void FastQRFinder::CheckAlignmentPattern(Mat & img, Point2i center, Size2f patte
 		{
 			if (debugLevel == 1)
 			{
-				debugVector.push_back(new DebugCircle(patternPoints[i],8,Colors::Lime,1,true));
+				debugVector.push_back(new DebugCircle(patternPoints[i],8,Colors::GreenYellow,1,true));
 			}
 			floatCorners.push_back(Point2f(patternPoints[i].x,patternPoints[i].y));
 		}
@@ -998,8 +797,10 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 	bool nonMaxSuppress = config->GetBooleanParameter("NonMaxSuppress");
 	bool subPix = config->GetBooleanParameter("UseSubPix");
 	float maxCosine = config->GetFloatParameter("MaxCosine");
+	float maxSquareCos = config->GetFloatParameter("FP_Square_Cos");
 	//int outerMostSearchK = config->GetIntegerParameter("K-NN");
-
+	
+	squareValidator->SetParameters(debugLevel,maxSquareCos);
 
 	//FinderPattern search area
 	float searchRegion = pattern->size * 1.4f;  //Window needs to be bigger to account for diagonals
@@ -1162,7 +963,7 @@ void FastQRFinder::LocateFPCorners(Mat & img, FinderPattern * pattern, vector<Po
 
 		for (int i=0;i<corners.size();i++)
 		{
-			if (validateSquare(corners,squarePoints,pattern->pt,pattern->patternSize,debugVector,debugLevel))
+			if (squareValidator->ValidateSquare(corners,squarePoints,0,pattern->pt,pattern->patternSize,&debugVector))
 			{
 				success = true;
 				break;

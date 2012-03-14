@@ -429,7 +429,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 										
 					int tempYCenter = 0;
 					int passCount = 0;
-					int avgYSize = 0;
+					float avgYSize = 0;
 
 					int averageVerticalSize[5] = {0,0,0,0,0};
 
@@ -452,9 +452,9 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 						//LOGV(LOGTAG_QR,"Vertical test pass-1");
 						
 						tempYCenter = (int)round((float)tempYCenter / (float)passCount);
-						avgYSize = (int)round((float)avgYSize / (float)passCount);
+						avgYSize = (float)avgYSize / (float)passCount;
 
-						int allowedVariance = avgYSize >> 2;
+						int allowedVariance = (int)avgYSize >> 2;
 						bool yVarianceTest = true;
 						for (int yTest = 0; yTest < 3; yTest++)
 						{
@@ -489,7 +489,7 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 
 							tempXCenter = 0;
 							passCount = 0;
-							int avgXSize = 0;
+							float avgXSize = 0;
 
 							for (int xTest = 0; xTest < 3; xTest++)
 							{
@@ -506,11 +506,11 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 								
 								//LOGV(LOGTAG_QR,"Horizontal test pass");
 								tempXCenter = (int)round((float)tempXCenter / (float)passCount);
-								avgXSize = (int)round((float)avgXSize/(float)passCount);
-								allowedVariance = (int)round((float)avgYSize/1.5f);
+								avgXSize = (float)avgXSize/(float)passCount;
+								//allowedVariance = (int)round((float)avgYSize/1.5f);
+								float aspectRatio = avgXSize/avgYSize;
 								
-								//Pattern width must be within 66% of height
-								if (abs(avgXSize - avgYSize) <= allowedVariance)
+								if (aspectRatio > 0.33f && aspectRatio < 3.0f)
 								{
 									
 									//LOGV(LOGTAG_QR,"Size test pass");
@@ -533,29 +533,29 @@ void QRFinder::FindFinderPatterns(cv::Mat& inputImg, Rect regionOfInterest, vect
 									SET_TIME(&fastEnd);
 									double fastFPTime_Local = calc_time_double(fastStart,fastEnd);
 									fastFPTime += fastFPTime_Local;
-									if (corners.size() > 3)
+									if (corners.size() == 4)
 									{
-										if (validatePattern(newPattern,finderPatterns))
+										//if (validatePattern(newPattern,finderPatterns))
+										//{
+										newPattern->patternCorners = corners;
+										exclusionZones.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
+										finderPatterns.push_back(newPattern);
+										if (FP_DEBUG_ENABLED && debugLevel > 0)
 										{
-											newPattern->patternCorners = corners;
-											exclusionZones.push_back(Point3i(finderPatternCenter.x,finderPatternCenter.y, fpRadiusExclude));
-											finderPatterns.push_back(newPattern);
-											if (FP_DEBUG_ENABLED && debugLevel > 0)
+											debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1,true));
+											for (int i=0;i<corners.size();i++)
 											{
-												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::MediumSpringGreen,1,true));
-												for (int i=0;i<corners.size();i++)
-												{
-													if (FP_DEBUG_ENABLED && debugLevel > 0)
-														debugVector.push_back(new DebugCircle(corners[i],10,Colors::DodgerBlue,2));
-												}
+												if (FP_DEBUG_ENABLED && debugLevel > 0)
+													debugVector.push_back(new DebugCircle(corners[i],10,Colors::DodgerBlue,2));
 											}
 										}
-										else
-										{
-											//LOGV(LOGTAG_QR,"Compare check failed");
-											if (FP_DEBUG_ENABLED && debugLevel > 0)
-												debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::HotPink,2));
-										}
+										//}
+										//else
+										//{
+										//	//LOGV(LOGTAG_QR,"Compare check failed");
+										//	if (FP_DEBUG_ENABLED && debugLevel > 0)
+										//		debugVector.push_back(new DebugCircle(finderPatternCenter,fpRadius,Colors::HotPink,2));
+										//}
 									}
 									else
 									{

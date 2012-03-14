@@ -38,8 +38,6 @@ void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& trans
 	LOGV(LOGTAG_QR,"Retreiving tracking points. Extra=%d",extraPoints);
 	qrCode->getTrackingPoints(imagePointVector,qrVector,extraPoints);
 
-	/*LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"ImagePoints",&imagePointVector);
-	LOG_Vector(ANDROID_LOG_DEBUG,LOGTAG_POSITION,"QR-Points",&qrVector);*/
 	/*Mat imagePointMatrix(imagePointVector.size(),2,CV_32F,imagePointVector.data());
 	LOGD_Mat(LOGTAG_POSITION,"ImagePoints",&imagePointMatrix);
 	Mat qrPointMatrix(qrVector.size(),3,CV_32F,qrVector.data());

@@ -16,6 +16,7 @@ public:
 	//void ReadSensors(std::vector<ASensorEvent*> * sensorEvents);
 	void ProcessSensorEvents();
 	cv::Mat GetRotation();
+	void ClearRotation();
 
 private:
 	int64_t lastTimestamp;

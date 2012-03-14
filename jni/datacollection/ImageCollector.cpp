@@ -1,10 +1,24 @@
 #include "ImageCollector.hpp"
 
 
-
+int focusCount = 100;
 void ImageCollector::newFrame()
-{
+{	
 	myCapture->grab();
+	/*if (focusCount-- == 0)
+	{
+		try
+		{
+		LOGI(LOGTAG_IMAGECAPTURE,"Starting autofocus with QCAR");
+		bool result = QCAR::CameraDevice::getInstance().startAutoFocus();
+		LOGI(LOGTAG_IMAGECAPTURE,"Focus result = %d",result);
+		focusCount = 100;
+		}
+		catch (exception & e)
+		{
+			LOGI(LOGTAG_IMAGECAPTURE,"Exception while focusing: %s",e.what());
+		}
+	}*/
 }
 
 bool ImageCollector::IsReady()
@@ -55,13 +69,23 @@ ImageCollector::ImageCollector(int width, int height)
 	}
 	else
 	{
+		//LOGI(LOGTAG_IMAGECAPTURE,"Getting some props:");
+		//LOGI(LOGTAG_IMAGECAPTURE,"CaptureMode=%lf,ConvertRGB=%lf,Sharpness=%lf,FPS=%lf",myCapture->get(CV_CAP_PROP_MODE),myCapture->get(CV_CAP_PROP_CONVERT_RGB),myCapture->get(CV_CAP_PROP_SHARPNESS),myCapture->get(CV_CAP_PROP_FPS));
+		//double fps = myCapture->get(CV_CAP_PROP_FPS);
+		//LOGI(LOGTAG_IMAGECAPTURE,"FPS=%lf",0);
+		//double mode = myCapture->get(CV_CAP_PROP_MODE);
+		//LOGI(LOGTAG_IMAGECAPTURE,"Mode=%lf",mode);
+
 		double addr = myCapture->get(CV_CAP_PROP_SUPPORTED_PREVIEW_SIZES_STRING);
 		char* result = *((char**)&addr);
-
+		
 		string sizes(result);
 		LOGI(LOGTAG_IMAGECAPTURE,"Allowed preview sizes = %s",sizes.c_str());
 		bool parsing = true;
 		size_t found = 0;	
+
+
+
 		while(parsing)
 		{
 			LOGD(LOGTAG_IMAGECAPTURE,"Found ',' at %d",found);			
@@ -95,13 +119,24 @@ ImageCollector::ImageCollector(int width, int height)
 				break;
 			}
 		}
-
+		
+		try
+		{
+		LOGI(LOGTAG_IMAGECAPTURE,"Setting FPS to 30");
+		myCapture->set(CV_CAP_PROP_FPS, 30);
+		LOGI(LOGTAG_IMAGECAPTURE,"Setting FPS Complete");
+		}
+		catch (exception & e)
+		{
+			LOGW(LOGTAG_IMAGECAPTURE,"Exception: %s",e.what());
+		}
 		myCapture->set(CV_CAP_PROP_FRAME_WIDTH, width);
 		myCapture->set(CV_CAP_PROP_FRAME_HEIGHT, height);
 		
 		SetAutograb(true);
 
-		LOGI(LOGTAG_IMAGECAPTURE,"VideoCapture Initialized with width=%d and height=%d", width, height);
+
+		LOGI(LOGTAG_IMAGECAPTURE,"VideoCapture Initialized with width=%d and height=%d", width, height);		
 	}
 }
 

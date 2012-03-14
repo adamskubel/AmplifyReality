@@ -17,6 +17,7 @@ FrameItem::FrameItem()
 {	
 	rotationMatrix = new Mat();
 	translationMatrix = new Mat();
+	gyroRotation = Mat::eye(4,4,CV_64F);
 	qrCode = NULL;
 }
 

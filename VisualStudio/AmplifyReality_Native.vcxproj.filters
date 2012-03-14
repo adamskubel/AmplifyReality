@@ -421,6 +421,9 @@
     <ClCompile Include="..\jni\util\JNIUtils.cpp">
       <Filter>Header Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\positioning\fast\SquareValidator.cpp">
+      <Filter>Header Files\positioning\fast</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
@@ -809,6 +812,9 @@
     </ClInclude>
     <ClInclude Include="..\jni\model\PreferenceManager.hpp">
       <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\jni\positioning\fast\SquareValidator.hpp">
+      <Filter>Header Files\positioning\fast</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

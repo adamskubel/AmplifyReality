@@ -8,6 +8,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
 
+//#include <QCAR/CameraDevice.h>
+
 #ifndef DATACOLLECTOR_HPP_
 #define DATACOLLECTOR_HPP_
 

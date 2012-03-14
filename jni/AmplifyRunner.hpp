@@ -26,7 +26,7 @@ public:
 	AmplifyRunner(Engine * engine);
 	~AmplifyRunner();
 
-	void Initialize(Engine * engine);
+	//void Initialize(Engine * engine);
 	void DoFrame(Engine * engine);
 	void Teardown(Engine * engine);
 
@@ -39,16 +39,12 @@ private:
 
 	//Members
 	void ProcessFrame(Engine * engine);
-	void Main_HandleButtonInput(void* sender, PhysicalButtonEventArgs args);
 	void InitializeUserInterface(Engine * engine);
 	void CheckControllerExpiry(Engine * engine);
-	void ControllerExpired(CalibrationController * calibrationController);
-	
-	
+	void ControllerExpired(CalibrationController * calibrationController);	
 
 	//Fields
 	struct timespec lastFrameTimeStamp;	
-	ActionMode currentActionMode;
 	Controller * currentController;
 		
 };

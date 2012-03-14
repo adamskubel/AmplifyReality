@@ -42,7 +42,7 @@ public:
 	AugmentedView(UIElementCollection * window, Engine * engine, cv::Mat cameraMatrix);
 	~AugmentedView();
 
-	void SetTransformations(Mat * position, Mat * rotation);
+	void SetTransformations(Mat * position, Mat * rotation, Mat gyroData);
 	void Update(Mat * rgbaImage, Engine * engine);
 	void Render(OpenGL * openGL);
 
@@ -57,8 +57,8 @@ public:
 private:
 	cv::Mat * cameraMatrix;
 	cv::Mat * rotation, * position;
+	cv::Mat gyroRotation;
 	std::vector<ARObject *> objectVector;
-	void SetCameraPosition(OpenGLRenderData & renderData);
 	bool canDraw, createNext;
 	vector<Point2i> inputPoints;
 	Mat projection;
@@ -66,11 +66,18 @@ private:
 	ARObject * selectionIndicator, * testObject;
 	SelectedObject * selectedObject;
 	TabDisplay * tabs;
+	Button *cancelSelection, *releaseSelection;
 
-	struct timespec lastSelectionTime;
+	struct timespec lastSelectionTime, cursorShowTime;
 	bool unselectNext, closeNext,farNext;
 	map<std::string,ARObjectMessage*> updateObjectMap;
-	
+
+
+	//Members
+	void UnselectObject();
+	void SetCameraPosition(OpenGLRenderData & renderData);
+	void UpdateObjectPosition(Mat & projection, SelectedObject * selectedObject);
+	SelectedObject * SelectObjects(OpenGL * openGL);
 
 };
 

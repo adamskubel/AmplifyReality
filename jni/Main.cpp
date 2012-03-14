@@ -108,7 +108,7 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 			LOGI(LOGTAG_MAIN,"OS Has Initialized Window");
 
 			engine->glRender = new OpenGL(engine->app->window);	
-			data->runner->Initialize(engine);
+			//data->runner->Initialize(engine);
 			engine->animating = 1;
 		}
 		break;

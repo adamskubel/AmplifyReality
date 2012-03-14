@@ -17,6 +17,7 @@ class FrameItem
 public:
 	FrameItem();
 	cv::Mat *rotationMatrix, *translationMatrix;
+	cv::Mat gyroRotation;
 	QRCode * qrCode;
 
 	void clearOldData();

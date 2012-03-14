@@ -34,7 +34,7 @@ class PositionSelector : public IDeletable
 public:
 	PositionSelector(ARControllerDebugUI * config);
 	~PositionSelector();
-	float UpdatePosition(FrameItem * item);
+	float UpdatePosition(Engine * engine, FrameItem * item);
 	void GetPreviousResult(FrameItem * item);
 
 private:

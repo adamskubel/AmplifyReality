@@ -26,7 +26,7 @@ ARController::ARController(Mat cameraMatrix, Mat distortionMatrix, double fov)
 	
 	//Create locator object
 	qrLocator = new QRLocator(cameraMatrix,distortionMatrix,debugUI);
-
+	recheckNext = false;
 
 	//Initialize image matrices
 	grayImage = new Mat();
@@ -97,6 +97,7 @@ void ARController::initializeUI(Engine * engine)
 	debugUI->AddNewParameter("FOV",startingFOV,1,10,180,"%3.0f","Tracking");
 	debugUI->AddNewParameter("UseExtraPoints",0,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("UseGuess",0,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("UseGyro",1,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
 	debugUI->AddNewLabel("State","","Data");
@@ -118,6 +119,9 @@ void ARController::initializeUI(Engine * engine)
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(debugUI);
 
+	certaintyIndicator = new CertaintyIndicator(1.0f,15);
+	certaintyIndicator->DoLayout(Rect(engine->imageWidth-60,engine->imageHeight-60,30,30));
+
 	LOGI(LOGTAG_ARCONTROLLER,"UI initialization complete.");
 }
 
@@ -129,7 +133,7 @@ void ARController::Initialize(Engine * engine)
 
 	initializeUI(engine);
 
-	engine->sensorCollector->EnableSensors(false,false,false);
+	engine->sensorCollector->EnableSensors(false,true,false);
 	
 	//Initialize stateful objects
 	worldLoader = new WorldLoader();
@@ -211,7 +215,7 @@ void ARController::SetState(ControllerStates::ControllerState newState)
 	LOGD(LOGTAG_ARCONTROLLER,"State changed from %d -> %d",controllerState,newState);
 	controllerState = newState;
 }
-
+string currentCode;
 void ARController::ProcessFrame(Engine * engine)
 {
 	if (!isInitialized)
@@ -281,6 +285,7 @@ void ARController::ProcessFrame(Engine * engine)
 					string codeText = "Code=";
 					codeText.append(item->qrCode->TextValue);
 					debugUI->SetLabelValue("CurrentCode",codeText);
+					currentCode = item->qrCode->TextValue;
 
 					if (engine->communicator->IsConnected())
 					{
@@ -357,16 +362,37 @@ void ARController::ProcessFrame(Engine * engine)
 			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix),useGuess);
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);
+
+			if (false && (frameCount % 100 == 0 || recheckNext))
+			{
+				LOGD(LOGTAG_ARCONTROLLER,"Rechecking code. Current value = %s",currentCode.c_str());
+				qrDecoder->DecodeQRCode(grayImage,binaryImage,item->qrCode,debugVector);
+				if (item->qrCode->isDecoded() && item->qrCode->TextValue != currentCode)
+				{
+					if (worldLoader == NULL)
+						worldLoader = new WorldLoader();
+					currentCode = item->qrCode->TextValue;
+					worldLoader->LoadRealm(currentCode);
+					controllerState = ControllerStates::Loading;
+					delete augmentedView;
+					recheckNext = false;
+				}
+				else if (!item->qrCode->isDecoded())
+				{
+					recheckNext = true;
+				}
+			}
 		}	
 
 		//Evaluate the position	
-		float resultCertainty = positionSelector->UpdatePosition(item);
+		float resultCertainty = positionSelector->UpdatePosition(engine,item);
 		//debugUI->SetPositionCertainty(resultCertainty);
+		certaintyIndicator->SetCertainty(resultCertainty);
 
 		if (resultCertainty > 0 && augmentedView != NULL)
 		{			
 			augmentedView->SetFOV(debugUI->GetParameter("FOV"));
-			augmentedView->SetTransformations(item->translationMatrix,item->rotationMatrix);
+			augmentedView->SetTransformations(item->translationMatrix,item->rotationMatrix,item->gyroRotation);
 		}
 
 		augmentedView->Update(rgbImage,engine);
@@ -441,6 +467,8 @@ void ARController::Draw(Mat * rgbaImage)
 		SET_TIME(&end);
 		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
+
+	certaintyIndicator->Draw(rgbaImage);
 	//Draw FPS label on top of everything else
 	fpsLabel->Draw(rgbaImage);
 	//Update textured quad 

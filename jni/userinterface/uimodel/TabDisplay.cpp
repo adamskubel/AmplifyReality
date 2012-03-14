@@ -224,7 +224,8 @@ void TabDisplay::Draw(Mat * rgbaImage)
 
 	if (!collapseEnabled || !isCollapsed)
 	{
-		for (int i=0;i<TabChildren.size();i++)
+		//Don't draw first tab if collapse enabled and only one tab present
+		for (int i=(collapseEnabled && TabChildren.size() == 1) ? 1 : 0;i<TabChildren.size();i++)
 		{
 			TabChildren[i]->TabButton->Draw(rgbaImage);
 		}

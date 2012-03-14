@@ -4,7 +4,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
-//#include <opencv2/flann/flann.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 
 #include <vector>
@@ -20,6 +19,7 @@
 #include <stdlib.h>
 #include <set>
 #include "display/Colors.hpp"
+#include "SquareValidator.hpp"
 
 using namespace cv;
 using namespace std;
@@ -164,6 +164,7 @@ private:
 	void GetRandomPoint(map<int,map<int,Point2i>*> & regionMap, Point2i & randomPoint, Point2i & randomPointKey);
 	float getBestEdgeSize(int detectorRadius, Mat & img, Point2i imgPoint, int recurseCount);
 	ARControllerDebugUI * config;
+	SquareValidator * squareValidator;
 	double flannTime, pointTime, avgPerPointTime, maxThreshTime, fastTime, clusterTime;
 	//double patternTimes[4];
 

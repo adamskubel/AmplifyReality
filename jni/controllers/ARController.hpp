@@ -93,12 +93,13 @@ private:
 
 	cv::Mat *rgbImage, *binaryImage, *grayImage;
 		
-	bool isExpired, isInitialized;
+	bool isExpired, isInitialized, recheckNext;
 
 	UIElementCollection * window;
 	ControllerStates::ControllerState controllerState;
 
 	PositionSelector * positionSelector;
+	CertaintyIndicator * certaintyIndicator;
 
 	CircularList<FrameItem*> * frameList;
 

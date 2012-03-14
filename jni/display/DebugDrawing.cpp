@@ -179,9 +179,9 @@ void DebugPoly::Draw(Mat * rgbaImage)
 //Arrow
 DebugArrow::DebugArrow(Point2i pt0, Point2i pt1, Scalar _color, int _thickness)
 {		
-	LOGV(LOGTAG_QRFAST,"Drawing arrow between (%d,%d)->(%d,%d)",pt0.x,pt0.y,pt1.x,pt1.y);
 	float lineLength = GetPointDistance_Slow(pt0,pt1);
-	float headLength = 0.4f * lineLength;
+	float headLength = MIN(0.4f * lineLength,12);
+	headLength = MAX(headLength,3);
 
 	Point2f vecPoint = pt1-pt0;
 
@@ -193,7 +193,7 @@ DebugArrow::DebugArrow(Point2i pt0, Point2i pt1, Scalar _color, int _thickness)
 
 	Point2f headPoint0 = Point2f(headLength * cosf(headAngle0), headLength * sinf(headAngle0));
 	Point2f headPoint1 = Point2f(headLength * cosf(headAngle1), headLength * sinf(headAngle1));
-
+		
 	points.push_back((Point2i(headPoint0.x,headPoint0.y)+pt1));
 	points.push_back(pt1);
 	points.push_back(pt0);
@@ -213,5 +213,13 @@ void DebugArrow::Draw(Mat * rgbaImage)
 {		
 	const Point* p = &points[0];
 	int n = (int)points.size();
-	polylines(*rgbaImage, &p, &n, 1, true, fillColor, thickness, CV_AA);
+	if (thickness == -1) //Filled arrow
+	{
+		fillPoly(*rgbaImage, &p, &n, 1, fillColor);
+		//polylines(*rgbaImage, &p, &n, 1, true, fillColor, 2, CV_AA);
+	}
+	else
+	{
+		polylines(*rgbaImage, &p, &n, 1, true, fillColor, thickness);
+	}
 }

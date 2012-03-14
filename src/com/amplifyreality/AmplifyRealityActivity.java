@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
+import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,17 +28,19 @@ public class AmplifyRealityActivity extends NativeActivity //implements AutoFocu
 	public static native void SetClientObject(Object amplifyRealityActivity, Object arClient);
 
 	private ARClient client;
-//	volatile boolean waiting = true;
 	private LocationCollector locationCollector;
+	private LocationManager locationManager;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 
+//		SensorManager sm;
+//		sm.getRotationMatrixFromVector(R, rotationVector)
 		locationCollector = new LocationCollector();
-		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 0,locationCollector);
-		locationCollector.onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+//		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 0,locationCollector);
+//		locationCollector.onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
 
 		Log.i("AmplifyR-JNI", "Creating client");
 		client = new ARClient(locationCollector);
@@ -45,12 +48,6 @@ public class AmplifyRealityActivity extends NativeActivity //implements AutoFocu
 		super.onCreate(savedInstanceState);
 	}
 
-//	@Override
-//	public void onAutoFocus(boolean success, Camera camera)
-//	{
-//		Log.i("AmplifyR-JNI", "JNI just " + ((success) ? "FUCKED UP" : "focused the camera") + "LOL");
-//		waiting = false;
-//	}
 
 	public String getPreference(String key)
 	{
@@ -78,7 +75,9 @@ public class AmplifyRealityActivity extends NativeActivity //implements AutoFocu
 	@Override
 	protected void onDestroy()
 	{
-		
+		Log.i("AmplifyR-JNI","Shutting down location collector");
+		if (locationManager != null && locationCollector != null)
+			locationManager.removeUpdates(locationCollector);
 		client.Shutdown();
 		super.onDestroy();
 		System.exit(0);

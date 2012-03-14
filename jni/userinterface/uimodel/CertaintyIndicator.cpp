@@ -20,13 +20,17 @@ cv::Scalar CertaintyIndicator::determineColor()
 {
 	if (percentRadius > 0.8f)
 	{
-		return cv::Scalar(200,117,51,255);
+		return Colors::Red;
 	}
-	if (percentRadius > 0.4f)
+	if (percentRadius > 0.5f)
 	{
-		return cv::Scalar(191,230,77,255);
+		return Colors::Orange;
 	}
-	return cv::Scalar(0,255,0,255);
+	if (percentRadius > 0.2f)
+	{
+		return Colors::Yellow;
+	}
+	return Colors::Lime;
 
 }
 
@@ -45,8 +49,10 @@ void CertaintyIndicator::SetCertainty(float certainty)
 {
 	if (certainty < 0.0f)
 		percentRadius = 1.0f;
-	else if (certainty > 0.8f)
+	else if (certainty == 1.0f)
 		percentRadius = 0.2f;
+	else if (certainty > 0.7f)
+		percentRadius = 0.3f;
 	else
 		percentRadius = 1.0f - certainty;
 }

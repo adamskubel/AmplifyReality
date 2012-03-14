@@ -30,16 +30,17 @@ void PositionSelector::GetPreviousResult(FrameItem * item)
 /* Set the rotation and translation matrices in the FrameItem to the
  * estimated position and orientation. 
  */
-float PositionSelector::UpdatePosition(FrameItem * item)
+float PositionSelector::UpdatePosition(Engine * engine, FrameItem * item)
 {
 	
 	QRCode * qrCode = item->qrCode;
+	bool useGyro = config->GetBooleanParameter("UseGyro");
 	
 	PositioningResults * currentResults;
 
 	if (qrCode == NULL)
 	{
-		
+		;
 	}
 	else
 	{
@@ -54,6 +55,9 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			currentResults->Rotation = *(item->rotationMatrix);
 			currentResults->positioningMethod = PositioningMethods::QRCode;
 			currentResults->PositionCertainty = 1.0f;
+						
+			engine->sensorCollector->ClearRotation(); //clear rotation
+			item->gyroRotation = Mat::eye(4,4,item->gyroRotation.type());
 
 			if (!pastResults->empty())
 			{
@@ -69,11 +73,37 @@ float PositionSelector::UpdatePosition(FrameItem * item)
 			{
 				currentResults = new PositioningResults();
 				PositioningResults * lastResults = pastResults->front();
+
+				if (useGyro)
+				{
+					(engine->sensorCollector->GetRotation()).copyTo(item->gyroRotation);
+
+					/*try
+					{
+						LOGD_Mat(LOGTAG_POSITION,"Gyro data",&gyroRotation);
+						newRotation = gyroRotation * lastResults->Rotation;
+					}
+					catch (exception & e)
+					{
+						LOGD_Mat(LOGTAG_POSITION,"Current rotation data",&lastResults->Rotation);
+						LOGW(LOGTAG_POSITION,"Error adding gyro matrix: %s",e.what());
+						newRotation = lastResults->Rotation;
+					}*/
+				}
+				else
+				{
+					item->gyroRotation = Mat::eye(4,4,item->gyroRotation.type());
+				}
+				
+
+				
 				*(item->translationMatrix) = lastResults->Position;
+				currentResults->Position = lastResults->Position;
+
+				currentResults->Rotation = lastResults->Rotation;
+				//newRotation.copyTo(*(item->rotationMatrix));
 				*(item->rotationMatrix) = lastResults->Rotation;
 
-				currentResults->Position = lastResults->Position;
-				currentResults->Rotation = lastResults->Rotation;
 				currentResults->positioningMethod = PositioningMethods::Momentum;
 				currentResults->PositionCertainty = lastResults->PositionCertainty * 0.9f;
 				LowpassFilter(currentResults, pastResults->front());

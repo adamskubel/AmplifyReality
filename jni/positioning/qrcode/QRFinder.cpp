@@ -10,13 +10,14 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
 	finderPatternTime = 0;
 	edgeTime = 0;
 	fastFPTime = 0;
-	debugLevel = 1;
 	nonMaxEnabled = true;
 	edgeThreshold = 20;
 	detectorSize = 2;
 	minimumFinderPatternScore = 180;
 	minimumAlignmentPatternScore = 180;
+
 	alignDebugLevel = 0;
+	debugLevel = 0;
 	
 	config->AddNewParameter("MinFPDeviance",0.1f,0.1f,0.0f,3,"%2.1f","QR");
 	config->AddNewParameter("MaxDevianceRatio",0.4f,0.1f,1.0f,3,"%2.1f","QR");
@@ -27,7 +28,7 @@ QRFinder::QRFinder(ARControllerDebugUI * _debugUI)
 	config->AddNewParameter("MinimumAPScore",minimumAlignmentPatternScore,10,0,400,"%3.0f","QR");
 	config->AddNewParameter("DetectorSize",detectorSize,1,1,5,"%1.0f","QR",true);
 	config->AddNewParameter("Finder Pattern","QR Debug Level",debugLevel,1,-3,5,"%3.0f","Debug");
-	config->AddNewParameter("Alignment Pattern","AlignDebug",debugLevel,1,-3,5,"%3.0f","Debug");
+	config->AddNewParameter("Alignment Pattern","AlignDebug",alignDebugLevel,1,-3,5,"%3.0f","Debug");
 	config->AddNewParameter("YResolution",2,1,1,50,"%2.0f","QR");
 	config->AddNewParameter("EdgeNonMax",(float)nonMaxEnabled,1,0,1,"%1.0f","QR",true);
 	

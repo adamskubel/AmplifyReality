@@ -87,6 +87,7 @@
     <ClCompile Include="..\jni\model\WorldLoader.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastQRFinder.cpp" />
     <ClCompile Include="..\jni\positioning\fast\FastTracking.cpp" />
+    <ClCompile Include="..\jni\positioning\fast\SquareValidator.cpp" />
     <ClCompile Include="..\jni\positioning\PositionPredictor.cpp" />
     <ClCompile Include="..\jni\positioning\PositionSelector.cpp" />
     <ClCompile Include="..\jni\positioning\qrcode\AlignmentPatternHelper.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="..\jni\model\WorldLoader.hpp" />
     <ClInclude Include="..\jni\positioning\fast\FastQRFinder.hpp" />
     <ClInclude Include="..\jni\positioning\fast\FastTracking.hpp" />
+    <ClInclude Include="..\jni\positioning\fast\SquareValidator.hpp" />
     <ClInclude Include="..\jni\positioning\PositionPredictor.hpp" />
     <ClInclude Include="..\jni\positioning\PositionSelector.hpp" />
     <ClInclude Include="..\jni\positioning\qrcode\AlignmentPatternHelper.hpp" />
