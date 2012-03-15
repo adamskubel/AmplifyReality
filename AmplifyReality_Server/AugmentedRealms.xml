@@ -1,32 +1,6 @@
 <realmManager>
    <realmMap class="com.amplifyreality.networking.model.EqualityMap">
       <entry>
-         <realmKey CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
-         <realm QRUnitSize="3.0">
-            <objectMap>
-               <entry>
-                  <string>TestObj2</string>
-                  <ARObject Name="TestObj2" ModelName="cube.obj">
-                     <Position X="-40.0" Y="0.0" Z="0.0"/>
-                     <Rotation X="-1.1" Y="2.1" Z="3.1"/>
-                     <Scale X="15.0" Y="20.0" Z="10.0"/>
-                     <BoundingSphereRadius>18.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-               <entry>
-                  <string>TestObj1</string>
-                  <ARObject Name="TestObj1" ModelName="cube.obj">
-                     <Position X="47.016354" Y="3.2264602" Z="-0.8451233"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="15.0" Y="10.0" Z="15.0"/>
-                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-            </objectMap>
-            <Key CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
-         </realm>
-      </entry>
-      <entry>
          <realmKey CodeValue="TestRealm_2" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          <realm QRUnitSize="2.0">
             <objectMap>
@@ -59,6 +33,56 @@
                </entry>
             </objectMap>
             <Key CodeValue="TestRealm_2" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         </realm>
+      </entry>
+      <entry>
+         <realmKey CodeValue="ThoughtWorks Interactive Technologies" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="10.0">
+            <objectMap/>
+            <Key CodeValue="ThoughtWorks Interactive Technologies" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         </realm>
+      </entry>
+      <entry>
+         <realmKey CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="10.0">
+            <objectMap>
+               <entry>
+                  <string>TestObj1</string>
+                  <ARObject Name="TestObj1" ModelName="human.obj">
+                     <Position X="0.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="2.0" Y="2.0" Z="2.0"/>
+                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+            </objectMap>
+            <Key CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         </realm>
+      </entry>
+      <entry>
+         <realmKey CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="3.0">
+            <objectMap>              
+               <entry>
+                  <string>user_obj_3</string>
+                  <ARObject Name="user_obj_3" ModelName="Cube" Action="Create">
+                     <Position X="-82.05475" Y="-31.159489" Z="-143.29498"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_2</string>
+                  <ARObject Name="user_obj_2" ModelName="Cube" Action="Create">
+                     <Position X="4.9383736" Y="-2.546957" Z="7.6293945E-6"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+            </objectMap>
+            <Key CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          </realm>
       </entry>
    </realmMap>

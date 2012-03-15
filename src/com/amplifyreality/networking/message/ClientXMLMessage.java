@@ -28,12 +28,13 @@ public class ClientXMLMessage implements ClientMessage
 			StringWriter stringWriter = new StringWriter();
 			BufferedWriter bufferedStringWriter = new BufferedWriter(stringWriter);
 			serializer.write(data,bufferedStringWriter);
+			bufferedStringWriter.append('\n');
 			byte[] bytes = stringWriter.toString().getBytes();
 							
 			BufferedOutputStream bufferedOut = new BufferedOutputStream(output);
+			bufferedOut.flush();
 			String header ="XML_BYTES_NEXT:" + bytes.length + ":" + data.getClass().getCanonicalName() + "\n";
 			bufferedOut.write(header.getBytes());
-			bufferedOut.flush();
 			bufferedOut.write(bytes);
 			bufferedOut.flush();				
 		} catch (Exception e)

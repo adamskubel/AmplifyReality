@@ -20,8 +20,10 @@ public:
 	void SetMaxRadius(float maxRadius);
 	cv::Point2i CenterPoint;
 	void DoLayout(Rect boundaryRectangle);
+	void EnableOutline(bool outlineEnabled);
 
 private:
+	bool outlineEnabled;
 	float percentRadius,maxRadius;
 	cv::Scalar determineColor();
 

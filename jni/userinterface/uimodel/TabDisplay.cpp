@@ -230,12 +230,14 @@ void TabDisplay::Draw(Mat * rgbaImage)
 			TabChildren[i]->TabButton->Draw(rgbaImage);
 		}
 
-		if (currentTab >= 0)
+		if (currentTab >= 0 )
 		{
-			//Draw tab line
-			rectangle(*rgbaImage,tabLineSeperatorRectangle,UI_BUTTON_ALT_STATE_COLOR,-1);
-			rectangle(*rgbaImage,TabChildren.at(currentTab)->TabJoinRect,UI_BUTTON_ALT_STATE_COLOR,-1);
-
+			if (!(collapseEnabled && TabChildren.size() == 1))
+			{
+				//Draw tab line
+				rectangle(*rgbaImage,tabLineSeperatorRectangle,UI_BUTTON_ALT_STATE_COLOR,-1);
+				rectangle(*rgbaImage,TabChildren.at(currentTab)->TabJoinRect,UI_BUTTON_ALT_STATE_COLOR,-1);
+			}
 			if (TabChildren.at(currentTab)->TabContent->IsVisible())
 				TabChildren.at(currentTab)->TabContent->Draw(rgbaImage);
 

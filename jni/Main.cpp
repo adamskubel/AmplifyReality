@@ -83,8 +83,9 @@ extern "C"
 static void engineHandleCommand(struct android_app* app, int32_t cmd);
 static void sendMessagesToJNI(vector<OutgoingMessage*> messages);
 static int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent);
+static void initializeWindow(struct android_app* state, Engine * engine);
 
-void initializeEngine(struct android_app* state, Engine & engine);
+void initializeEngine(struct android_app* state, Engine * engine);
 void shutdownEngine(Engine* engine);
 
 
@@ -103,23 +104,21 @@ void engineHandleCommand(struct android_app* app, int32_t cmd)
 	switch (cmd)
 	{
 	case APP_CMD_INIT_WINDOW:
-		if (data->engine->app->window != NULL)
-		{
-			LOGI(LOGTAG_MAIN,"OS Has Initialized Window");
-
-			engine->glRender = new OpenGL(engine->app->window);	
-			//data->runner->Initialize(engine);
-			engine->animating = 1;
-		}
+		LOGI(LOGTAG_MAIN,"OS Has Initialized Window");		
+		initializeEngine(app, engine);
+		initializeWindow(app, engine);	
 		break;
 	case APP_CMD_TERM_WINDOW:
+		LOGI(LOGTAG_MAIN,"Terminated Window");
 		shutdownEngine(engine);
 		break;
 	case APP_CMD_GAINED_FOCUS:	
+		LOGI(LOGTAG_MAIN,"Gained focus");
 		engine->animating = 1;
 		break;
 	case APP_CMD_LOST_FOCUS:
-		shutdownEngine(engine);
+		LOGI(LOGTAG_MAIN,"Lost focus, pausing animation");
+		engine->animating = 0;
 		break;
     }
 }
@@ -130,13 +129,25 @@ int32_t engineHandleInput(struct android_app* app, AInputEvent* inputEvent)
 	return engine->inputHandler->HandleInputEvent(app,inputEvent);
 }
 
-
-void initializeEngine(struct android_app* state, Engine & engine)
+void initializeWindow(struct android_app* state, Engine * engine)
 {
+	if (state->window != NULL)
+	{
+		engine->glRender = new OpenGL(engine->app->window);	
+	}
+}
+
+void initializeEngine(struct android_app* state, Engine * engine)
+{
+	if (engine->animating == 1)
+	{
+		LOGI(LOGTAG_MAIN,"Engine already initialized. Returning.");
+		return;
+	}
 	LOGI(LOGTAG_MAIN,"Initializing engine");
 
 	//Define engine properties
-	engine.animating = 1;
+	engine->animating = 1;
 				
 	//Call this to ensure "glue isn't stripped" (w/e that means..)
 	app_dummy();
@@ -144,29 +155,28 @@ void initializeEngine(struct android_app* state, Engine & engine)
 	state->onAppCmd = engineHandleCommand;
 	state->onInputEvent = engineHandleInput;
 
-	engine.app = state;
+	engine->app = state;
 	
 	//Default image size
-	engine.imageWidth = CAMERA_IMAGE_WIDTH;
-	engine.imageHeight = CAMERA_IMAGE_HEIGHT;
+	engine->imageWidth = CAMERA_IMAGE_WIDTH;
+	engine->imageHeight = CAMERA_IMAGE_HEIGHT;
 	
 	//Initialize objects
 	try
 	{
-		engine.imageCollector = new ImageCollector(engine.imageWidth, engine.imageHeight);
+		LOGI(LOGTAG_MAIN,"Initializing stateful classes");
+		engine->imageCollector = new ImageCollector(engine->imageWidth, engine->imageHeight);
+		engine->inputHandler = new AndroidInputHandler();
+		engine->sensorCollector = new SensorCollector(ASensorManager_getInstance(), state->looper);	
+		engine->communicator = new ARCommunicator(arClientObject);	
+		engine->preferenceManager = new PreferenceManager(myActivity);
+		
+		engine->animating = 1;
 	}
 	catch (Exception & e)
 	{
-		engine.imageCollector = NULL;
+		LOGE("Error initializing: %s",e.what());
 	}
-
-	LOGI(LOGTAG_MAIN,"Initialize stateful classes");
-	engine.inputHandler = new AndroidInputHandler();
-	
-	engine.sensorCollector = new SensorCollector(ASensorManager_getInstance(), state->looper);	
-	engine.communicator = new ARCommunicator(arClientObject);	
-	engine.preferenceManager = new PreferenceManager(myActivity);
-
 }
 
 
@@ -175,10 +185,10 @@ void shutdownEngine(Engine* engine)
 	LOGI(LOGTAG_MAIN,"Shutting down");
 	engine->animating = 0;
 	
-	/*if (engine->sensorCollector != NULL)
+	if (engine->sensorCollector != NULL)
 	{
-		engine->sensorCollector->disablesensors();
-	}*/
+		engine->sensorCollector->DisableSensors();
+	}
 	
 	if (engine->imageCollector != NULL)
 	{
@@ -213,20 +223,18 @@ void android_main(struct android_app* state)
 	pthread_mutex_init(&incomingMutex,NULL);
 	jniDataVector.clear();	
 
-	Engine mainEngine = Engine();
-	initializeEngine(state, mainEngine);
-
-	
+	Engine mainEngine = Engine();	
 	AmplifyRunner myRunner = AmplifyRunner(&mainEngine);
-
+	
 	struct ARUserData myData;
 	memset(&myData,0,sizeof(ARUserData));
 
 	myData.engine = &mainEngine;
 	myData.runner = &myRunner;
-
-
 	state->userData = &myData;
+		
+	initializeEngine(state, &mainEngine);	
+
 
 	bool running = true;
 	while (running)

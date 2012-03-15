@@ -10,6 +10,7 @@
 #include "userinterface/uimodel/GridLayout.hpp"
 #include "userinterface/uimodel/Button.hpp"
 #include "userinterface/uimodel/TabDisplay.hpp"
+#include <opencv2/calib3d/calib3d.hpp>
 
 #ifndef AUGMENTEDVIEW_HPP_
 #define AUGMENTEDVIEW_HPP_
@@ -30,6 +31,7 @@ struct SelectedObject
 	
 	Point3f originalPosition;
 	Point3f originalRotation;
+	Mat originalProjectionMat;
 };
 
 /*
@@ -71,14 +73,14 @@ private:
 	struct timespec lastSelectionTime, cursorShowTime;
 	bool unselectNext, closeNext,farNext;
 	map<std::string,ARObjectMessage*> updateObjectMap;
-
+	
 
 	//Members
 	void UnselectObject();
 	void SetCameraPosition(OpenGLRenderData & renderData);
 	void UpdateObjectPosition(Mat & projection, SelectedObject * selectedObject);
 	SelectedObject * SelectObjects(OpenGL * openGL);
-
+	Point3f getCameraRotation();
 };
 
 #endif

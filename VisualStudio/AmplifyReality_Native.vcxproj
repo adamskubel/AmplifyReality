@@ -74,6 +74,7 @@
     <ClCompile Include="..\jni\display\objloader\objLoader.cpp" />
     <ClCompile Include="..\jni\display\objloader\obj_parser.cpp" />
     <ClCompile Include="..\jni\display\objloader\string_extra.cpp" />
+    <ClCompile Include="..\jni\display\opengl\GLObject.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGL2Renderer.cpp" />
     <ClCompile Include="..\jni\display\opengl\OpenGLHelper.cpp" />
     <ClCompile Include="..\jni\display\opengl\QuadBackground.cpp" />

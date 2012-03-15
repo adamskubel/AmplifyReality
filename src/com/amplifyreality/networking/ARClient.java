@@ -189,8 +189,22 @@ public class ARClient
 	private void ProcessData(DataHeader dataHeader, BufferedReader bufferedReader) throws IOException
 	{
 		char buffer[] = new char[dataHeader.NumBytes];
+		
 		int result = bufferedReader.read(buffer, 0, dataHeader.NumBytes);
-		Log.i(LOGTAG_NETWORKING, "Received " + result + " bytes from server.");
+		Log.i(LOGTAG_NETWORKING, "Received " + result + " bytes from server as expected.");
+		while (result < dataHeader.NumBytes)
+		{
+			Log.i(LOGTAG_NETWORKING, "Received " + result + " bytes from server. Expected " + dataHeader.NumBytes + " bytes. Sleeping for a bit.");
+			try
+			{
+				Thread.sleep(1000);
+			} catch (InterruptedException e)
+			{
+				Log.e(LOGTAG_NETWORKING,"Error during wait message sleep",e);
+			}
+			result = bufferedReader.read(buffer, result, dataHeader.NumBytes);
+		}
+
 		String data = new String(buffer);
 
 		// No XML definition, so process as a string
@@ -274,6 +288,7 @@ public class ARClient
 			InetSocketAddress address = new InetSocketAddress(connectHost, connectPort);
 			mySocket = new Socket();
 			mySocket.connect(address,5000);
+			mySocket.setReceiveBufferSize(250000);
 			Log.i(LOGTAG_NETWORKING, "Socket created. Connected = " + mySocket.isConnected());
 						
 			if (!mySocket.isConnected())

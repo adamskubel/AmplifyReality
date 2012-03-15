@@ -129,30 +129,30 @@ ColorGLObject * OpenGLHelper::CreateMultiColorCube(int _size)
 	colorVector.push_back(Colors::MidnightBlue);
 	colorVector.push_back(Colors::MidnightBlue); 
 		
-	colorVector.push_back(Colors::CornflowerBlue);
-	colorVector.push_back(Colors::CornflowerBlue);
-	colorVector.push_back(Colors::CornflowerBlue);
-	colorVector.push_back(Colors::CornflowerBlue);
+	colorVector.push_back(Colors::DeepSkyBlue);
+	colorVector.push_back(Colors::DeepSkyBlue);
+	colorVector.push_back(Colors::DeepSkyBlue);
+	colorVector.push_back(Colors::DeepSkyBlue);
 		
-	colorVector.push_back(Colors::OliveDrab);
-	colorVector.push_back(Colors::OliveDrab);
-	colorVector.push_back(Colors::OliveDrab);
-	colorVector.push_back(Colors::OliveDrab);
+	colorVector.push_back(Colors::Azure);
+	colorVector.push_back(Colors::Azure);
+	colorVector.push_back(Colors::Azure);
+	colorVector.push_back(Colors::Azure);
 	
-	colorVector.push_back(Colors::Green);
-	colorVector.push_back(Colors::Green);
-	colorVector.push_back(Colors::Green);
-	colorVector.push_back(Colors::Green);
+	colorVector.push_back(Colors::Lime);
+	colorVector.push_back(Colors::Lime);
+	colorVector.push_back(Colors::Lime);
+	colorVector.push_back(Colors::Lime);
 
-	colorVector.push_back(Colors::Gold);
-	colorVector.push_back(Colors::Gold);
-	colorVector.push_back(Colors::Gold);
-	colorVector.push_back(Colors::Gold);
+	colorVector.push_back(Colors::Orchid);
+	colorVector.push_back(Colors::Orchid);
+	colorVector.push_back(Colors::Orchid);
+	colorVector.push_back(Colors::Orchid);
 	
-	colorVector.push_back(Colors::Aqua);
-	colorVector.push_back(Colors::Aqua);
-	colorVector.push_back(Colors::Aqua);
-	colorVector.push_back(Colors::Aqua);
+	colorVector.push_back(Colors::BlueViolet);
+	colorVector.push_back(Colors::BlueViolet);
+	colorVector.push_back(Colors::BlueViolet);
+	colorVector.push_back(Colors::BlueViolet);
 
 	PopulateColors(cube,&colorVector);
 

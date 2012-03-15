@@ -34,13 +34,11 @@ public class AmplifyRealityActivity extends NativeActivity //implements AutoFocu
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-
-//		SensorManager sm;
-//		sm.getRotationMatrixFromVector(R, rotationVector)
 		locationCollector = new LocationCollector();
 //		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 //		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 0,locationCollector);
 //		locationCollector.onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+//		locationManager.removeUpdates(locationCollector);
 
 		Log.i("AmplifyR-JNI", "Creating client");
 		client = new ARClient(locationCollector);

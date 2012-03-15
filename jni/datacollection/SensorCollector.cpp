@@ -93,8 +93,8 @@ void SensorCollector::ProcessSensorEvents()
 		}
 		
 		double deltaT = (sensorEvent.timestamp - lastTimestamp) / 1000000000.0;
-		float axisX = sensorEvent.data[1];
-		float axisY = sensorEvent.data[0];
+		float axisX = -sensorEvent.data[1];
+		float axisY = -sensorEvent.data[0];
 		float axisZ = -sensorEvent.data[2];
 
 		// Calculate the angular speed of the sample

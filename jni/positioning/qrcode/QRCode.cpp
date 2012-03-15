@@ -339,14 +339,16 @@ void QRCode::getTrackingPoints(vector<cv::Point2f> & points, vector<Point3f> & q
 
 void QRCode::Draw(Mat * rgbaImage)
 {
+	if ((debugDrawingLevel == -3 || debugDrawingLevel == 2) && isDecoded())
+	{
+		DebugLabel(finderPatterns[0]->pt,TextValue,Colors::Aqua,1.0f,Colors::Blue).Draw(rgbaImage);
+	}
+
 	if (debugDrawingLevel > 0)
 	{
 		if (isValidCode())
 		{
-			if (isDecoded())
-			{
-				DebugLabel(finderPatterns[1]->pt,TextValue,Colors::Black,2.0f,Colors::Beige).Draw(rgbaImage);
-			}
+			
 			if (trackingCorners.size() != 3) //Use centers
 			{
 				Point2i points[4];
@@ -377,7 +379,7 @@ void QRCode::Draw(Mat * rgbaImage)
 		}
 	}
 
-	if (debugDrawingLevel > 1)
+	if (debugDrawingLevel > 2)
 	{
 
 		for (size_t i = 0; i < finderPatterns.size(); i++)
@@ -386,7 +388,7 @@ void QRCode::Draw(Mat * rgbaImage)
 
 			if (pattern->patternCorners.size() == 4)
 			{
-				if (debugDrawingLevel > 2)
+				if (debugDrawingLevel > 3)
 				{
 					DebugCircle(pattern->patternCorners[0],10,Colors::Red,2).Draw(rgbaImage);
 					DebugCircle(pattern->patternCorners[1],10,Colors::Orange,2).Draw(rgbaImage);

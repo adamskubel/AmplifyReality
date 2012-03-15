@@ -98,6 +98,8 @@ void ARController::initializeUI(Engine * engine)
 	debugUI->AddNewParameter("UseExtraPoints",0,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("UseGuess",0,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("UseGyro",1,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("CodeOnly",0,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("Show Entire Binary",0,1,0,1,"%1.0f","Tracking");
 	
 	debugUI->AddNewLabel("CurrentCode","","Data");
 	debugUI->AddNewLabel("State","","Data");
@@ -114,15 +116,26 @@ void ARController::initializeUI(Engine * engine)
 	fpsLabel = new Label("[FPS]",Point2i(0,0),Colors::MediumBlue,Colors::DarkTurquoise);
 	fpsLabel->DoLayout(Rect(engine->imageWidth - 40,10,30,15));
 
+	resetButton = new Button("X");
+	resetButton->DoLayout(Rect(0,engine->imageHeight-60,120,60));
+	window->AddChild(resetButton);
+	resetButton->AddClickDelegate(ClickEventDelegate::from_method<ARController,&ARController::ButtonPressed>(this));
+	resetButton->FillColor = Colors::DarkRed;
 
 	deletableObjects.push_back(window);
 	deletableObjects.push_back(inputScaler);
 	deletableObjects.push_back(debugUI);
 
-	certaintyIndicator = new CertaintyIndicator(1.0f,15);
-	certaintyIndicator->DoLayout(Rect(engine->imageWidth-60,engine->imageHeight-60,30,30));
+	certaintyIndicator = new CertaintyIndicator(1.0f,20);
+	certaintyIndicator->DoLayout(Rect(engine->imageWidth-60,engine->imageHeight-60,40,40));
 
 	LOGI(LOGTAG_ARCONTROLLER,"UI initialization complete.");
+}
+
+
+void ARController::ButtonPressed(void * sender, EventArgs args)
+{
+	recheckNext = true;
 }
 
 void ARController::Initialize(Engine * engine)
@@ -235,6 +248,7 @@ void ARController::ProcessFrame(Engine * engine)
 
 	int debugLevel = debugUI->GetIntegerParameter("ARControllerDebug");
 	bool useGuess = debugUI->GetBooleanParameter("UseGuess");
+	bool showEntireBinary = debugUI->GetBooleanParameter("Show Entire Binary");
 	
 
 	//This section is the default per-frame operations
@@ -286,8 +300,12 @@ void ARController::ProcessFrame(Engine * engine)
 					codeText.append(item->qrCode->TextValue);
 					debugUI->SetLabelValue("CurrentCode",codeText);
 					currentCode = item->qrCode->TextValue;
-
-					if (engine->communicator->IsConnected())
+					
+					if (debugUI->GetBooleanParameter("CodeOnly"))
+					{
+						LOGI(LOGTAG_ARCONTROLLER,"Code found (%s), still searching since we're in debug mode",currentCode.c_str());
+					}
+					else if (engine->communicator->IsConnected())
 					{
 						worldLoader->LoadRealm(item->qrCode->TextValue);
 					}
@@ -351,6 +369,7 @@ void ARController::ProcessFrame(Engine * engine)
 	{
 		debugUI->SetLabelValue("State","Run");
 
+		bool doSkip = false;
 		if (item->qrCode != NULL && item->qrCode->isValidCode())
 		{
 			if (useGuess)
@@ -363,39 +382,48 @@ void ARController::ProcessFrame(Engine * engine)
 			debugUI->SetTranslation(item->translationMatrix);
 			debugUI->SetRotation(item->rotationMatrix);
 
-			if (false && (frameCount % 100 == 0 || recheckNext))
+			if (recheckNext)
 			{
 				LOGD(LOGTAG_ARCONTROLLER,"Rechecking code. Current value = %s",currentCode.c_str());
 				qrDecoder->DecodeQRCode(grayImage,binaryImage,item->qrCode,debugVector);
+			
 				if (item->qrCode->isDecoded() && item->qrCode->TextValue != currentCode)
 				{
 					if (worldLoader == NULL)
 						worldLoader = new WorldLoader();
+					else
+					{
+						delete worldLoader;
+						worldLoader = new WorldLoader();
+					}
 					currentCode = item->qrCode->TextValue;
 					worldLoader->LoadRealm(currentCode);
 					controllerState = ControllerStates::Loading;
 					delete augmentedView;
+					augmentedView = NULL;
 					recheckNext = false;
+					doSkip = true;
 				}
-				else if (!item->qrCode->isDecoded())
-				{
-					recheckNext = true;
-				}
+				else if (item->qrCode->isDecoded())
+					recheckNext = false;
 			}
 		}	
 
-		//Evaluate the position	
-		float resultCertainty = positionSelector->UpdatePosition(engine,item);
-		//debugUI->SetPositionCertainty(resultCertainty);
-		certaintyIndicator->SetCertainty(resultCertainty);
+		if (!doSkip)
+		{
+			//Evaluate the position	
+			float resultCertainty = positionSelector->UpdatePosition(engine,item);
+			certaintyIndicator->SetCertainty(resultCertainty);
+			certaintyIndicator->EnableOutline(recheckNext);
 
-		if (resultCertainty > 0 && augmentedView != NULL)
-		{			
-			augmentedView->SetFOV(debugUI->GetParameter("FOV"));
-			augmentedView->SetTransformations(item->translationMatrix,item->rotationMatrix,item->gyroRotation);
+			if (resultCertainty > 0 && augmentedView != NULL)
+			{			
+				augmentedView->SetFOV(debugUI->GetParameter("FOV"));
+				augmentedView->SetTransformations(item->translationMatrix,item->rotationMatrix,item->gyroRotation);
+			}
+			if (augmentedView != NULL)
+				augmentedView->Update(rgbImage,engine);
 		}
-
-		augmentedView->Update(rgbImage,engine);
 	}
 	else
 	{
@@ -407,9 +435,17 @@ void ARController::ProcessFrame(Engine * engine)
 
 	if (debugUI->currentDrawMode == DrawModes::BinaryImage)
 	{		
-		LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw");
-		cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
-		LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw complete");
+		if (showEntireBinary)
+		{		
+			ImageProcessor::SimpleThreshold(grayImage,binaryImage);
+			cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
+		}
+		else
+		{
+			LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw");
+			cvtColor(*binaryImage, *rgbImage, CV_GRAY2RGBA, 4);
+			LOGD(LOGTAG_ARCONTROLLER,"Binary debug draw complete");
+		}
 	}
 	
 	if (drawingLevel == 1 || drawingLevel == 3)
@@ -468,6 +504,7 @@ void ARController::Draw(Mat * rgbaImage)
 		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
 
+	resetButton->Draw(rgbaImage);
 	certaintyIndicator->Draw(rgbaImage);
 	//Draw FPS label on top of everything else
 	fpsLabel->Draw(rgbaImage);

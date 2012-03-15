@@ -7,7 +7,7 @@ import org.simpleframework.xml.Root;
 @Root
 public class MyLocation
 {
-	@Attribute
+	@Attribute(required=false)
 	public String Provider;
 	@Attribute
     public long Time = 0;

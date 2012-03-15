@@ -14,8 +14,12 @@ CertaintyIndicator::CertaintyIndicator(float initialCertainty, float _maxRadius)
 	SetCertainty(initialCertainty);
 	maxRadius = _maxRadius;
 	CenterPoint = Point2i(0,0);
+	outlineEnabled = false;
 }
-
+void CertaintyIndicator::EnableOutline(bool arg)
+{
+	outlineEnabled = arg;
+}
 cv::Scalar CertaintyIndicator::determineColor()
 {
 	if (percentRadius > 0.8f)
@@ -64,5 +68,9 @@ void CertaintyIndicator::SetMaxRadius(float _maxRadius)
 
 void CertaintyIndicator::Draw(cv::Mat * rgbaImage)
 {
+	if (outlineEnabled)
+	{
+		cv::circle(*rgbaImage,CenterPoint,maxRadius*1.1f,Colors::OrangeRed,2);
+	}
 	cv::circle(*rgbaImage,CenterPoint,maxRadius*percentRadius,determineColor(),-1,CV_AA);
 }

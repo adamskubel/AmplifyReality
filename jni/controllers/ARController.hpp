@@ -57,6 +57,7 @@ public:
 	void Render(OpenGL * openGL);
 
 	void HandleButtonPress(void * sender, PhysicalButtonEventArgs args);
+	void ButtonPressed(void * sender, EventArgs args);
 
 private:
 
@@ -100,7 +101,7 @@ private:
 
 	PositionSelector * positionSelector;
 	CertaintyIndicator * certaintyIndicator;
-
+	Button * resetButton;
 	CircularList<FrameItem*> * frameList;
 
 	int frameCount;

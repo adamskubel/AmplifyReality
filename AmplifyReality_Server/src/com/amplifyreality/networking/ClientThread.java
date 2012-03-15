@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,7 +52,7 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 
 	private ClientStates clientState = ClientStates.Unauthorized;
 
-	public ClientThread(Socket _clientSocket, RealmManager realmManager)
+	public ClientThread(Socket _clientSocket, RealmManager realmManager) throws SocketException
 	{
 		messageInputQueue = new LinkedBlockingQueue<String>();
 		messageOutputQueue = new LinkedBlockingQueue<ClientMessage>();
@@ -59,6 +60,7 @@ public class ClientThread implements MessageListener, RealmPositionWatcher
 		this.realmManager = realmManager;
 		listening = true;
 		clientSocket = _clientSocket;
+		clientSocket.setSendBufferSize(250000);
 
 		LOGGER.info("Created new client. Remote address = " + clientSocket.getRemoteSocketAddress().toString());
 

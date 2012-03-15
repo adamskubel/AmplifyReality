@@ -29,18 +29,26 @@ AugmentedView::AugmentedView(UIElementCollection * window, Engine * engine, cv::
 	cancelSelection = new Button("Cancel");
 	cancelSelection->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
 	myGrid->AddChild(cancelSelection,Point2i(4,3));		
+	cancelSelection->SetVisible(false);
 	cancelSelection->Name = "Cancel";
 	
 	releaseSelection = new Button("Release");
 	releaseSelection->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
-	myGrid->AddChild(releaseSelection,Point2i(4,2));		
+	myGrid->AddChild(releaseSelection,Point2i(4,2));	
+	releaseSelection->SetVisible(false);
 	releaseSelection->Name = "Release";
 
-	Button * createCube = new Button("Create Cube");
+	Button * createCube = new Button("Create");
 	createCube->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
 	myGrid->AddChild(createCube,Point2i(4,1));	
 	createCube->Name = "Create";
 	createCube->FillColor = Colors::LightGreen;
+
+	Button * deleteObject = new Button("Delete");
+	deleteObject->AddClickDelegate(ClickEventDelegate::from_method<AugmentedView,&AugmentedView::ButtonPressed>(this));
+	myGrid->AddChild(deleteObject,Point2i(4,0));	
+	deleteObject->Name = "Delete";
+	deleteObject->FillColor = Colors::Orange;
 
 	tabs->AddTab("AR",myGrid);
 	LOGD(LOGTAG_ARINPUT,"Laying out tabs %d,%d",engine->imageWidth,engine->imageHeight);
@@ -127,6 +135,14 @@ void AugmentedView::ButtonPressed(void * sender, EventArgs args)
 	{
 		unselectNext = true;
 	}
+	else if (button->Name.compare("Delete") == 0)
+	{
+		if (selectedObject != NULL)
+		{
+			selectedObject->arObject->BoundingSphereRadius = 0.1f;
+			selectedObject->arObject->scale *= 0.001f;
+		}
+	}
 }
 
 void AugmentedView::HandleButtonPress(void * sender, PhysicalButtonEventArgs args)
@@ -144,12 +160,12 @@ void AugmentedView::HandleButtonPress(void * sender, PhysicalButtonEventArgs arg
 	{
 		if (farNext)
 		{
-			selectedObject->objectPositionDelta *= 1.07f;
+			selectedObject->objectPositionDelta += Point3f(0,0,5);
 			farNext = false;
 		}
 		else if (closeNext)
 		{
-			selectedObject->objectPositionDelta *= 0.90f;
+			selectedObject->objectPositionDelta -= Point3f(0,0,5);
 			closeNext = false;
 		}
 	}
@@ -218,11 +234,67 @@ static Point3f getCameraPosition(Mat projection)
 
 }
 
-void AugmentedView::UpdateObjectPosition(Mat & projection, SelectedObject * selectedObject)
+
+static Point3f getObject3DCoord(Point3f objectPosition, Mat projection)
 {
-	Point3f cameraPosition = getCameraPosition(projection);
-	Point3f objPosition =  selectedObject->objectPositionDelta + cameraPosition;
-	selectedObject->arObject->position = objPosition; //Offset by camera position
+	Mat invProjection = projection.inv();
+
+	float data[] = {objectPosition.x,objectPosition.y,objectPosition.z,1.0f};
+	Mat cameraPos = Mat(4,1,CV_32F,data);
+	cameraPos = invProjection * cameraPos;
+	cameraPos *= 1.0f/ cameraPos.at<float>(3,0);
+	
+	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"3D->Screen",&cameraPos);
+	return Point3f(cameraPos.at<float>(0,0),cameraPos.at<float>(1,0),cameraPos.at<float>(2,0));
+
+}
+
+static Point3f getObjectScreenCoord(Point3f objectPosition, Mat projection)
+{
+	float data[] = {objectPosition.x,objectPosition.y,objectPosition.z,1.0f};
+	Mat cameraPos = Mat(4,1,CV_32F,data);
+	cameraPos = projection * cameraPos;
+	cameraPos *= 1.0f/ cameraPos.at<float>(3,0);
+	
+	LOG_Mat(ANDROID_LOG_VERBOSE,LOGTAG_ARINPUT,"Screen->3D",&cameraPos);
+	return Point3f(cameraPos.at<float>(0,0),cameraPos.at<float>(1,0),cameraPos.at<float>(2,0));
+}
+
+Point3f AugmentedView::getCameraRotation()
+{
+	/*Mat invTranslation = Mat::eye(4,4,CV_32F);
+	OpenGLHelper::translate(invTranslation,Point3f(((float)position->at<double>(0,0)), ((float)position->at<double>(0,1)),-((float)position->at<double>(0,2))));
+	*/
+	
+	Mat cameraProj = Mat::eye(4,4,CV_32F);
+	OpenGLHelper::gluPerspective(cameraProj,fieldOfView,1.7f,20.0f, 600.0f);
+	Mat invCamProj = cameraProj.inv();
+
+	//Projection = camera * gyro * translation * rotation
+	Mat rotationOnly = projection * invCamProj;
+	Mat rotationVector = Mat(1,3,CV_32F);
+	rotationOnly *= (1.0f / rotationOnly.at<float>(3,3));
+	Mat smallRotation =  rotationOnly(Range(0,3),Range(0,3));
+	try
+	{
+		LOGD_Mat(LOGTAG_POSITION,"smallRotation",&smallRotation);
+		cv::Rodrigues(smallRotation,rotationVector);
+		LOGD_Mat(LOGTAG_POSITION,"RotationVector",&rotationVector);
+	}
+	catch (exception & e)
+	{
+		LOGW(LOGTAG_POSITION,"Error rodriguing: %s",e.what());
+		return Point3f(0,0,0);
+	}
+	return Point3f(-(rotationVector.at<float>(0,0)), -(rotationVector.at<float>(0,1)),-(rotationVector.at<float>(0,2)));
+}
+
+void AugmentedView::UpdateObjectPosition(Mat & _projection, SelectedObject * selectedObject)
+{
+	//Point3f cameraPosition = getCameraPosition(projection);
+	//Point3f objPosition =  selectedObject->objectPositionDelta + cameraPosition;
+	//selectedObject->arObject->position =  objPosition; //Offset by camera position
+	selectedObject->arObject->position =  getObject3DCoord(selectedObject->objectPositionDelta,projection);
 	LOGD(LOGTAG_ARINPUT,"Updated Object Position(%f,%f,%f)",selectedObject->arObject->position.x,selectedObject->arObject->position.y,selectedObject->arObject->position.z);
 
 	//Send command to server notifying that object has new position
@@ -335,13 +407,16 @@ void AugmentedView::Render(OpenGL * openGL)
 		{
 			delete selectedObject;
 			selectedObject = newSelection;
-						
-			Point3f cameraPosition = getCameraPosition(projection);			
-			Point3f cameraOffset = selectedObject->arObject->position - cameraPosition;
-			//Initial offset between object and camera
-			selectedObject->objectPositionDelta = cameraOffset;
+			//			
+			//Point3f cameraPosition = getCameraPosition(projection);			
+			//Point3f cameraOffset = selectedObject->arObject->position - cameraPosition;
+			////Initial offset between object and camera
+			selectedObject->objectPositionDelta = getObjectScreenCoord(selectedObject->arObject->position,projection);//scameraOffset;
+			projection.copyTo(selectedObject->originalProjectionMat);
+			cancelSelection->SetVisible(true);
+			releaseSelection->SetVisible(true);
 
-			LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",cameraOffset.x,cameraOffset.y,cameraOffset.z);
+			//LOGD(LOGTAG_ARINPUT,"CameraPositionOffset(%f,%f,%f)",cameraOffset.x,cameraOffset.y,cameraOffset.z);
 		}
 		lastSelectionTime = now;
 	}else if (newSelection != NULL)
@@ -371,8 +446,10 @@ void AugmentedView::Render(OpenGL * openGL)
 
 		if (selectedObject != NULL && selectedObject->arObject == object)
 		{			
-			Point3f cameraPosition = getCameraPosition(projection);			
-			selectedObject->arObject->position = selectedObject->objectPositionDelta + cameraPosition; 
+			//Point3f cameraPosition = getCameraPosition(projection);			
+			selectedObject->arObject->position =  getObject3DCoord(selectedObject->objectPositionDelta,projection);//selectedObject->objectPositionDelta + cameraPosition; 
+		/*	Point3f cameraRotation = getCameraRotation();			
+			selectedObject->arObject->rotation = selectedObject->objectRotationDelta + cameraRotation; */
 		}
 
 		OpenGLHelper::translate(modelMatrix,Point3f(object->position.x,object->position.y,object->position.z));
@@ -441,16 +518,23 @@ void AugmentedView::Update(Mat * rgbaImage, Engine * engine)
 	}
 
 	
-	if ( engine->communicator->IsConnected() && createNext)
+	if (createNext)
 	{
 		Point3f cameraPosition = getCameraPosition(projection);
 		char objectName[100];
 		sprintf(objectName,"user_obj_%d",objectVector.size()+1);
 		GLObject * glObject = OpenGLHelper::CreateMultiColorCube(35);
-		ARObject * newObject = new ARObject(glObject, Point3f(0,0,0));//cameraPosition - Point3f(0,0,150));
+		Point3f newLocation = Point3f(0,0,0);
+		if (testObject != NULL)
+			newLocation = testObject->position;
+
+		ARObject * newObject = new ARObject(glObject, newLocation);
 		newObject->BoundingSphereRadius = 20;
 		newObject->objectID = objectName;
-		engine->communicator->SendMessage(new ARObjectMessage(newObject,true));
+		if (engine->communicator->IsConnected())
+		{
+			engine->communicator->SendMessage(new ARObjectMessage(newObject,true));
+		}
 		createNext = false;
 		objectVector.push_back(newObject);
 	}

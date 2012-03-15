@@ -16,7 +16,7 @@ public class NativeMessage
 	public Object data;
 
 	MyLocation newLocation;
-	
+
 	public NativeMessage(String action, Object data)
 	{
 		if (data == null)
@@ -42,23 +42,26 @@ public class NativeMessage
 
 	public void setLocation(Location androidLocation)
 	{
-		//Copy location to XML structure
 		newLocation = new MyLocation();
-		newLocation.Accuracy = androidLocation.getAccuracy();
-		newLocation.HasAccuracy = androidLocation.hasAccuracy();
-		newLocation.Altitude = androidLocation.getAltitude();
-		newLocation.HasAccuracy = androidLocation.hasAltitude();
-		newLocation.Bearing = androidLocation.getBearing();
-		newLocation.HasBearing = androidLocation.hasBearing();
-		newLocation.Latitude = androidLocation.getLatitude();
-		newLocation.Longitude = androidLocation.getLongitude();
-		newLocation.Provider = androidLocation.getProvider();
-		newLocation.Speed = androidLocation.getSpeed();
-		newLocation.HasSpeed = androidLocation.hasSpeed();
-		newLocation.Time = androidLocation.getTime();
-		
+		if (androidLocation != null)		
+		{
+			// Copy location to XML structure
+			newLocation.Accuracy = androidLocation.getAccuracy();
+			newLocation.HasAccuracy = androidLocation.hasAccuracy();
+			newLocation.Altitude = androidLocation.getAltitude();
+			newLocation.HasAccuracy = androidLocation.hasAltitude();
+			newLocation.Bearing = androidLocation.getBearing();
+			newLocation.HasBearing = androidLocation.hasBearing();
+			newLocation.Latitude = androidLocation.getLatitude();
+			newLocation.Longitude = androidLocation.getLongitude();
+			newLocation.Provider = androidLocation.getProvider();
+			newLocation.Speed = androidLocation.getSpeed();
+			newLocation.HasSpeed = androidLocation.hasSpeed();
+			newLocation.Time = androidLocation.getTime();
+		}
+
 	}
-	
+
 	public Object GetXMLObject() throws UnknownClientActionException
 	{
 		if (action.equals("String"))

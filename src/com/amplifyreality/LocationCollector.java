@@ -27,7 +27,7 @@ public class LocationCollector implements LocationListener
 		if (isBetterLocation(location,lastLocation))
 		{	
 			lastLocation = location;
-//			Log.v("AmplifyR-GPS","New location = " + location.toString());
+			Log.v("AmplifyR-GPS","New location = " + location.toString());
 		}
 		else
 			Log.d("AmplifyR-GPS","New location is inferior:" + location.toString());

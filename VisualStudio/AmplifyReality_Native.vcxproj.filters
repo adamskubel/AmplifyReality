@@ -424,6 +424,9 @@
     <ClCompile Include="..\jni\positioning\fast\SquareValidator.cpp">
       <Filter>Header Files\positioning\fast</Filter>
     </ClCompile>
+    <ClCompile Include="..\jni\display\opengl\GLObject.cpp">
+      <Filter>Header Files\display\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jni\ExceptionCodes.hpp">
