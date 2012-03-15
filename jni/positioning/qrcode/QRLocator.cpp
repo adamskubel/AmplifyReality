@@ -25,6 +25,8 @@ QRLocator::~QRLocator()
 //Transform a set of points from camera space to reality space 
 void QRLocator::transformPoints(QRCode * qrCode, Mat& rotationMatrix, Mat& translationMatrix, bool useGuess)
 {
+	if (qrCode == NULL)
+		return;
 	struct timespec start,end;
 	SET_TIME(&start);
 	

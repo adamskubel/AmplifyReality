@@ -202,7 +202,7 @@ public class ARClient
 			{
 				Log.e(LOGTAG_NETWORKING,"Error during wait message sleep",e);
 			}
-			result = bufferedReader.read(buffer, result, dataHeader.NumBytes);
+			result += bufferedReader.read(buffer, result, dataHeader.NumBytes - result);
 		}
 
 		String data = new String(buffer);

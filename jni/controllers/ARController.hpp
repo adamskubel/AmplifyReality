@@ -48,7 +48,7 @@ namespace ControllerStates
 class ARController : public Controller, private Drawable //,public OpenGLRenderable
 {
 public:
-	ARController(Mat camera = Mat(), Mat distortion = Mat(), double fov = 50);
+	ARController(Mat camera = Mat(), Mat distortion = Mat(), double fov = 53.4);
 	~ARController();
 	void ProcessFrame(Engine * engine);
 	void Initialize(Engine * engine);

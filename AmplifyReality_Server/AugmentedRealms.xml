@@ -1,6 +1,23 @@
 <realmManager>
    <realmMap class="com.amplifyreality.networking.model.EqualityMap">
       <entry>
+         <realmKey CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         <realm QRUnitSize="10.0">
+            <objectMap>
+               <entry>
+                  <string>TestObj1</string>
+                  <ARObject Name="TestObj1" ModelName="human.obj">
+                     <Position X="30.340244" Y="-0.5977962" Z="53.50395"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="2.0" Y="2.0" Z="2.0"/>
+                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+            </objectMap>
+            <Key CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
+         </realm>
+      </entry>
+      <entry>
          <realmKey CodeValue="TestRealm_2" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          <realm QRUnitSize="2.0">
             <objectMap>
@@ -43,30 +60,67 @@
          </realm>
       </entry>
       <entry>
-         <realmKey CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
-         <realm QRUnitSize="10.0">
-            <objectMap>
-               <entry>
-                  <string>TestObj1</string>
-                  <ARObject Name="TestObj1" ModelName="human.obj">
-                     <Position X="0.0" Y="0.0" Z="0.0"/>
-                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
-                     <Scale X="2.0" Y="2.0" Z="2.0"/>
-                     <BoundingSphereRadius>15.0</BoundingSphereRadius>
-                  </ARObject>
-               </entry>
-            </objectMap>
-            <Key CodeValue="UnknownRealm" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
-         </realm>
-      </entry>
-      <entry>
          <realmKey CodeValue="ThisIsAQRCode" Latitude="0.0" Longitude="0.0" Radius="0.0"/>
          <realm QRUnitSize="3.0">
-            <objectMap>              
+            <objectMap>
+               <entry>
+                  <string>user_obj_9</string>
+                  <ARObject Name="user_obj_9" ModelName="Cube" Action="Create">
+                     <Position X="0.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_8</string>
+                  <ARObject Name="user_obj_8" ModelName="Cube" Action="Create">
+                     <Position X="0.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_7</string>
+                  <ARObject Name="user_obj_7" ModelName="Cube" Action="Create">
+                     <Position X="0.0" Y="0.0" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_6</string>
+                  <ARObject Name="user_obj_6" ModelName="Cube" Action="Create">
+                     <Position X="47.403587" Y="48.970825" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_5</string>
+                  <ARObject Name="user_obj_5" ModelName="Cube" Action="Create">
+                     <Position X="56.924625" Y="2.4335365" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
+               <entry>
+                  <string>user_obj_4</string>
+                  <ARObject Name="user_obj_4" ModelName="Cube" Action="Create">
+                     <Position X="-18.767248" Y="17.082321" Z="0.0"/>
+                     <Rotation X="0.0" Y="0.0" Z="0.0"/>
+                     <Scale X="1.0" Y="1.0" Z="1.0"/>
+                     <BoundingSphereRadius>0.0</BoundingSphereRadius>
+                  </ARObject>
+               </entry>
                <entry>
                   <string>user_obj_3</string>
                   <ARObject Name="user_obj_3" ModelName="Cube" Action="Create">
-                     <Position X="-82.05475" Y="-31.159489" Z="-143.29498"/>
+                     <Position X="-60.208244" Y="5.350645" Z="0.0"/>
                      <Rotation X="0.0" Y="0.0" Z="0.0"/>
                      <Scale X="1.0" Y="1.0" Z="1.0"/>
                      <BoundingSphereRadius>0.0</BoundingSphereRadius>

@@ -160,12 +160,12 @@ void AugmentedView::HandleButtonPress(void * sender, PhysicalButtonEventArgs arg
 	{
 		if (farNext)
 		{
-			selectedObject->objectPositionDelta += Point3f(0,0,5);
+			selectedObject->objectPositionDelta.z *= 1.07f;
 			farNext = false;
 		}
 		else if (closeNext)
 		{
-			selectedObject->objectPositionDelta -= Point3f(0,0,5);
+			selectedObject->objectPositionDelta.z *= 0.90f;
 			closeNext = false;
 		}
 	}
@@ -523,13 +523,13 @@ void AugmentedView::Update(Mat * rgbaImage, Engine * engine)
 		Point3f cameraPosition = getCameraPosition(projection);
 		char objectName[100];
 		sprintf(objectName,"user_obj_%d",objectVector.size()+1);
-		GLObject * glObject = OpenGLHelper::CreateMultiColorCube(35);
+		GLObject * glObject = OpenGLHelper::CreateMultiColorCube(20);
 		Point3f newLocation = Point3f(0,0,0);
 		if (testObject != NULL)
 			newLocation = testObject->position;
 
 		ARObject * newObject = new ARObject(glObject, newLocation);
-		newObject->BoundingSphereRadius = 20;
+		newObject->BoundingSphereRadius = 12;
 		newObject->objectID = objectName;
 		if (engine->communicator->IsConnected())
 		{

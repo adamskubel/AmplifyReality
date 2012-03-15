@@ -95,7 +95,7 @@ void ARController::initializeUI(Engine * engine)
 	debugUI->AddNewParameter("T-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("R-Alpha",0.5f,0.1f,0.1f,1.0f,"%1.1f","Tracking");
 	debugUI->AddNewParameter("FOV",startingFOV,1,10,180,"%3.0f","Tracking");
-	debugUI->AddNewParameter("UseExtraPoints",0,1,0,1,"%1.0f","Tracking");
+	debugUI->AddNewParameter("UseExtraPoints",1,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("UseGuess",0,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("UseGyro",1,1,0,1,"%1.0f","Tracking");
 	debugUI->AddNewParameter("CodeOnly",0,1,0,1,"%1.0f","Tracking");
@@ -118,7 +118,7 @@ void ARController::initializeUI(Engine * engine)
 
 	resetButton = new Button("X");
 	resetButton->DoLayout(Rect(0,engine->imageHeight-60,120,60));
-	window->AddChild(resetButton);
+	//window->AddChild(resetButton);
 	resetButton->AddClickDelegate(ClickEventDelegate::from_method<ARController,&ARController::ButtonPressed>(this));
 	resetButton->FillColor = Colors::DarkRed;
 
@@ -326,7 +326,7 @@ void ARController::ProcessFrame(Engine * engine)
 						//myCube3->BoundingSphereRadius = 30;
 
 						augmentedView->AddObject(myCube1);	
-						myCube1->BoundingSphereRadius = 23;
+						myCube1->BoundingSphereRadius = 12;
 
 						SetState(ControllerStates::Running);
 						delete worldLoader;
@@ -372,16 +372,7 @@ void ARController::ProcessFrame(Engine * engine)
 		bool doSkip = false;
 		if (item->qrCode != NULL && item->qrCode->isValidCode())
 		{
-			if (useGuess)
-				positionSelector->GetPreviousResult(item);
-
-			LOGV(LOGTAG_QR,"Getting position");
-			currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
-			item->qrCode->QRCodeDimension = currentQRSize;
-			qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix),useGuess);
-			debugUI->SetTranslation(item->translationMatrix);
-			debugUI->SetRotation(item->rotationMatrix);
-
+			
 			if (recheckNext)
 			{
 				LOGD(LOGTAG_ARCONTROLLER,"Rechecking code. Current value = %s",currentCode.c_str());
@@ -396,9 +387,10 @@ void ARController::ProcessFrame(Engine * engine)
 						delete worldLoader;
 						worldLoader = new WorldLoader();
 					}
+					LOGD(LOGTAG_ARCONTROLLER,"Changing to code %s",currentCode.c_str());
 					currentCode = item->qrCode->TextValue;
 					worldLoader->LoadRealm(currentCode);
-					controllerState = ControllerStates::Loading;
+					SetState(ControllerStates::Loading);
 					delete augmentedView;
 					augmentedView = NULL;
 					recheckNext = false;
@@ -407,14 +399,26 @@ void ARController::ProcessFrame(Engine * engine)
 				else if (item->qrCode->isDecoded())
 					recheckNext = false;
 			}
-		}	
+			else
+			{
+				if (useGuess)
+					positionSelector->GetPreviousResult(item);
 
+				LOGV(LOGTAG_QR,"Getting position");
+				currentQRSize = debugUI->GetParameter("QRSize"); //Should be using value from server
+				item->qrCode->QRCodeDimension = currentQRSize;
+				qrLocator->transformPoints(item->qrCode,*(item->rotationMatrix),*(item->translationMatrix),useGuess);
+				debugUI->SetTranslation(item->translationMatrix);
+				debugUI->SetRotation(item->rotationMatrix);
+			}
+		}	
+		
+		certaintyIndicator->EnableOutline(recheckNext);
 		if (!doSkip)
 		{
 			//Evaluate the position	
 			float resultCertainty = positionSelector->UpdatePosition(engine,item);
 			certaintyIndicator->SetCertainty(resultCertainty);
-			certaintyIndicator->EnableOutline(recheckNext);
 
 			if (resultCertainty > 0 && augmentedView != NULL)
 			{			
@@ -504,7 +508,7 @@ void ARController::Draw(Mat * rgbaImage)
 		LOG_TIME_PRECISE("ARController Drawing",start,end);
 	}
 
-	resetButton->Draw(rgbaImage);
+	//resetButton->Draw(rgbaImage);
 	certaintyIndicator->Draw(rgbaImage);
 	//Draw FPS label on top of everything else
 	fpsLabel->Draw(rgbaImage);
